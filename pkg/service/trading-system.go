@@ -25,13 +25,13 @@ THE SOFTWARE.
 package service
 
 import (
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/portfolio-trader/pkg/business"
-	"github.com/tradalia/portfolio-trader/pkg/business/filter"
-	"github.com/tradalia/portfolio-trader/pkg/business/performance"
-	"github.com/tradalia/portfolio-trader/pkg/business/quality"
-	"github.com/tradalia/portfolio-trader/pkg/business/simulation"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/portfolio-trader/pkg/business"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter"
+	"github.com/algotiqa/portfolio-trader/pkg/business/performance"
+	"github.com/algotiqa/portfolio-trader/pkg/business/quality"
+	"github.com/algotiqa/portfolio-trader/pkg/business/simulation"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 )
 

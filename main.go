@@ -25,18 +25,19 @@ THE SOFTWARE.
 package main
 
 import (
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/core/boot"
-	"github.com/tradalia/core/msg"
-	"github.com/tradalia/core/req"
-	"github.com/tradalia/portfolio-trader/pkg/app"
-	"github.com/tradalia/portfolio-trader/pkg/core/messaging/inventory"
-	"github.com/tradalia/portfolio-trader/pkg/core/messaging/runtime"
-	"github.com/tradalia/portfolio-trader/pkg/core/process"
-	"github.com/tradalia/portfolio-trader/pkg/db"
-	"github.com/tradalia/portfolio-trader/pkg/platform"
-	"github.com/tradalia/portfolio-trader/pkg/service"
 	"log/slog"
+
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/boot"
+	"github.com/algotiqa/core/msg"
+	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/portfolio-trader/pkg/app"
+	"github.com/algotiqa/portfolio-trader/pkg/core/messaging/inventory"
+	"github.com/algotiqa/portfolio-trader/pkg/core/messaging/runtime"
+	"github.com/algotiqa/portfolio-trader/pkg/core/process"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/platform"
+	"github.com/algotiqa/portfolio-trader/pkg/service"
 )
 
 //=============================================================================
@@ -49,7 +50,7 @@ func main() {
 	cfg := &app.Config{}
 	boot.ReadConfig(component, cfg)
 	logger := boot.InitLogger(component, &cfg.Application)
-	engine := boot.InitEngine(logger,    &cfg.Application)
+	engine := boot.InitEngine(logger, &cfg.Application)
 	initClients()
 	auth.InitAuthentication(&cfg.Authentication)
 	db.InitDatabase(&cfg.Database)

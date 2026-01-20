@@ -30,11 +30,11 @@ import (
 	"sort"
 	"time"
 
-	"github.com/tradalia/core/datatype"
-	"github.com/tradalia/core/msg"
-	"github.com/tradalia/portfolio-trader/pkg/business/filter"
-	"github.com/tradalia/portfolio-trader/pkg/consts"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/core/datatype"
+	"github.com/algotiqa/core/msg"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter"
+	"github.com/algotiqa/portfolio-trader/pkg/consts"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -76,7 +76,7 @@ func handleNewTrades(tm *TradeListMessage) bool {
 
 	slog.Info("handleNewTrades: Processing new trades for trading systems", "id", tsId)
 
-	err := db.RunInTransaction(func (tx *gorm.DB) error {
+	err := db.RunInTransaction(func(tx *gorm.DB) error {
 		ts, err := db.GetTradingSystemById(tx, tsId)
 		if err != nil {
 			slog.Error("handleNewTrades: Cannot retrieve trading system", "id", tsId, "error", err.Error())
@@ -94,15 +94,15 @@ func handleNewTrades(tm *TradeListMessage) bool {
 		}
 
 		var trades *[]db.Trade
-		trades,err = db.FindTradesByTradingSystemId(tx, tsId)
+		trades, err = db.FindTradesByTradingSystemId(tx, tsId)
 		if err == nil {
 			var dailyProfits *[]db.DailyReturn
-			dailyProfits,err = db.FindDailyReturnsByTradingSystemId(tx, tsId)
+			dailyProfits, err = db.FindDailyReturnsByTradingSystemId(tx, tsId)
 			if err == nil {
 				var tf *db.TradingFilter
 				tf, err = db.GetTradingFilterByTsId(tx, tsId)
 				if err == nil {
-					trades,err = addNewTrades(tx, ts, trades, tm.Trades)
+					trades, err = addNewTrades(tx, ts, trades, tm.Trades)
 					if err == nil {
 						err = addNewDailyProfits(tx, ts, dailyProfits, tm.DailyProfits)
 						if err == nil {
@@ -130,7 +130,7 @@ func addNewTrades(tx *gorm.DB, ts *db.TradingSystem, trades *[]db.Trade, newTrad
 	}
 
 	firstTrade := ts.FirstTrade
-	lastTrade  := ts.LastTrade
+	lastTrade := ts.LastTrade
 
 	for _, tr := range newTrades {
 		dbTr := toDbTrade(ts.Id, tr)
@@ -148,7 +148,7 @@ func addNewTrades(tx *gorm.DB, ts *db.TradingSystem, trades *[]db.Trade, newTrad
 
 		if isTheTradeOutOfRange(ts, dbTr) {
 			tradeSet[dbTr.String()] = true
-			err  := db.AddTrade(tx, dbTr)
+			err := db.AddTrade(tx, dbTr)
 
 			if err != nil {
 				return nil, err
@@ -171,11 +171,11 @@ func addNewTrades(tx *gorm.DB, ts *db.TradingSystem, trades *[]db.Trade, newTrad
 	}
 
 	ts.FirstTrade = firstTrade
-	ts.LastTrade  = lastTrade
+	ts.LastTrade = lastTrade
 
 	//--- Sort final list as new trades could be in the past
 
-	sort.Slice(list, func(i,j int) bool {
+	sort.Slice(list, func(i, j int) bool {
 		return list[i].EntryDate.Before(*list[j].EntryDate)
 	})
 
@@ -198,15 +198,15 @@ func isTheTradeOutOfRange(ts *db.TradingSystem, t *db.Trade) bool {
 func toDbTrade(tsId uint, t *TradeItem) *db.Trade {
 	return &db.Trade{
 		TradingSystemId: tsId,
-		TradeType      : t.TradeType,
-		EntryDate      : t.EntryDate,
-		EntryPrice     : t.EntryPrice,
-		EntryLabel     : t.EntryLabel,
-		ExitDate       : t.ExitDate,
-		ExitPrice      : t.ExitPrice,
-		ExitLabel      : t.ExitLabel,
-		GrossProfit    : t.GrossProfit,
-		Contracts      : t.Contracts,
+		TradeType:       t.TradeType,
+		EntryDate:       t.EntryDate,
+		EntryPrice:      t.EntryPrice,
+		EntryLabel:      t.EntryLabel,
+		ExitDate:        t.ExitDate,
+		ExitPrice:       t.ExitPrice,
+		ExitLabel:       t.ExitLabel,
+		GrossProfit:     t.GrossProfit,
+		Contracts:       t.Contracts,
 	}
 }
 
@@ -223,7 +223,7 @@ func addNewDailyProfits(tx *gorm.DB, ts *db.TradingSystem, profits *[]db.DailyRe
 		_, exists := profitSet[dbDp.Day]
 		if !exists {
 			profitSet[dbDp.Day] = true
-			err  := db.AddDailyReturn(tx, dbDp)
+			err := db.AddDailyReturn(tx, dbDp)
 
 			if err != nil {
 				return err
@@ -239,9 +239,9 @@ func addNewDailyProfits(tx *gorm.DB, ts *db.TradingSystem, profits *[]db.DailyRe
 func toDbDailyProfit(tsId uint, p *DailyProfitItem) *db.DailyReturn {
 	return &db.DailyReturn{
 		TradingSystemId: tsId,
-		Day            : p.Day,
-		GrossProfit    : p.GrossProfit,
-		Trades         : p.Trades,
+		Day:             p.Day,
+		GrossProfit:     p.GrossProfit,
+		Trades:          p.Trades,
 	}
 }
 
@@ -266,9 +266,9 @@ func updateTradingSystem(tx *gorm.DB, ts *db.TradingSystem, trades *[]db.Trade, 
 //=============================================================================
 
 func updateActivationStatus(ts *db.TradingSystem, trades *[]db.Trade, f *db.TradingFilter) {
-	if ! ts.Running {
+	if !ts.Running {
 		ts.SuggestedAction = db.TsActionNone
-		ts.Status          = db.TsStatusOff
+		ts.Status = db.TsStatusOff
 		return
 	}
 

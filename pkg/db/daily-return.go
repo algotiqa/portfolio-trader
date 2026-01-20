@@ -27,8 +27,8 @@ package db
 import (
 	"time"
 
-	"github.com/tradalia/core/datatype"
-	"github.com/tradalia/core/req"
+	"github.com/algotiqa/core/datatype"
+	"github.com/algotiqa/core/req"
 	"gorm.io/gorm"
 )
 
@@ -52,7 +52,7 @@ func FindDailyReturnsByTradingSystemId(tx *gorm.DB, tsId uint) (*[]DailyReturn, 
 //=============================================================================
 
 func FindDailyReturnsByTsIdFromTime(tx *gorm.DB, tsId uint, fromTime *time.Time, toTime *time.Time) (*[]DailyReturn, error) {
-	to   := datatype.Today(time.UTC)
+	to := datatype.Today(time.UTC)
 	from := to.AddDays(-50 * 365)
 
 	if fromTime != nil {
@@ -67,7 +67,7 @@ func FindDailyReturnsByTsIdFromTime(tx *gorm.DB, tsId uint, fromTime *time.Time,
 
 	//--- WHERE condition must be exit_date otherwise we loose trades started in the past and ended after fromTime
 	query := "trading_system_id = ? and day >= ? and day <= ?"
-	res   := tx.Order("day").Find(&list, query, tsId, from, to)
+	res := tx.Order("day").Find(&list, query, tsId, from, to)
 
 	if res.Error != nil {
 		return nil, req.NewServerErrorByError(res.Error)

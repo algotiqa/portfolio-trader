@@ -25,9 +25,9 @@ THE SOFTWARE.
 package service
 
 import (
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/portfolio-trader/pkg/business"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/portfolio-trader/pkg/business"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -77,7 +77,7 @@ func getPortfolioTree(c *auth.Context) {
 
 func getPortfolioMonitoring(c *auth.Context) {
 	params := business.PortfolioMonitoringParams{}
-	err    := c.BindParamsFromBody(&params)
+	err := c.BindParamsFromBody(&params)
 
 	if err == nil {
 		err = db.RunInTransaction(func(tx *gorm.DB) error {

@@ -25,9 +25,9 @@ THE SOFTWARE.
 package business
 
 import (
-	"github.com/tradalia/core/req"
-	"github.com/tradalia/portfolio-trader/pkg/core"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 	"sort"
 	"time"
@@ -60,7 +60,7 @@ func GetPortfolioMonitoring(tx *gorm.DB, params *PortfolioMonitoringParams) (*Po
 	}
 
 	trMap := buildSortedMapOfInfo(trades)
-	res   := buildMonitoringResult(trMap, tsMap)
+	res := buildMonitoringResult(trMap, tsMap)
 	buildTotalInfo(res)
 
 	return res, nil
@@ -83,7 +83,7 @@ func calcFromTime(period int) time.Time {
 func calcIdsArrayFromSourceIds(tsMap map[uint]*db.TradingSystem) []uint {
 	var list []uint
 
-	for k,_ := range tsMap {
+	for k, _ := range tsMap {
 		list = append(list, k)
 	}
 
@@ -139,7 +139,7 @@ func buildMonitoringResult(trMap *map[uint][]*db.Trade, tsMap map[uint]*db.Tradi
 
 func buildTradingSystemMonitoring(ts *db.TradingSystem, list []*db.Trade) *TradingSystemMonitoring {
 	tsa := NewTradingSystemMonitoring(len(list))
-	tsa.Id   = ts.Id
+	tsa.Id = ts.Id
 	tsa.Name = ts.Name
 
 	currRawProfit := 0.0
@@ -149,15 +149,15 @@ func buildTradingSystemMonitoring(ts *db.TradingSystem, list []*db.Trade) *Tradi
 
 	for _, tr := range list {
 		currRawProfit += tr.GrossProfit
-		currNetProfit += tr.GrossProfit - float64(ts.CostPerOperation) * 2
+		currNetProfit += tr.GrossProfit - float64(ts.CostPerOperation)*2
 
 		//tsa.Time[i]        = *tr.ExitDate
 		//tsa.GrossProfit[i] = currRawProfit
 		//tsa.NetProfit[i]   = currNetProfit
 	}
 
-	tsa.GrossDrawdown,_ = core.BuildDrawDown(tsa.GrossProfit)
-	tsa.NetDrawdown,  _ = core.BuildDrawDown(tsa.NetProfit)
+	tsa.GrossDrawdown, _ = core.BuildDrawDown(tsa.GrossProfit)
+	tsa.NetDrawdown, _ = core.BuildDrawDown(tsa.NetProfit)
 
 	return tsa
 }
@@ -186,7 +186,7 @@ func buildTotalInfo(pm *PortfolioMonitoringResponse) {
 			}
 
 			ds.grossProfit += (*tsm.GrossProfit)[i]
-			ds.netProfit   += (*tsm.NetProfit)[i]
+			ds.netProfit += (*tsm.NetProfit)[i]
 		}
 	}
 
@@ -212,14 +212,14 @@ func buildTotalInfo(pm *PortfolioMonitoringResponse) {
 	//pm.NetDrawdown   = make([]float64, len(res))
 
 	//for i, day := range res {
-		//ds := timeSum[day]
-		//
-		//pm.GrossProfit[i] = ds.grossProfit
-		//pm.NetProfit[i]   = ds.netProfit
+	//ds := timeSum[day]
+	//
+	//pm.GrossProfit[i] = ds.grossProfit
+	//pm.NetProfit[i]   = ds.netProfit
 	//}
 
-	pm.GrossDrawdown,_ = core.BuildDrawDown(pm.GrossProfit)
-	pm.NetDrawdown,  _ = core.BuildDrawDown(pm.NetProfit)
+	pm.GrossDrawdown, _ = core.BuildDrawDown(pm.GrossProfit)
+	pm.NetDrawdown, _ = core.BuildDrawDown(pm.NetProfit)
 }
 
 //=============================================================================

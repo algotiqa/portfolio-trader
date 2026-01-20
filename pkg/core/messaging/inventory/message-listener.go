@@ -28,9 +28,9 @@ import (
 	"encoding/json"
 	"log/slog"
 
-	"github.com/tradalia/core/msg"
-	"github.com/tradalia/portfolio-trader/pkg/business"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/core/msg"
+	"github.com/algotiqa/portfolio-trader/pkg/business"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -119,10 +119,10 @@ func setTradingSystem(tsm *TradingSystemMessage, create bool) bool {
 
 		if ts == nil {
 			ts = &db.TradingSystem{}
-			ts.Running         = false
-			ts.AutoActivation  = false
-			ts.Status          = db.TsStatusOff
-			ts.Active          = false
+			ts.Running = false
+			ts.AutoActivation = false
+			ts.Status = db.TsStatusOff
+			ts.Active = false
 			ts.SuggestedAction = db.TsActionNone
 		} else {
 			isNew = false
@@ -133,41 +133,41 @@ func setTradingSystem(tsm *TradingSystemMessage, create bool) bool {
 			}
 		}
 
-		ts.Id              = tsm.TradingSystem.Id
-		ts.Username        = tsm.TradingSystem.Username
-		ts.Name            = tsm.TradingSystem.Name
-		ts.Timeframe       = tsm.TradingSystem.Timeframe
-		ts.DataProductId   = tsm.TradingSystem.DataProductId
-		ts.DataSymbol      = tsm.DataProduct.Symbol
+		ts.Id = tsm.TradingSystem.Id
+		ts.Username = tsm.TradingSystem.Username
+		ts.Name = tsm.TradingSystem.Name
+		ts.Timeframe = tsm.TradingSystem.Timeframe
+		ts.DataProductId = tsm.TradingSystem.DataProductId
+		ts.DataSymbol = tsm.DataProduct.Symbol
 		ts.BrokerProductId = tsm.TradingSystem.BrokerProductId
-		ts.BrokerSymbol    = tsm.BrokerProduct.Symbol
-		ts.PointValue      = tsm.BrokerProduct.PointValue
-		ts.CostPerOperation= tsm.BrokerProduct.CostPerOperation
-		ts.MarginValue     = tsm.BrokerProduct.MarginValue
-		ts.Increment       = tsm.BrokerProduct.Increment
-		ts.MarketType      = tsm.BrokerProduct.MarketType
-		ts.CurrencyId      = tsm.Currency.Id
-		ts.CurrencyCode    = tsm.Currency.Code
-		ts.CurrencySymbol  = tsm.Currency.Symbol
-		ts.TradingSessionId= tsm.TradingSession.Id
-		ts.SessionName     = tsm.TradingSession.Name
-		ts.SessionConfig   = tsm.TradingSession.Config
-		ts.StrategyType    = tsm.TradingSystem.StrategyType
-		ts.Overnight       = tsm.TradingSystem.Overnight
-		ts.Tags            = tsm.TradingSystem.Tags
-		ts.Finalized       = tsm.TradingSystem.Finalized
-		ts.Timezone        = tsm.Exchange.Timezone
-		ts.AgentProfileId  = tsm.TradingSystem.AgentProfileId
-		ts.ExternalRef     = tsm.TradingSystem.ExternalRef
-		ts.InSampleFrom    = tsm.TradingSystem.InSampleFrom
-		ts.InSampleTo      = tsm.TradingSystem.InSampleTo
-		ts.EngineCode      = tsm.TradingSystem.EngineCode
+		ts.BrokerSymbol = tsm.BrokerProduct.Symbol
+		ts.PointValue = tsm.BrokerProduct.PointValue
+		ts.CostPerOperation = tsm.BrokerProduct.CostPerOperation
+		ts.MarginValue = tsm.BrokerProduct.MarginValue
+		ts.Increment = tsm.BrokerProduct.Increment
+		ts.MarketType = tsm.BrokerProduct.MarketType
+		ts.CurrencyId = tsm.Currency.Id
+		ts.CurrencyCode = tsm.Currency.Code
+		ts.CurrencySymbol = tsm.Currency.Symbol
+		ts.TradingSessionId = tsm.TradingSession.Id
+		ts.SessionName = tsm.TradingSession.Name
+		ts.SessionConfig = tsm.TradingSession.Config
+		ts.StrategyType = tsm.TradingSystem.StrategyType
+		ts.Overnight = tsm.TradingSystem.Overnight
+		ts.Tags = tsm.TradingSystem.Tags
+		ts.Finalized = tsm.TradingSystem.Finalized
+		ts.Timezone = tsm.Exchange.Timezone
+		ts.AgentProfileId = tsm.TradingSystem.AgentProfileId
+		ts.ExternalRef = tsm.TradingSystem.ExternalRef
+		ts.InSampleFrom = tsm.TradingSystem.InSampleFrom
+		ts.InSampleTo = tsm.TradingSystem.InSampleTo
+		ts.EngineCode = tsm.TradingSystem.EngineCode
 
 		err = db.UpdateTradingSystem(tx, ts)
 
 		if err == nil && isNew {
 			err = db.SetTradingFilter(tx, &db.TradingFilter{
-				TradingSystemId : ts.Id,
+				TradingSystemId: ts.Id,
 			})
 		}
 
@@ -208,9 +208,9 @@ func updateDataProduct(dpm *DataProductMessage) bool {
 	slog.Info("updateDataProduct: Data product change received", "sourceId", dpm.DataProduct.Id)
 
 	err := db.RunInTransaction(func(tx *gorm.DB) error {
-		values := map[string]interface{} {
+		values := map[string]interface{}{
 			//--- data_symbol cannot be changed, anyway
-			"data_symbol" : dpm.DataProduct.Symbol,
+			"data_symbol": dpm.DataProduct.Symbol,
 		}
 
 		return db.UpdateDataProductInfo(tx, dpm.DataProduct.Id, values)
@@ -231,12 +231,12 @@ func updateBrokerProduct(bpm *BrokerProductMessage) bool {
 	slog.Info("updateBrokerProduct: Broker product change received", "sourceId", bpm.BrokerProduct.Id)
 
 	err := db.RunInTransaction(func(tx *gorm.DB) error {
-		values := map[string]interface{} {
-			"broker_symbol"     : bpm.BrokerProduct.Symbol,
-			"point_value"       : bpm.BrokerProduct.PointValue,
+		values := map[string]interface{}{
+			"broker_symbol":      bpm.BrokerProduct.Symbol,
+			"point_value":        bpm.BrokerProduct.PointValue,
 			"cost_per_operation": bpm.BrokerProduct.CostPerOperation,
-			"margin_value"      : bpm.BrokerProduct.MarginValue,
-			"increment"         : bpm.BrokerProduct.Increment,
+			"margin_value":       bpm.BrokerProduct.MarginValue,
+			"increment":          bpm.BrokerProduct.Increment,
 		}
 
 		return db.UpdateBrokerProductInfo(tx, bpm.BrokerProduct.Id, values)

@@ -27,14 +27,14 @@ package stats
 import (
 	"math"
 
-	"github.com/tradalia/portfolio-trader/pkg/core"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
 )
 
 //=============================================================================
 
 type BarRange struct {
-	MinValue  float64 `json:"minValue"`
-	MaxValue  float64 `json:"maxValue"`
+	MinValue float64 `json:"minValue"`
+	MaxValue float64 `json:"maxValue"`
 }
 
 //=============================================================================
@@ -50,7 +50,7 @@ type Histogram struct {
 
 func NewHistogram(data []float64) *Histogram {
 	slots := int(math.Sqrt(float64(len(data))))
-	if slots % 2 == 0 {
+	if slots%2 == 0 {
 		slots++
 	}
 
@@ -58,9 +58,9 @@ func NewHistogram(data []float64) *Histogram {
 		slots: slots,
 	}
 
-	h.Bars    = make([]int      , slots)
-	h.Gaussian= make([]float64  , slots)
-	h.Ranges  = make([]*BarRange, slots)
+	h.Bars = make([]int, slots)
+	h.Gaussian = make([]float64, slots)
+	h.Ranges = make([]*BarRange, slots)
 
 	h.initRanges(data)
 	h.populate(data)
@@ -76,14 +76,14 @@ func NewHistogram(data []float64) *Histogram {
 //=============================================================================
 
 func (h *Histogram) initRanges(data []float64) {
-	minV   := Min(data)
-	maxV   := Max(data)
-	delta  := (maxV - minV)/float64(h.slots)
+	minV := Min(data)
+	maxV := Max(data)
+	delta := (maxV - minV) / float64(h.slots)
 
-	for i := 0; i<h.slots; i++ {
+	for i := 0; i < h.slots; i++ {
 		h.Ranges[i] = &BarRange{
 			MinValue: core.Trunc2d(minV),
-			MaxValue: core.Trunc2d(minV+delta),
+			MaxValue: core.Trunc2d(minV + delta),
 		}
 		minV = minV + delta
 	}
@@ -108,12 +108,12 @@ func (h *Histogram) populate(data []float64) {
 //=============================================================================
 
 func (h *Histogram) createGaussian(data []float64) {
-	mean    := Mean(data)
-	stdDev  := StdDev(data, mean)
+	mean := Mean(data)
+	stdDev := StdDev(data, mean)
 	meanIdx := 0
 
 	for i, br := range h.Ranges {
-		medValue := (br.MinValue + br.MaxValue) /2
+		medValue := (br.MinValue + br.MaxValue) / 2
 		gasValue := gaussian(medValue, mean, stdDev)
 		h.Gaussian[i] = gasValue
 
@@ -136,7 +136,7 @@ func (h *Histogram) createGaussian(data []float64) {
 
 func gaussian(x, mean, stdDev float64) float64 {
 	v := (x - mean) / stdDev
-	exponent := - v*v/2
+	exponent := -v * v / 2
 	return math.Exp(exponent) / (stdDev * math.Sqrt(2*math.Pi))
 }
 

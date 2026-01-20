@@ -27,9 +27,9 @@ package platform
 import (
 	"fmt"
 
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/core/datatype"
-	"github.com/tradalia/core/req"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/datatype"
+	"github.com/algotiqa/core/req"
 )
 
 //=============================================================================
@@ -41,9 +41,9 @@ import (
 const (
 	DirectionStrongBear = -2
 	DirectionBear       = -1
-	DirectionNeutral    =  0
-	DirectionBull       =  1
-	DirectionStrongBull =  2
+	DirectionNeutral    = 0
+	DirectionBull       = 1
+	DirectionStrongBull = 2
 )
 
 const (
@@ -56,12 +56,12 @@ const (
 //=============================================================================
 
 type DataProductAnalysisResponse struct {
-	Id              uint             `json:"id"`
-	Symbol          string           `json:"symbol"`
-	From            datatype.IntDate `json:"from"`
-	To              datatype.IntDate `json:"to"`
-	Days            int              `json:"days"`
-	DailyResults    []*DailyResult   `json:"dailyResults"`
+	Id           uint             `json:"id"`
+	Symbol       string           `json:"symbol"`
+	From         datatype.IntDate `json:"from"`
+	To           datatype.IntDate `json:"to"`
+	Days         int              `json:"days"`
+	DailyResults []*DailyResult   `json:"dailyResults"`
 }
 
 //=============================================================================
@@ -86,19 +86,19 @@ type DailyResult struct {
 func AnalyzeDataProduct(c *auth.Context, id uint, backDays int) (*DataProductAnalysisResponse, error) {
 	c.Log.Info("AnalyzeDataProduct: Asking data product analysis to data collector", "id", id, "backDays", backDays)
 
-	token  := c.Token
+	token := c.Token
 	client := req.GetClient("bf")
-	url    := fmt.Sprintf("%s/v1/data-products/%d/analysis?backDays=%d", platform.Data, id, backDays)
+	url := fmt.Sprintf("%s/v1/data-products/%d/analysis?backDays=%d", platform.Data, id, backDays)
 
 	var res DataProductAnalysisResponse
 	err := req.DoGet(client, url, &res, token)
 	if err != nil {
 		c.Log.Error("AnalyzeDataProduct: Got an error when accessing the data-collector", "id", id, "error", err.Error())
-		return nil,req.NewServerError("Cannot communicate with data-manager: %v", err.Error())
+		return nil, req.NewServerError("Cannot communicate with data-manager: %v", err.Error())
 	}
 
 	c.Log.Info("AnalyzeDataProduct: Analysis received", "id", id)
-	return &res,nil
+	return &res, nil
 }
 
 //=============================================================================

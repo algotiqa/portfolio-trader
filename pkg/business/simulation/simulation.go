@@ -29,8 +29,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/tradalia/portfolio-trader/pkg/core"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
 
 //=============================================================================

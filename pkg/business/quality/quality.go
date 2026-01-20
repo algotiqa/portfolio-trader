@@ -27,10 +27,10 @@ package quality
 import (
 	"math"
 
-	"github.com/tradalia/core/datatype"
-	"github.com/tradalia/portfolio-trader/pkg/core"
-	"github.com/tradalia/portfolio-trader/pkg/db"
-	"github.com/tradalia/portfolio-trader/pkg/platform"
+	"github.com/algotiqa/core/datatype"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/platform"
 	"golang.org/x/exp/stats"
 )
 
@@ -90,7 +90,7 @@ func GetQualityAnalysis(ts *db.TradingSystem, trades *[]db.Trade, man *platform.
 func buildMarketMap(list []*platform.DailyResult) map[datatype.IntDate]*platform.DailyResult {
 	res := make(map[datatype.IntDate]*platform.DailyResult)
 
-	for _,dr := range list {
+	for _, dr := range list {
 		res[dr.Date] = dr
 	}
 
@@ -100,13 +100,13 @@ func buildMarketMap(list []*platform.DailyResult) map[datatype.IntDate]*platform
 //=============================================================================
 
 func calcQualityCell(res *AnalysisResponse, trades *[]db.Trade, dir int, vol int, risk float64, costPerOperation float64, marketMap map[datatype.IntDate]*platform.DailyResult) {
-	res.QualityAllGross  [dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeAll,   dir, vol, risk, 0, marketMap)
-	res.QualityLongGross [dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeLong,  dir, vol, risk, 0, marketMap)
+	res.QualityAllGross[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeAll, dir, vol, risk, 0, marketMap)
+	res.QualityLongGross[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeLong, dir, vol, risk, 0, marketMap)
 	res.QualityShortGross[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeShort, dir, vol, risk, 0, marketMap)
 
-	res.QualityAllNet    [dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeAll,   dir, vol, risk, costPerOperation, marketMap)
-	res.QualityLongNet   [dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeLong,  dir, vol, risk, costPerOperation, marketMap)
-	res.QualityShortNet  [dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeShort, dir, vol, risk, costPerOperation, marketMap)
+	res.QualityAllNet[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeAll, dir, vol, risk, costPerOperation, marketMap)
+	res.QualityLongNet[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeLong, dir, vol, risk, costPerOperation, marketMap)
+	res.QualityShortNet[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeShort, dir, vol, risk, costPerOperation, marketMap)
 }
 
 //=============================================================================
@@ -123,8 +123,8 @@ func calcQualityMetrics(trades *[]db.Trade, tradeType string, direction int, vol
 
 			if direction == DirectionAll || direction == tradeDir {
 				if volatility == VolatilityAll || volatility == tradeVol {
-					returns := t.GrossProfit - 2 * costPerOper
-					list = append(list, returns / risk)
+					returns := t.GrossProfit - 2*costPerOper
+					list = append(list, returns/risk)
 				}
 			}
 		}
@@ -159,17 +159,17 @@ func mapTrade(trade *db.Trade, marketMap map[datatype.IntDate]*platform.DailyRes
 //=============================================================================
 
 func calcMetrics(list []float64, cell *Metrics) {
-	mean,stdd := stats.MeanAndStdDev(list)
-	listLen   := float64(len(list))
-	capLen    := math.Min(listLen, 100)
+	mean, stdd := stats.MeanAndStdDev(list)
+	listLen := float64(len(list))
+	capLen := math.Min(listLen, 100)
 
 	if stdd > 0.0 {
-		cell.Sqn    = core.Trunc2d(mean / stdd * math.Sqrt(listLen))
+		cell.Sqn = core.Trunc2d(mean / stdd * math.Sqrt(listLen))
 		cell.Sqn100 = core.Trunc2d(mean / stdd * math.Sqrt(capLen))
 	}
 
-	equity  := core.BuildEquity(&list)
-	_,maxDD := core.BuildDrawDown(equity)
+	equity := core.BuildEquity(&list)
+	_, maxDD := core.BuildDrawDown(equity)
 
 	cell.MaxDrawdown = core.Trunc2d(maxDD)
 }

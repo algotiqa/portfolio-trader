@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package genetic
 
-import "github.com/tradalia/portfolio-trader/pkg/business/filter/algorithm/optimization"
+import "github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
 
 //=============================================================================
 
@@ -46,21 +46,21 @@ func New() optimization.Algorithm {
 //=============================================================================
 
 func (ga *geneticAlgorithm) Init(ctx optimization.Context) {
-	ga.ctx    = ctx
+	ga.ctx = ctx
 	ga.config = &ctx.AlgorithmConfig().Genetic
 
 	//--- TODO Validate config and return an error in case of errors
 
 	ga.config = &optimization.GeneticConfig{
 		PopulationSize: 1000,
-		MinSteps      : 1000,
+		MinSteps:       1000,
 	}
 }
 
 //=============================================================================
 
 func (ga *geneticAlgorithm) StepsCount() uint {
-	return	ga.config.MinSteps
+	return ga.config.MinSteps
 }
 
 //=============================================================================

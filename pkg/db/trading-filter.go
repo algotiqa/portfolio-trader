@@ -25,7 +25,7 @@ THE SOFTWARE.
 package db
 
 import (
-	"github.com/tradalia/core/req"
+	"github.com/algotiqa/core/req"
 	"gorm.io/gorm"
 )
 
@@ -44,7 +44,7 @@ func GetTradingFilterByTsId(tx *gorm.DB, tsId uint) (*TradingFilter, error) {
 	}
 
 	if len(list) == 0 {
-		return nil, req.NewServerError("Filter not found for tsId=%v",tsId)
+		return nil, req.NewServerError("Filter not found for tsId=%v", tsId)
 	}
 
 	return &list[0], nil

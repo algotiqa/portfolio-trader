@@ -25,8 +25,8 @@ THE SOFTWARE.
 package business
 
 import (
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -57,9 +57,9 @@ type TradingSystemActiveRequest struct {
 //=============================================================================
 
 const (
-	ResponseStatusOk     = "ok"
-	ResponseStatusSkipped= "skipped"
-	ResponseStatusError  = "error"
+	ResponseStatusOk      = "ok"
+	ResponseStatusSkipped = "skipped"
+	ResponseStatusError   = "error"
 )
 
 //-----------------------------------------------------------------------------
@@ -95,7 +95,7 @@ func SetTradingSystemTrading(tx *gorm.DB, c *auth.Context, tsId uint, req *Tradi
 		//--- Turning off
 		if ts.Running {
 			return &TradingSystemPropertyResponse{
-				Status : ResponseStatusError,
+				Status:  ResponseStatusError,
 				Message: "Trading system must be stopped",
 			}, nil
 		}
@@ -111,7 +111,7 @@ func SetTradingSystemTrading(tx *gorm.DB, c *auth.Context, tsId uint, req *Tradi
 	c.Log.Info("SetTradingSystemTrading: Trading property changed", "id", tsId, "value", req.Value)
 
 	return &TradingSystemPropertyResponse{
-		Status       : ResponseStatusOk,
+		Status:        ResponseStatusOk,
 		TradingSystem: ts,
 	}, err
 }
@@ -131,7 +131,7 @@ func SetTradingSystemRunning(tx *gorm.DB, c *auth.Context, tsId uint, req *Tradi
 
 	if oldValue == newValue {
 		return &TradingSystemPropertyResponse{
-			Status : ResponseStatusSkipped,
+			Status: ResponseStatusSkipped,
 		}, nil
 	}
 
@@ -150,7 +150,7 @@ func SetTradingSystemRunning(tx *gorm.DB, c *auth.Context, tsId uint, req *Tradi
 	c.Log.Info("SetTradingSystemRunning: Running property changed", "id", tsId, "value", req.Value)
 
 	return &TradingSystemPropertyResponse{
-		Status       : ResponseStatusOk,
+		Status:        ResponseStatusOk,
 		TradingSystem: ts,
 	}, err
 }
@@ -170,7 +170,7 @@ func SetTradingSystemActivation(tx *gorm.DB, c *auth.Context, tsId uint, req *Tr
 
 	if oldValue == newValue {
 		return &TradingSystemPropertyResponse{
-			Status : ResponseStatusSkipped,
+			Status: ResponseStatusSkipped,
 		}, nil
 	}
 
@@ -180,7 +180,7 @@ func SetTradingSystemActivation(tx *gorm.DB, c *auth.Context, tsId uint, req *Tr
 	c.Log.Info("SetTradingSystemActivation: Auto-activation property changed", "id", tsId, "value", req.Value)
 
 	return &TradingSystemPropertyResponse{
-		Status       : ResponseStatusOk,
+		Status:        ResponseStatusOk,
 		TradingSystem: ts,
 	}, err
 }
@@ -200,13 +200,13 @@ func SetTradingSystemActive(tx *gorm.DB, c *auth.Context, tsId uint, req *Tradin
 
 	if oldValue == newValue {
 		return &TradingSystemPropertyResponse{
-			Status : ResponseStatusSkipped,
+			Status: ResponseStatusSkipped,
 		}, nil
 	}
 
 	if ts.AutoActivation {
 		return &TradingSystemPropertyResponse{
-			Status : ResponseStatusError,
+			Status:  ResponseStatusError,
 			Message: "Trading system is in AUTOMATIC mode. Switch to MANUAL to change",
 		}, nil
 	}
@@ -223,7 +223,7 @@ func SetTradingSystemActive(tx *gorm.DB, c *auth.Context, tsId uint, req *Tradin
 	c.Log.Info("SetTradingSystemActive: Active property changed", "id", tsId, "value", req.Value)
 
 	return &TradingSystemPropertyResponse{
-		Status       : ResponseStatusOk,
+		Status:        ResponseStatusOk,
 		TradingSystem: ts,
 	}, err
 }
@@ -237,7 +237,7 @@ func SetTradingSystemActive(tx *gorm.DB, c *auth.Context, tsId uint, req *Tradin
 func updateStatus(ts *db.TradingSystem) {
 	ts.SuggestedAction = db.TsActionNone
 
-	if ! ts.Running {
+	if !ts.Running {
 		ts.Status = db.TsStatusOff
 	} else if ts.Active {
 		ts.Status = db.TsStatusRunning

@@ -27,12 +27,12 @@ package business
 import (
 	"time"
 
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/core/datatype"
-	"github.com/tradalia/core/req"
-	"github.com/tradalia/portfolio-trader/pkg/business/performance"
-	"github.com/tradalia/portfolio-trader/pkg/core"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/datatype"
+	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/portfolio-trader/pkg/business/performance"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -63,13 +63,13 @@ func RunPerformanceAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, req *perfor
 
 	trades, err := db.FindTradesByTsIdFromTime(tx, ts.Id, fromTime, toTime)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	shiftTradesTimezone(trades, loc)
 
-	returns,err := db.FindDailyReturnsByTsIdFromTime(tx, ts.Id, fromTime, toTime)
+	returns, err := db.FindDailyReturnsByTsIdFromTime(tx, ts.Id, fromTime, toTime)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
 	res := performance.GetPerformanceAnalysis(ts, trades, returns)
@@ -90,7 +90,7 @@ func calcPerformancePeriod(daysBack int, fromDate, toDate datatype.IntDate, loc 
 
 	if daysBack > 0 {
 		fromTime := time.Now().UTC()
-		back     := time.Hour * time.Duration(24 * daysBack)
+		back := time.Hour * time.Duration(24*daysBack)
 		fromTime = fromTime.Add(-back)
 
 		return &fromTime, nil, nil
@@ -100,7 +100,7 @@ func calcPerformancePeriod(daysBack int, fromDate, toDate datatype.IntDate, loc 
 
 	if daysBack == -1 {
 		var from *time.Time
-		var to   *time.Time
+		var to *time.Time
 
 		if !fromDate.IsNil() {
 			if !fromDate.IsValid() {
@@ -129,12 +129,12 @@ func calcPerformancePeriod(daysBack int, fromDate, toDate datatype.IntDate, loc 
 //=============================================================================
 
 func shiftTradesTimezone(trades *[]db.Trade, loc *time.Location) {
-	for i:=0; i<len(*trades); i++ {
+	for i := 0; i < len(*trades); i++ {
 		tr := &(*trades)[i]
-		tr.EntryDate         = shiftLocation(tr.EntryDate,         loc)
-		tr.ExitDate          = shiftLocation(tr.ExitDate,          loc)
+		tr.EntryDate = shiftLocation(tr.EntryDate, loc)
+		tr.ExitDate = shiftLocation(tr.ExitDate, loc)
 		tr.EntryDateAtBroker = shiftLocation(tr.EntryDateAtBroker, loc)
-		tr.ExitDateAtBroker  = shiftLocation(tr.ExitDateAtBroker,  loc)
+		tr.ExitDateAtBroker = shiftLocation(tr.ExitDateAtBroker, loc)
 	}
 }
 

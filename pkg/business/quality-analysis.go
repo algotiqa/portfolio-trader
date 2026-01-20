@@ -25,10 +25,10 @@ THE SOFTWARE.
 package business
 
 import (
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/portfolio-trader/pkg/business/quality"
-	"github.com/tradalia/portfolio-trader/pkg/db"
-	"github.com/tradalia/portfolio-trader/pkg/platform"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/portfolio-trader/pkg/business/quality"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/platform"
 	"gorm.io/gorm"
 )
 
@@ -47,12 +47,12 @@ func RunQualityAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, req *quality.An
 
 	trades, err := db.FindTradesByTsIdFromTime(tx, ts.Id, fromTime, nil)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
-	man,err := platform.AnalyzeDataProduct(c, ts.DataProductId,0)
+	man, err := platform.AnalyzeDataProduct(c, ts.DataProductId, 0)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
 	return quality.GetQualityAnalysis(ts, trades, man)

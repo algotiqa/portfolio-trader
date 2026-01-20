@@ -26,9 +26,9 @@ package filter
 
 import (
 	"errors"
-	"github.com/tradalia/portfolio-trader/pkg/business/filter/algorithm"
-	"github.com/tradalia/portfolio-trader/pkg/business/filter/algorithm/optimization"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"time"
 )
 
@@ -38,10 +38,10 @@ import (
 //===
 //=============================================================================
 
-const FieldToOptimizeNetProfit              = "netProfit"
-const FieldToOptimizeAvgTrade               = "avgTrade"
-const FieldToOptimizeDrawDown               = "maxDD"
-const FieldToOptimizeNetProfitAvgTrade      = "netProfit*avgTrade"
+const FieldToOptimizeNetProfit = "netProfit"
+const FieldToOptimizeAvgTrade = "avgTrade"
+const FieldToOptimizeDrawDown = "maxDD"
+const FieldToOptimizeNetProfitAvgTrade = "netProfit*avgTrade"
 const FieldToOptimizeNetProfitAvgTradeMaxDD = "netProfit*avgTrade/maxDD"
 
 //=============================================================================
@@ -64,18 +64,18 @@ type OptimizationRequest struct {
 //=============================================================================
 
 func (r *OptimizationRequest) Validate() error {
-	if  r.FieldToOptimize != FieldToOptimizeNetProfit         &&
-		r.FieldToOptimize != FieldToOptimizeAvgTrade          &&
-		r.FieldToOptimize != FieldToOptimizeDrawDown          &&
+	if r.FieldToOptimize != FieldToOptimizeNetProfit &&
+		r.FieldToOptimize != FieldToOptimizeAvgTrade &&
+		r.FieldToOptimize != FieldToOptimizeDrawDown &&
 		r.FieldToOptimize != FieldToOptimizeNetProfitAvgTrade &&
 		r.FieldToOptimize != FieldToOptimizeNetProfitAvgTradeMaxDD {
-		return errors.New("Invalid field to optimize: "+ r.FieldToOptimize)
+		return errors.New("Invalid field to optimize: " + r.FieldToOptimize)
 	}
 
 	algoType := r.Algorithm.Type
 
-	if  algoType != algorithm.Simple && algoType != algorithm.Genetic {
-		return errors.New("Invalid optimization algorithm: "+ algoType)
+	if algoType != algorithm.Simple && algoType != algorithm.Genetic {
+		return errors.New("Invalid optimization algorithm: " + algoType)
 	}
 
 	if err := r.FilterConfig.Validate(); err != nil {

@@ -25,9 +25,9 @@ THE SOFTWARE.
 package business
 
 import (
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/core/req"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 	"log/slog"
 )
@@ -35,7 +35,7 @@ import (
 //=============================================================================
 
 func GetPortfolios(tx *gorm.DB, c *auth.Context, filter map[string]any, offset int, limit int) (*[]db.Portfolio, error) {
-	if ! c.Session.IsAdmin() {
+	if !c.Session.IsAdmin() {
 		filter["username"] = c.Session.Username
 	}
 

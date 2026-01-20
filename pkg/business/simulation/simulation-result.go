@@ -27,30 +27,30 @@ package simulation
 import (
 	"time"
 
-	"github.com/tradalia/core/datatype"
+	"github.com/algotiqa/core/datatype"
 )
 
 //=============================================================================
 
 type Result struct {
-	FirstTradeDate datatype.IntDate  `json:"firstTradeDate"`
-	LastTradeDate  datatype.IntDate  `json:"lastTradeDate"`
-	Runs           int               `json:"runs"`
-	InitialCapital float64           `json:"initialCapital"`
-	RuinPercentage int               `json:"ruinPercentage"`
-	Risk           float64           `json:"risk"`
+	FirstTradeDate datatype.IntDate `json:"firstTradeDate"`
+	LastTradeDate  datatype.IntDate `json:"lastTradeDate"`
+	Runs           int              `json:"runs"`
+	InitialCapital float64          `json:"initialCapital"`
+	RuinPercentage int              `json:"ruinPercentage"`
+	Risk           float64          `json:"risk"`
 
-	Status         string            `json:"status"`
-	StartTime      time.Time         `json:"startTime"`
-	EndTime        time.Time         `json:"endTime"`
-	Step           int               `json:"step"`
+	Status    string    `json:"status"`
+	StartTime time.Time `json:"startTime"`
+	EndTime   time.Time `json:"endTime"`
+	Step      int       `json:"step"`
 
-	GrossAll       *Details          `json:"grossAll"`
-	GrossLong      *Details          `json:"grossLong"`
-	GrossShort     *Details          `json:"grossShort"`
-	NetAll         *Details          `json:"netAll"`
-	NetLong        *Details          `json:"netLong"`
-	NetShort       *Details          `json:"netShort"`
+	GrossAll   *Details `json:"grossAll"`
+	GrossLong  *Details `json:"grossLong"`
+	GrossShort *Details `json:"grossShort"`
+	NetAll     *Details `json:"netAll"`
+	NetLong    *Details `json:"netLong"`
+	NetShort   *Details `json:"netShort"`
 }
 
 //=============================================================================
@@ -58,11 +58,11 @@ type Result struct {
 func NewResult(first, last datatype.IntDate, runs int, initialCapital float64, ruinPerc int, risk float64) *Result {
 	return &Result{
 		FirstTradeDate: first,
-		LastTradeDate : last,
-		Runs          : runs,
+		LastTradeDate:  last,
+		Runs:           runs,
 		InitialCapital: initialCapital,
 		RuinPercentage: ruinPerc,
-		Risk          : risk,
+		Risk:           risk,
 	}
 }
 

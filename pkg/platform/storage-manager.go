@@ -28,8 +28,8 @@ import (
 	"log/slog"
 	"strconv"
 
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/core/req"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/req"
 )
 
 //=============================================================================
@@ -38,6 +38,7 @@ type EquityRequest struct {
 	Username string            `json:"username"`
 	Images   map[string][]byte `json:"images"`
 }
+
 //-----------------------------------------------------------------------------
 
 func NewEquityRequest() *EquityRequest {
@@ -55,13 +56,13 @@ func NewEquityRequest() *EquityRequest {
 func SetEquityChart(id uint, er *EquityRequest) error {
 	slog.Info("SetEquityChart: Sending equity chart to storage manager", "id", id, "username", er.Username)
 
-	token,err := auth.Token()
+	token, err := auth.Token()
 	if err != nil {
 		return err
 	}
 
-	client :=req.GetClient("bf")
-	url    := platform.Storage +"/v1/trading-systems/"+ strconv.Itoa(int(id)) +"/equity-chart"
+	client := req.GetClient("bf")
+	url := platform.Storage + "/v1/trading-systems/" + strconv.Itoa(int(id)) + "/equity-chart"
 
 	err = req.DoPut(client, url, &er, "", token)
 	if err != nil {
@@ -78,14 +79,14 @@ func SetEquityChart(id uint, er *EquityRequest) error {
 func DeleteEquityChart(username string, id uint) error {
 	slog.Info("DeleteEquityChart: Deleting equity chart from the storage manager", "id", id, "username", username)
 
-	token,err := auth.Token()
+	token, err := auth.Token()
 	if err != nil {
 		return err
 	}
 
-	client :=req.GetClient("bf")
-	url    := platform.Storage +"/v1/trading-systems/"+ strconv.Itoa(int(id)) +"/equity-chart"
-	er     := EquityRequest{
+	client := req.GetClient("bf")
+	url := platform.Storage + "/v1/trading-systems/" + strconv.Itoa(int(id)) + "/equity-chart"
+	er := EquityRequest{
 		Username: username,
 	}
 

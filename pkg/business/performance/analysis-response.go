@@ -27,10 +27,10 @@ package performance
 import (
 	"time"
 
-	"github.com/tradalia/core/datatype"
-	"github.com/tradalia/portfolio-trader/pkg/core"
-	"github.com/tradalia/portfolio-trader/pkg/core/stats"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/core/datatype"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
+	"github.com/algotiqa/portfolio-trader/pkg/core/stats"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
 
 //=============================================================================
@@ -64,8 +64,8 @@ type Equities struct {
 //=============================================================================
 
 type General struct {
-	FromDate datatype.IntDate  `json:"fromDate"`
-	ToDate   datatype.IntDate  `json:"toDate"`
+	FromDate datatype.IntDate `json:"fromDate"`
+	ToDate   datatype.IntDate `json:"toDate"`
 }
 
 //=============================================================================
@@ -89,16 +89,16 @@ type AnnualAggregate struct {
 
 //-----------------------------------------------------------------------------
 
-func NewAggregate(tr *db.Trade, cost float64) *AnnualAggregate{
+func NewAggregate(tr *db.Trade, cost float64) *AnnualAggregate {
 	a := &AnnualAggregate{
-		Year         : tr.ExitDate.Year(),
-		GrossProfit  : tr.GrossProfit,
+		Year:          tr.ExitDate.Year(),
+		GrossProfit:   tr.GrossProfit,
 		GrossAvgTrade: 0,
-		GrossWinPerc : 0,
-		NetProfit    : tr.GrossProfit - 2 * cost,
-		NetAvgTrade  : 0,
-		NetWinPerc   : 0,
-		Trades       : 1,
+		GrossWinPerc:  0,
+		NetProfit:     tr.GrossProfit - 2*cost,
+		NetAvgTrade:   0,
+		NetWinPerc:    0,
+		Trades:        1,
 	}
 
 	if a.GrossProfit > 0 {
@@ -115,10 +115,10 @@ func NewAggregate(tr *db.Trade, cost float64) *AnnualAggregate{
 //-----------------------------------------------------------------------------
 
 func (a *AnnualAggregate) addTrade(tr *db.Trade, cost float64) {
-	netProfit := tr.GrossProfit - 2 * cost
+	netProfit := tr.GrossProfit - 2*cost
 
 	a.GrossProfit += tr.GrossProfit
-	a.NetProfit   += netProfit
+	a.NetProfit += netProfit
 	a.Trades++
 
 	if tr.GrossProfit > 0 {
@@ -133,10 +133,10 @@ func (a *AnnualAggregate) addTrade(tr *db.Trade, cost float64) {
 //-----------------------------------------------------------------------------
 
 func (a *AnnualAggregate) consolidate() {
-	a.GrossAvgTrade = core.Trunc2d(a.GrossProfit  / float64(a.Trades))
-	a.GrossWinPerc  = core.Trunc2d(a.GrossWinPerc / float64(a.Trades) * 100)
-	a.NetAvgTrade   = core.Trunc2d(a.NetProfit    / float64(a.Trades))
-	a.NetWinPerc    = core.Trunc2d(a.NetWinPerc   / float64(a.Trades) * 100)
+	a.GrossAvgTrade = core.Trunc2d(a.GrossProfit / float64(a.Trades))
+	a.GrossWinPerc = core.Trunc2d(a.GrossWinPerc / float64(a.Trades) * 100)
+	a.NetAvgTrade = core.Trunc2d(a.NetProfit / float64(a.Trades))
+	a.NetWinPerc = core.Trunc2d(a.NetWinPerc / float64(a.Trades) * 100)
 }
 
 //=============================================================================
@@ -151,14 +151,14 @@ type TradeDistribution struct {
 //=============================================================================
 
 type Distribution struct {
-	Mean           float64           `json:"mean"`
-	Median         float64           `json:"median"`
-	StandardDev    float64           `json:"standardDev"`
-	SharpeRatio    float64           `json:"sharpeRatio"`
-	LowerTail      float64           `json:"lowerTail"`
-	UpperTail      float64           `json:"upperTail"`
-	Skewness       float64           `json:"skewness"`
-	Histogram      *stats.Histogram  `json:"histogram"`
+	Mean        float64          `json:"mean"`
+	Median      float64          `json:"median"`
+	StandardDev float64          `json:"standardDev"`
+	SharpeRatio float64          `json:"sharpeRatio"`
+	LowerTail   float64          `json:"lowerTail"`
+	UpperTail   float64          `json:"upperTail"`
+	Skewness    float64          `json:"skewness"`
+	Histogram   *stats.Histogram `json:"histogram"`
 }
 
 //=============================================================================
@@ -193,7 +193,7 @@ type YoYRolling struct {
 //=============================================================================
 
 type Rolling struct {
-	Daily    [ 7]RollingInfo `json:"daily"`
+	Daily    [7]RollingInfo  `json:"daily"`
 	Monthly  [12]RollingInfo `json:"monthly"`
 	DayYoY   []*YoYRolling   `json:"dayYoY"`
 	MonthYoY []*YoYRolling   `json:"monthYoY"`
@@ -202,17 +202,17 @@ type Rolling struct {
 //=============================================================================
 
 type AnalysisResponse struct {
-	General         General           `json:"general"`
-	TradingSystem   *db.TradingSystem `json:"tradingSystem"`
-	Gross           Performance       `json:"gross"`
-	Net             Performance       `json:"net"`
-	AllEquities     *Equities         `json:"allEquities"`
-	LongEquities    *Equities         `json:"longEquities"`
-	ShortEquities   *Equities         `json:"shortEquities"`
-	Trades          *[]db.Trade       `json:"trades"`
-	Aggregates      Aggregates        `json:"aggregates"`
-	Distributions   Distributions     `json:"distributions"`
-	Rolling         Rolling           `json:"rolling"`
+	General       General           `json:"general"`
+	TradingSystem *db.TradingSystem `json:"tradingSystem"`
+	Gross         Performance       `json:"gross"`
+	Net           Performance       `json:"net"`
+	AllEquities   *Equities         `json:"allEquities"`
+	LongEquities  *Equities         `json:"longEquities"`
+	ShortEquities *Equities         `json:"shortEquities"`
+	Trades        *[]db.Trade       `json:"trades"`
+	Aggregates    Aggregates        `json:"aggregates"`
+	Distributions Distributions     `json:"distributions"`
+	Rolling       Rolling           `json:"rolling"`
 }
 
 //=============================================================================

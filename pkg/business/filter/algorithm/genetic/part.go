@@ -25,8 +25,8 @@ THE SOFTWARE.
 package genetic
 
 import (
-	"github.com/tradalia/portfolio-trader/pkg/business/filter/algorithm/optimization"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
 
 //=============================================================================
@@ -54,8 +54,8 @@ type PosProfitPart struct {
 func NewPosProfitPart(fc *optimization.FilterConfig) Part {
 	p := &PosProfitPart{
 		lenEnabled: fc.PosProLen.Enabled,
-		len       : fc.PosProLen.CurValue,
-		lenFo     : &fc.PosProLen,
+		len:        fc.PosProLen.CurValue,
+		lenFo:      &fc.PosProLen,
 	}
 
 	if p.lenEnabled {
@@ -95,8 +95,8 @@ type EquityVsAvgPart struct {
 func NewEquityVsAvgPart(fc *optimization.FilterConfig) Part {
 	p := &EquityVsAvgPart{
 		lenEnabled: fc.EquAvgLen.Enabled,
-		len       : fc.EquAvgLen.CurValue,
-		lenFo     : &fc.EquAvgLen,
+		len:        fc.EquAvgLen.CurValue,
+		lenFo:      &fc.EquAvgLen,
 	}
 
 	if p.lenEnabled {
@@ -138,13 +138,13 @@ type WinningPercPart struct {
 
 func NewWinningPercPart(fc *optimization.FilterConfig) Part {
 	p := &WinningPercPart{
-		lenEnabled : fc.WinPercLen.Enabled,
-		len        : fc.WinPercLen.CurValue,
-		lenFo      : &fc.WinPercLen,
+		lenEnabled: fc.WinPercLen.Enabled,
+		len:        fc.WinPercLen.CurValue,
+		lenFo:      &fc.WinPercLen,
 
 		percEnabled: fc.WinPercPerc.Enabled,
-		perc       : fc.WinPercPerc.CurValue,
-		percFo     : &fc.WinPercPerc,
+		perc:        fc.WinPercPerc.CurValue,
+		percFo:      &fc.WinPercPerc,
 	}
 
 	if p.lenEnabled {
@@ -177,11 +177,11 @@ func (p *WinningPercPart) Apply(f *db.TradingFilter) {
 //=============================================================================
 
 type OldVsNewPart struct {
-	oldLenEnabled  bool
-	oldLen         int
+	oldLenEnabled bool
+	oldLen        int
 
-	newLenEnabled  bool
-	newLen         int
+	newLenEnabled bool
+	newLen        int
 
 	oldPercEnabled bool
 	oldPerc        int
@@ -195,17 +195,17 @@ type OldVsNewPart struct {
 
 func NewOldVsNewPart(fc *optimization.FilterConfig) Part {
 	p := &OldVsNewPart{
-		oldLenEnabled : fc.OldNewOldLen.Enabled,
-		oldLen        : fc.OldNewOldLen.CurValue,
-		oldLenFo      : &fc.OldNewOldLen,
+		oldLenEnabled: fc.OldNewOldLen.Enabled,
+		oldLen:        fc.OldNewOldLen.CurValue,
+		oldLenFo:      &fc.OldNewOldLen,
 
-		newLenEnabled : fc.OldNewNewLen.Enabled,
-		newLen        : fc.OldNewNewLen.CurValue,
-		newLenFo      : &fc.OldNewNewLen,
+		newLenEnabled: fc.OldNewNewLen.Enabled,
+		newLen:        fc.OldNewNewLen.CurValue,
+		newLenFo:      &fc.OldNewNewLen,
 
 		oldPercEnabled: fc.OldNewOldPerc.Enabled,
-		oldPerc       : fc.OldNewOldPerc.CurValue,
-		oldPercFo     : &fc.OldNewOldPerc,
+		oldPerc:        fc.OldNewOldPerc.CurValue,
+		oldPercFo:      &fc.OldNewOldPerc,
 	}
 
 	if p.oldLenEnabled {
@@ -235,7 +235,6 @@ func (p *OldVsNewPart) Apply(f *db.TradingFilter) {
 
 }
 
-
 //=============================================================================
 //===
 //=== TrendlinePart
@@ -256,13 +255,13 @@ type TrendlinePart struct {
 
 func NewTrendlinePart(fc *optimization.FilterConfig) Part {
 	p := &TrendlinePart{
-		lenEnabled  : fc.TrendlineLen.Enabled,
-		len         : fc.TrendlineLen.CurValue,
-		lenFo       : &fc.TrendlineLen,
+		lenEnabled: fc.TrendlineLen.Enabled,
+		len:        fc.TrendlineLen.CurValue,
+		lenFo:      &fc.TrendlineLen,
 
 		valueEnabled: fc.TrendlineValue.Enabled,
-		value       : fc.TrendlineValue.CurValue,
-		valueFo     : &fc.TrendlineValue,
+		value:        fc.TrendlineValue.CurValue,
+		valueFo:      &fc.TrendlineValue,
 	}
 
 	if p.lenEnabled {

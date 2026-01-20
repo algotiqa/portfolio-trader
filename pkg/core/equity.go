@@ -27,14 +27,14 @@ package core
 import (
 	"time"
 
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
 
 //=============================================================================
 
-func BuildGrossProfits(trades *[]db.Trade, tradeType string) (*[]time.Time, *[]float64){
+func BuildGrossProfits(trades *[]db.Trade, tradeType string) (*[]time.Time, *[]float64) {
 	timeSlice := []time.Time{}
-	equSlice  := []float64{}
+	equSlice := []float64{}
 
 	for _, tr := range *trades {
 		if tradeType == db.TradeTypeAll || tr.TradeType == tradeType {
@@ -42,7 +42,7 @@ func BuildGrossProfits(trades *[]db.Trade, tradeType string) (*[]time.Time, *[]f
 			gross := tr.GrossProfit
 
 			timeSlice = append(timeSlice, *etime)
-			equSlice  = append(equSlice ,  gross)
+			equSlice = append(equSlice, gross)
 		}
 	}
 
@@ -55,7 +55,7 @@ func BuildNetProfits(grossProfits *[]float64, costPerOper float64) *[]float64 {
 	netSlice := []float64{}
 
 	for _, gross := range *grossProfits {
-		net := gross - 2 * costPerOper
+		net := gross - 2*costPerOper
 		netSlice = append(netSlice, net)
 	}
 
@@ -66,7 +66,7 @@ func BuildNetProfits(grossProfits *[]float64, costPerOper float64) *[]float64 {
 
 func BuildEquity(profits *[]float64) *[]float64 {
 	equity := []float64{}
-	value  := 0.0
+	value := 0.0
 
 	for _, profit := range *profits {
 		value += profit
@@ -80,10 +80,10 @@ func BuildEquity(profits *[]float64) *[]float64 {
 //=============================================================================
 
 func BuildDrawDown(equity *[]float64) (*[]float64, float64) {
-	maxProfit    := 0.0
+	maxProfit := 0.0
 	currDrawDown := 0.0
-	maxDrawDown  := 0.0
-	drawDown     := []float64{}
+	maxDrawDown := 0.0
+	drawDown := []float64{}
 
 	for _, currProfit := range *equity {
 		if currProfit >= maxProfit {
@@ -124,7 +124,7 @@ func CalcWinningPercentage(profits []float64, filter []int8) float64 {
 		return 0
 	}
 
-	return float64(pos * 10000 / tot) / 100
+	return float64(pos*10000/tot) / 100
 }
 
 //=============================================================================
@@ -142,7 +142,7 @@ func CalcAverageTrade(profits []float64, filter []int8) float64 {
 		}
 	}
 
-	return float64(int(sum * 100 / num)) / 100
+	return float64(int(sum*100/num)) / 100
 }
 
 //=============================================================================

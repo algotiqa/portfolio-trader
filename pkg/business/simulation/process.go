@@ -32,10 +32,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/algotiqa/core/datatype"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"github.com/go-analyze/charts"
-	"github.com/tradalia/core/datatype"
-	"github.com/tradalia/portfolio-trader/pkg/core"
-	"github.com/tradalia/portfolio-trader/pkg/db"
 	"golang.org/x/exp/stats"
 )
 
@@ -56,19 +56,19 @@ type Process struct {
 
 //=============================================================================
 
-const SimStatusIdle     = "idle"
-const SimStatusWaiting  = "waiting"
-const SimStatusRunning  = "running"
+const SimStatusIdle = "idle"
+const SimStatusWaiting = "waiting"
+const SimStatusRunning = "running"
 const SimStatusComplete = "complete"
 
 //=============================================================================
 
 func NewProcess(ts *db.TradingSystem, trades *[]db.Trade, req *Request, risk float64) *Process {
 	return &Process{
-		ts    : ts,
+		ts:     ts,
 		trades: trades,
-		req   : req,
-		risk  : risk,
+		req:    req,
+		risk:   risk,
 		result: &Result{
 			Status: SimStatusWaiting,
 		},
@@ -78,18 +78,18 @@ func NewProcess(ts *db.TradingSystem, trades *[]db.Trade, req *Request, risk flo
 //=============================================================================
 
 func (p *Process) Start() {
-	slog.Info("SimulationProcess: Starting","id", p.ts.Id)
+	slog.Info("SimulationProcess: Starting", "id", p.ts.Id)
 
 	p.result = NewResult(p.GetFirstTradeDate(), p.GetLastTradeDate(), p.req.Runs, p.req.InitialCapital, p.req.RuinPercentage, p.risk)
-	p.result.Status    = SimStatusRunning
+	p.result.Status = SimStatusRunning
 	p.result.StartTime = time.Now()
 
-	rMultGrossAll   := core.CalcRMultiple(p.trades, db.TradeTypeAll,   p.risk, 0)
-	rMultGrossLong  := core.CalcRMultiple(p.trades, db.TradeTypeLong,  p.risk, 0)
+	rMultGrossAll := core.CalcRMultiple(p.trades, db.TradeTypeAll, p.risk, 0)
+	rMultGrossLong := core.CalcRMultiple(p.trades, db.TradeTypeLong, p.risk, 0)
 	rMultGrossShort := core.CalcRMultiple(p.trades, db.TradeTypeShort, p.risk, 0)
-	rMultNetAll     := core.CalcRMultiple(p.trades, db.TradeTypeAll,   p.risk, p.ts.CostPerOperation)
-	rMultNetLong    := core.CalcRMultiple(p.trades, db.TradeTypeLong,  p.risk, p.ts.CostPerOperation)
-	rMultNetShort   := core.CalcRMultiple(p.trades, db.TradeTypeShort, p.risk, p.ts.CostPerOperation)
+	rMultNetAll := core.CalcRMultiple(p.trades, db.TradeTypeAll, p.risk, p.ts.CostPerOperation)
+	rMultNetLong := core.CalcRMultiple(p.trades, db.TradeTypeLong, p.risk, p.ts.CostPerOperation)
+	rMultNetShort := core.CalcRMultiple(p.trades, db.TradeTypeShort, p.risk, p.ts.CostPerOperation)
 
 	p.result.GrossAll = run(rMultGrossAll, p.req)
 	p.result.Step++
@@ -114,7 +114,7 @@ func (p *Process) Start() {
 		}
 	}
 
-	p.result.Status  = SimStatusComplete
+	p.result.Status = SimStatusComplete
 	p.result.EndTime = time.Now()
 	slog.Info("SimulationProcess: Ended", "id", p.ts.Id)
 }
@@ -142,7 +142,7 @@ func (p *Process) GetFirstTradeDate() datatype.IntDate {
 
 func (p *Process) GetLastTradeDate() datatype.IntDate {
 	t := *p.trades
-	return datatype.ToIntDate(t[len(*p.trades) -1].ExitDate)
+	return datatype.ToIntDate(t[len(*p.trades)-1].ExitDate)
 }
 
 //=============================================================================
@@ -171,7 +171,7 @@ func run(list []float64, req *Request) *Details {
 	}
 
 	return &Details{
-		Equities    : base64.StdEncoding.EncodeToString(buf),
+		Equities:     base64.StdEncoding.EncodeToString(buf),
 		MaxDrawdowns: buildDDDistrib(maxDrawdowns),
 	}
 }
@@ -181,13 +181,13 @@ func run(list []float64, req *Request) *Details {
 func buildSampleSet(list []float64, runs int) ([][]float64, []float64) {
 	size := len(list)
 
-	var sampleSet    [][]float64
+	var sampleSet [][]float64
 	var maxDrawdowns []float64
 
-	for i:=0; i<runs; i++ {
+	for i := 0; i < runs; i++ {
 		var sample = make([]float64, size)
 
-		for j:=0; j<size; j++ {
+		for j := 0; j < size; j++ {
 			value := list[rand.Intn(size)]
 			sample[j] = value
 		}
@@ -206,7 +206,7 @@ func buildSampleSet(list []float64, runs int) ([][]float64, []float64) {
 
 func addMeanAndStdDev(sampleSet [][]float64, size int) [][]float64 {
 	mean, stdDev := buildMeanAndStdDev(sampleSet, size)
-	up,down := buildUpAndLowStdDev(mean, stdDev)
+	up, down := buildUpAndLowStdDev(mean, stdDev)
 
 	sampleSet = append(sampleSet, make([]float64, size))
 	sampleSet = append(sampleSet, mean)
@@ -219,19 +219,19 @@ func addMeanAndStdDev(sampleSet [][]float64, size int) [][]float64 {
 //=============================================================================
 
 func buildMeanAndStdDev(sampleSet [][]float64, size int) ([]float64, []float64) {
-	var mean   []float64
+	var mean []float64
 	var stdDev []float64
 
-	for i:=0; i<size; i++ {
+	for i := 0; i < size; i++ {
 		var serie []float64
 
-		for j:=0; j<len(sampleSet); j++ {
+		for j := 0; j < len(sampleSet); j++ {
 			serie = append(serie, sampleSet[j][i])
 		}
 
 		m, s := stats.MeanAndStdDev(serie)
 
-		mean   = append(mean,   m)
+		mean = append(mean, m)
 		stdDev = append(stdDev, s)
 	}
 
@@ -241,12 +241,12 @@ func buildMeanAndStdDev(sampleSet [][]float64, size int) ([]float64, []float64) 
 //=============================================================================
 
 func buildUpAndLowStdDev(mean, stdDev []float64) ([]float64, []float64) {
-	var upStdDev   []float64
+	var upStdDev []float64
 	var downStdDev []float64
 
 	for i, v := range mean {
-		upStdDev   = append(upStdDev,   v + stdDev[i])
-		downStdDev = append(downStdDev, v - stdDev[i])
+		upStdDev = append(upStdDev, v+stdDev[i])
+		downStdDev = append(downStdDev, v-stdDev[i])
 	}
 
 	return upStdDev, downStdDev
@@ -256,17 +256,17 @@ func buildUpAndLowStdDev(mean, stdDev []float64) ([]float64, []float64) {
 
 func buildDDDistrib(data []float64) *Distribution {
 	minv := core.CalcMin(data)
-	size := int(math.Trunc(math.Abs(minv))) +1
+	size := int(math.Trunc(math.Abs(minv))) + 1
 
 	var xAxis []string
-	for i := 1; i <=size; i++ {
-		xAxis = append(xAxis, strconv.Itoa(-size + i) +"R")
+	for i := 1; i <= size; i++ {
+		xAxis = append(xAxis, strconv.Itoa(-size+i)+"R")
 	}
 
 	yAxis := make([]float64, size)
 
 	for _, value := range data {
-		index := size + int(math.Trunc(value)) -1
+		index := size + int(math.Trunc(value)) - 1
 		yAxis[index]++
 	}
 
@@ -284,7 +284,7 @@ func buildChart(sampleSet [][]float64, width, height int) (*charts.Painter, erro
 	xAxis := calcXAxis(len(sampleSet[0]))
 
 	opt := charts.NewLineChartOptionWithData(sampleSet)
-	opt.XAxis.Title  = "Trades"
+	opt.XAxis.Title = "Trades"
 	opt.XAxis.Labels = xAxis
 	opt.XAxis.LabelFontStyle.FontSize = 8
 	opt.YAxis[0].Title = "Cumulative R multiples"
@@ -294,8 +294,8 @@ func buildChart(sampleSet [][]float64, width, height int) (*charts.Painter, erro
 
 	p := charts.NewPainter(charts.PainterOptions{
 		OutputFormat: charts.ChartOutputPNG,
-		Width       : width,
-		Height      : height,
+		Width:        width,
+		Height:       height,
 	})
 	err := p.LineChart(opt)
 
@@ -307,7 +307,7 @@ func buildChart(sampleSet [][]float64, width, height int) (*charts.Painter, erro
 func calcXAxis(size int) []string {
 	var axis = make([]string, size)
 
-	for i:=1; i<=size; i++ {
+	for i := 1; i <= size; i++ {
 		axis[i-1] = strconv.Itoa(i)
 	}
 
@@ -319,14 +319,14 @@ func calcXAxis(size int) []string {
 func buildColors(size int) []charts.Color {
 	var list []charts.Color
 
-	for i:=0; i<size-4; i++ {
-		list = append(list, charts.Color{ 192, 192, 192, 96 })
+	for i := 0; i < size-4; i++ {
+		list = append(list, charts.Color{192, 192, 192, 96})
 	}
 
-	list = append(list, charts.Color{ 128, 128, 128, 255 })
-	list = append(list, charts.Color{  16,  16,  16, 255 })
-	list = append(list, charts.Color{  80,  80,  80, 255 })
-	list = append(list, charts.Color{  80,  80,  80, 255 })
+	list = append(list, charts.Color{128, 128, 128, 255})
+	list = append(list, charts.Color{16, 16, 16, 255})
+	list = append(list, charts.Color{80, 80, 80, 255})
+	list = append(list, charts.Color{80, 80, 80, 255})
 
 	return list
 }

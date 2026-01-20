@@ -27,7 +27,7 @@ package db
 import (
 	"time"
 
-	"github.com/tradalia/core/req"
+	"github.com/algotiqa/core/req"
 	"gorm.io/gorm"
 )
 
@@ -57,7 +57,7 @@ func FindTradesByTradingSystemId(tx *gorm.DB, tsId uint) (*[]Trade, error) {
 // Ordering by exit_date, the second record could come first
 
 func FindTradesByTsIdFromTime(tx *gorm.DB, tsId uint, fromTime *time.Time, toTime *time.Time) (*[]Trade, error) {
-	to   := time.Now().UTC()
+	to := time.Now().UTC()
 	from := to.Add(-50 * 365 * 24 * time.Hour)
 
 	if fromTime != nil {
@@ -72,7 +72,7 @@ func FindTradesByTsIdFromTime(tx *gorm.DB, tsId uint, fromTime *time.Time, toTim
 
 	//--- WHERE condition must be exit_date otherwise we loose trades started in the past and ended after fromTime
 	query := "trading_system_id = ? and exit_date >= ? and exit_date<= ?"
-	res   := tx.Order("exit_date,entry_date").Find(&list, query, tsId, from, to)
+	res := tx.Order("exit_date,entry_date").Find(&list, query, tsId, from, to)
 
 	if res.Error != nil {
 		return nil, req.NewServerErrorByError(res.Error)

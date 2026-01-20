@@ -25,7 +25,7 @@ THE SOFTWARE.
 package filter
 
 import (
-	"github.com/tradalia/portfolio-trader/pkg/core"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"math"
 )
 
@@ -43,8 +43,12 @@ func runComparator(a any, b any) int {
 	v1 := r1.FitnessValue
 	v2 := r2.FitnessValue
 
-	if v1 < v2 { return +1 }
-	if v1 > v2 { return -1 }
+	if v1 < v2 {
+		return +1
+	}
+	if v1 > v2 {
+		return -1
+	}
 
 	if r1.random == r2.random {
 		return 0
@@ -69,23 +73,23 @@ type FitnessFunction func(r *Run) float64
 
 func GetFitnessFunction(field string) FitnessFunction {
 	switch field {
-		case FieldToOptimizeNetProfit:
-			return ffNetProfit
+	case FieldToOptimizeNetProfit:
+		return ffNetProfit
 
-		case FieldToOptimizeAvgTrade:
-			return ffAvgTrade
+	case FieldToOptimizeAvgTrade:
+		return ffAvgTrade
 
-		case FieldToOptimizeDrawDown:
-			return ffMaxDrawdown
+	case FieldToOptimizeDrawDown:
+		return ffMaxDrawdown
 
-		case FieldToOptimizeNetProfitAvgTrade:
-			return ffNetProfitAvgTrade
+	case FieldToOptimizeNetProfitAvgTrade:
+		return ffNetProfitAvgTrade
 
-		case FieldToOptimizeNetProfitAvgTradeMaxDD:
-			return ffNetProfitAvgTradeMaxDD
+	case FieldToOptimizeNetProfitAvgTradeMaxDD:
+		return ffNetProfitAvgTradeMaxDD
 
-		default:
-			panic("Unknown field to optimize: "+ field)
+	default:
+		panic("Unknown field to optimize: " + field)
 	}
 }
 
@@ -110,7 +114,7 @@ func ffMaxDrawdown(r *Run) float64 {
 //=============================================================================
 
 func ffNetProfitAvgTrade(r *Run) float64 {
-	fv := r.NetProfit*r.AvgTrade
+	fv := r.NetProfit * r.AvgTrade
 
 	//--- We have to push down results where both netProfit and avgTrade are negative
 	//--- because their product is positive
@@ -129,7 +133,7 @@ func ffNetProfitAvgTrade(r *Run) float64 {
 //=============================================================================
 
 func ffNetProfitAvgTradeMaxDD(r *Run) float64 {
-	fv := r.NetProfit*r.AvgTrade
+	fv := r.NetProfit * r.AvgTrade
 	dd := math.Abs(r.MaxDrawdown)
 
 	//--- We have to push down results where both netProfit and avgTrade are negative
@@ -143,7 +147,7 @@ func ffNetProfitAvgTradeMaxDD(r *Run) float64 {
 		dd = 1
 	}
 
-	fv = core.Trunc2d(fv/dd)
+	fv = core.Trunc2d(fv / dd)
 
 	if fv <= -1000 || fv >= 1000 {
 		fv = math.Round(fv)

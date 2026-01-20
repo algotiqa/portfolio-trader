@@ -25,9 +25,9 @@ THE SOFTWARE.
 package business
 
 import (
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/portfolio-trader/pkg/business/filter"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -58,7 +58,7 @@ func SetTradingFilters(tx *gorm.DB, c *auth.Context, tsId uint, f *filter.Tradin
 
 //=============================================================================
 
-func RunFilterAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, far *filter.AnalysisRequest) (*filter.AnalysisResponse, error){
+func RunFilterAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, far *filter.AnalysisRequest) (*filter.AnalysisResponse, error) {
 	ts, err := getTradingSystemAndCheckAccess(tx, c, tsId)
 	if err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func RunFilterAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, far *filter.Anal
 
 	trades, err := db.FindTradesByTsIdFromTime(tx, ts.Id, far.StartDate, nil)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
 	res := filter.RunAnalysis(ts, filters, trades)
@@ -135,23 +135,23 @@ func GetFilterOptimizationInfo(c *auth.Context, tsId uint) (*filter.Optimization
 
 func convert(f *filter.TradingFilter) *db.TradingFilter {
 	return &db.TradingFilter{
-		EquAvgEnabled   : f.EquAvgEnabled,
-		EquAvgLen       : f.EquAvgLen,
-		PosProEnabled   : f.PosProEnabled,
-		PosProLen       : f.PosProLen,
-		WinPerEnabled   : f.WinPerEnabled,
-		WinPerLen       : f.WinPerLen,
-		WinPerValue     : f.WinPerValue,
-		OldNewEnabled   : f.OldNewEnabled,
-		OldNewOldLen    : f.OldNewOldLen,
-		OldNewOldPerc   : f.OldNewOldPerc,
-		OldNewNewLen    : f.OldNewNewLen,
+		EquAvgEnabled:    f.EquAvgEnabled,
+		EquAvgLen:        f.EquAvgLen,
+		PosProEnabled:    f.PosProEnabled,
+		PosProLen:        f.PosProLen,
+		WinPerEnabled:    f.WinPerEnabled,
+		WinPerLen:        f.WinPerLen,
+		WinPerValue:      f.WinPerValue,
+		OldNewEnabled:    f.OldNewEnabled,
+		OldNewOldLen:     f.OldNewOldLen,
+		OldNewOldPerc:    f.OldNewOldPerc,
+		OldNewNewLen:     f.OldNewNewLen,
 		TrendlineEnabled: f.TrendlineEnabled,
-		TrendlineLen    : f.TrendlineLen,
-		TrendlineValue  : f.TrendlineValue,
-		DrawdownEnabled : f.DrawdownEnabled,
-		DrawdownMin     : f.DrawdownMin,
-		DrawdownMax     : f.DrawdownMax,
+		TrendlineLen:     f.TrendlineLen,
+		TrendlineValue:   f.TrendlineValue,
+		DrawdownEnabled:  f.DrawdownEnabled,
+		DrawdownMin:      f.DrawdownMin,
+		DrawdownMax:      f.DrawdownMax,
 	}
 }
 

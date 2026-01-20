@@ -25,9 +25,9 @@ THE SOFTWARE.
 package statusupdater
 
 import (
-	"github.com/tradalia/portfolio-trader/pkg/app"
-	"github.com/tradalia/portfolio-trader/pkg/consts"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/app"
+	"github.com/algotiqa/portfolio-trader/pkg/consts"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 	"log/slog"
 	"time"
@@ -77,16 +77,16 @@ func run(cfg *app.Config) {
 
 //=============================================================================
 
-func GetTradingSystemsInIdle() (*[]db.TradingSystem, error){
+func GetTradingSystemsInIdle() (*[]db.TradingSystem, error) {
 	var list *[]db.TradingSystem
 	var err error
 
-	err = db.RunInTransaction(func (tx *gorm.DB) error {
+	err = db.RunInTransaction(func(tx *gorm.DB) error {
 		list, err = db.GetTradingSystemsInIdle(tx, consts.IdleDays)
 		return err
 	})
 
-	return list,err
+	return list, err
 }
 
 //=============================================================================
@@ -98,14 +98,14 @@ func updateTradingSystem(ts *db.TradingSystem) error {
 		brokenDate := time.Now().Add(-time.Hour * 24 * time.Duration(consts.BrokenDays))
 
 		if ts.LastTrade.Before(brokenDate) {
-			ts.Status          = db.TsStatusBroken
+			ts.Status = db.TsStatusBroken
 			ts.SuggestedAction = db.TsActionCheck
 		}
 	} else {
 		return nil
 	}
 
-	return db.RunInTransaction(func (tx *gorm.DB) error {
+	return db.RunInTransaction(func(tx *gorm.DB) error {
 		return db.UpdateTradingSystem(tx, ts)
 	})
 }

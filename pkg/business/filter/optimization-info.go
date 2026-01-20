@@ -25,9 +25,9 @@ THE SOFTWARE.
 package filter
 
 import (
-	"github.com/tradalia/portfolio-trader/pkg/business/filter/algorithm/optimization"
-	"github.com/tradalia/portfolio-trader/pkg/core"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"sync"
 	"time"
 )
@@ -39,7 +39,7 @@ import (
 //=============================================================================
 
 type Run struct {
-	Filter       *db.TradingFilter `json:"filter"`
+	Filter *db.TradingFilter `json:"filter"`
 
 	FitnessValue float64 `json:"fitnessValue"`
 	NetProfit    float64 `json:"netProfit"`
@@ -54,8 +54,8 @@ type Run struct {
 //===
 //=============================================================================
 
-const OptimStatusIdle     = "idle"
-const OptimStatusRunning  = "running"
+const OptimStatusIdle = "idle"
+const OptimStatusRunning = "running"
 const OptimStatusComplete = "complete"
 
 type OptimizationInfo struct {
@@ -85,24 +85,24 @@ type OptimizationInfo struct {
 //=============================================================================
 
 func NewOptimizationInfo(maxResultSize int, field string, fc *optimization.FilterConfig,
-						 steps uint, baseValue float64, startDate *time.Time) *OptimizationInfo {
+	steps uint, baseValue float64, startDate *time.Time) *OptimizationInfo {
 	oi := &OptimizationInfo{}
-	oi.CurrStep        = 0
-	oi.StartTime       = time.Now()
-	oi.Status          = OptimStatusRunning
-	oi.results         = core.NewSortedResults(maxResultSize, runComparator)
-	oi.BaseValue       = baseValue
-	oi.BestValue       = baseValue
-	oi.MaxSteps        = steps
+	oi.CurrStep = 0
+	oi.StartTime = time.Now()
+	oi.Status = OptimStatusRunning
+	oi.results = core.NewSortedResults(maxResultSize, runComparator)
+	oi.BaseValue = baseValue
+	oi.BestValue = baseValue
+	oi.MaxSteps = steps
 	oi.FieldToOptimize = field
-	oi.StartDate       = startDate
+	oi.StartDate = startDate
 
 	oi.Filter.PosProfit = fc.EnablePosProfit
-	oi.Filter.OldVsNew  = fc.EnableOldNew
-	oi.Filter.WinPerc   = fc.EnableWinPerc
-	oi.Filter.EquVsAvg  = fc.EnableEquAvg
+	oi.Filter.OldVsNew = fc.EnableOldNew
+	oi.Filter.WinPerc = fc.EnableWinPerc
+	oi.Filter.EquVsAvg = fc.EnableEquAvg
 	oi.Filter.Trendline = fc.EnableTrendline
-	oi.Filter.Drawdown  = fc.EnableDrawdown
+	oi.Filter.Drawdown = fc.EnableDrawdown
 
 	return oi
 }
@@ -155,7 +155,7 @@ func (oi *OptimizationInfo) isStatusComplete() bool {
 	}
 
 	oi.EndTime = time.Now()
-	oi.Status  = OptimStatusComplete
+	oi.Status = OptimStatusComplete
 
 	return true
 }

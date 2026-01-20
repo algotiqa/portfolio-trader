@@ -25,14 +25,14 @@ THE SOFTWARE.
 package genetic
 
 import (
-	"github.com/tradalia/portfolio-trader/pkg/business/filter/algorithm/optimization"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
 
 //=============================================================================
 
 type Population struct {
-	size int
+	size       int
 	candidates []*Candidate
 }
 
@@ -44,11 +44,11 @@ type Population struct {
 
 func NewPopulation(size int, baseline *db.TradingFilter, fc *optimization.FilterConfig) *Population {
 	p := &Population{
-		size: size,
+		size:       size,
 		candidates: []*Candidate{},
 	}
 
-	for i:=0; i<size; i++ {
+	for i := 0; i < size; i++ {
 		p.Add(NewRandomCandidate(fc))
 	}
 

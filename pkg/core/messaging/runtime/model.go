@@ -27,7 +27,7 @@ package runtime
 import (
 	"time"
 
-	"github.com/tradalia/core/datatype"
+	"github.com/algotiqa/core/datatype"
 )
 
 //=============================================================================
@@ -41,15 +41,15 @@ type TradeListMessage struct {
 //=============================================================================
 
 type TradeItem struct {
-	TradeType       string       `json:"tradeType"`
-	EntryDate       *time.Time   `json:"entryDate"`
-	EntryPrice      float64      `json:"entryPrice"`
-	EntryLabel      string       `json:"entryLabel"`
-	ExitDate        *time.Time   `json:"exitDate"`
-	ExitPrice       float64      `json:"exitPrice"`
-	ExitLabel       string       `json:"exitLabel"`
-	GrossProfit     float64      `json:"grossProfit"`
-	Contracts       int          `json:"contracts"`
+	TradeType   string     `json:"tradeType"`
+	EntryDate   *time.Time `json:"entryDate"`
+	EntryPrice  float64    `json:"entryPrice"`
+	EntryLabel  string     `json:"entryLabel"`
+	ExitDate    *time.Time `json:"exitDate"`
+	ExitPrice   float64    `json:"exitPrice"`
+	ExitLabel   string     `json:"exitLabel"`
+	GrossProfit float64    `json:"grossProfit"`
+	Contracts   int        `json:"contracts"`
 }
 
 //=============================================================================
@@ -57,7 +57,7 @@ type TradeItem struct {
 type DailyProfitItem struct {
 	Day         datatype.IntDate `json:"day"`
 	GrossProfit float64          `json:"grossProfit"`
-	Trades      int             `json:"trades"`
+	Trades      int              `json:"trades"`
 }
 
 //=============================================================================

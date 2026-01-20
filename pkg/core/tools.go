@@ -28,14 +28,14 @@ import (
 	"math"
 	"time"
 
-	"github.com/tradalia/core/req"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
 
 //=============================================================================
 
 func Trunc2d(value float64) float64 {
-	return float64(int(math.Floor(value * 100))) / 100
+	return float64(int(math.Floor(value*100))) / 100
 }
 
 //=============================================================================
@@ -83,12 +83,12 @@ func CalcRisk(trades *[]db.Trade) (float64, error) {
 
 	//--- Step 2: find the stop loss (the loss with most hits)
 
-	stopLoss  := 0.0
+	stopLoss := 0.0
 	bestCount := 0
 
 	for loss, count := range counts {
 		if count > bestCount {
-			stopLoss  = loss
+			stopLoss = loss
 			bestCount = count
 		}
 	}
@@ -107,8 +107,8 @@ func CalcRMultiple(trades *[]db.Trade, tradeType string, risk float64, costPerOp
 
 	for _, t := range *trades {
 		if tradeType == db.TradeTypeAll || tradeType == t.TradeType {
-			returns := t.GrossProfit - 2 * costPerOper
-			list = append(list, returns / risk)
+			returns := t.GrossProfit - 2*costPerOper
+			list = append(list, returns/risk)
 		}
 	}
 

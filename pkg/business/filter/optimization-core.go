@@ -25,8 +25,8 @@ THE SOFTWARE.
 package filter
 
 import (
-	"github.com/tradalia/portfolio-trader/pkg/core"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"log/slog"
 	"sync"
 	"time"
@@ -73,7 +73,7 @@ func StartOptimization(ts *db.TradingSystem, trades *[]db.Trade, or *Optimizatio
 	}
 
 	fop = &OptimizationProcess{
-		ts    : ts,
+		ts:     ts,
 		trades: trades,
 		optReq: or,
 	}

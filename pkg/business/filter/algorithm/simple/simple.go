@@ -25,13 +25,13 @@ THE SOFTWARE.
 package simple
 
 import (
-	"github.com/tradalia/portfolio-trader/pkg/business/filter/algorithm/optimization"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
 )
 
 //=============================================================================
 
 type simpleAlgorithm struct {
-	ctx  optimization.Context
+	ctx optimization.Context
 	fc  *optimization.FilterConfig
 }
 
@@ -49,24 +49,24 @@ func New() optimization.Algorithm {
 
 func (sa *simpleAlgorithm) Init(ctx optimization.Context) {
 	sa.ctx = ctx
-	sa.fc  = ctx.FilterConfig()
+	sa.fc = ctx.FilterConfig()
 }
 
 //=============================================================================
 
 func (sa *simpleAlgorithm) StepsCount() uint {
-	return	sa.stepsCountPosProfit() +
-			sa.stepsCountOldNew   () +
-			sa.stepsCountWinPerc  () +
-			sa.stepsCountEquAvg   () +
-			sa.stepsCountTrendline() +
-			sa.stepsCountDrawdown ()
+	return sa.stepsCountPosProfit() +
+		sa.stepsCountOldNew() +
+		sa.stepsCountWinPerc() +
+		sa.stepsCountEquAvg() +
+		sa.stepsCountTrendline() +
+		sa.stepsCountDrawdown()
 }
 
 //=============================================================================
 
 func (sa *simpleAlgorithm) Optimize() {
-	if !sa.generatePosProfit(){
+	if !sa.generatePosProfit() {
 		if !sa.generateOldVsNew() {
 			if !sa.generateWinPerc() {
 				if !sa.generateEquVsAvg() {
@@ -152,8 +152,8 @@ func (sa *simpleAlgorithm) generatePosProfit() bool {
 
 		for _, posProLen := range *sa.fc.PosProLen.Steps() {
 			f := sa.ctx.Baseline()
-			f.PosProEnabled= true
-			f.PosProLen    = posProLen
+			f.PosProEnabled = true
+			f.PosProLen = posProLen
 
 			go func() {
 				sa.ctx.RunAnalysis(&f)
@@ -182,8 +182,8 @@ func (sa *simpleAlgorithm) generateOldVsNew() bool {
 				for _, oldNewOldPerc := range *sa.fc.OldNewOldPerc.Steps() {
 					f := sa.ctx.Baseline()
 					f.OldNewEnabled = true
-					f.OldNewOldLen  = oldNewOldLen
-					f.OldNewNewLen  = oldNewNewLen
+					f.OldNewOldLen = oldNewOldLen
+					f.OldNewNewLen = oldNewNewLen
 					f.OldNewOldPerc = oldNewOldPerc
 
 					go func() {
@@ -213,11 +213,11 @@ func (sa *simpleAlgorithm) generateWinPerc() bool {
 		for _, winPerLen := range *sa.fc.WinPercLen.Steps() {
 			for _, winPerPerc := range *sa.fc.WinPercPerc.Steps() {
 				f := sa.ctx.Baseline()
-				f.WinPerEnabled= true
-				f.WinPerLen    = winPerLen
-				f.WinPerValue  = winPerPerc
+				f.WinPerEnabled = true
+				f.WinPerLen = winPerLen
+				f.WinPerValue = winPerPerc
 
-				go func(){
+				go func() {
 					sa.ctx.RunAnalysis(&f)
 				}()
 
@@ -242,10 +242,10 @@ func (sa *simpleAlgorithm) generateEquVsAvg() bool {
 
 		for _, equAvgLen := range *sa.fc.EquAvgLen.Steps() {
 			f := sa.ctx.Baseline()
-			f.EquAvgEnabled= true
-			f.EquAvgLen    = equAvgLen
+			f.EquAvgEnabled = true
+			f.EquAvgLen = equAvgLen
 
-			go func(){
+			go func() {
 				sa.ctx.RunAnalysis(&f)
 			}()
 
@@ -270,11 +270,11 @@ func (sa *simpleAlgorithm) generateTrendline() bool {
 		for _, trendLen := range *sa.fc.TrendlineLen.Steps() {
 			for _, trendValue := range *sa.fc.TrendlineValue.Steps() {
 				f := sa.ctx.Baseline()
-				f.TrendlineEnabled= true
-				f.TrendlineLen    = trendLen
-				f.TrendlineValue  = trendValue
+				f.TrendlineEnabled = true
+				f.TrendlineLen = trendLen
+				f.TrendlineValue = trendValue
 
-				go func(){
+				go func() {
 					sa.ctx.RunAnalysis(&f)
 				}()
 
@@ -301,10 +301,10 @@ func (sa *simpleAlgorithm) generateDrawdown() bool {
 			for _, maxVal := range *sa.fc.DrawdownMax.Steps() {
 				f := sa.ctx.Baseline()
 				f.DrawdownEnabled = true
-				f.DrawdownMin     = minVal
-				f.DrawdownMax     = maxVal
+				f.DrawdownMin = minVal
+				f.DrawdownMax = maxVal
 
-				go func(){
+				go func() {
 					sa.ctx.RunAnalysis(&f)
 				}()
 

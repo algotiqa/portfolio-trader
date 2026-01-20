@@ -25,8 +25,8 @@ THE SOFTWARE.
 package platform
 
 import (
-	"github.com/tradalia/core"
-	"github.com/tradalia/portfolio-trader/pkg/app"
+	"github.com/algotiqa/core"
+	"github.com/algotiqa/portfolio-trader/pkg/app"
 )
 
 //=============================================================================

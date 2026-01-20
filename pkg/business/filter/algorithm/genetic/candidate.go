@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package genetic
 
-import "github.com/tradalia/portfolio-trader/pkg/business/filter/algorithm/optimization"
+import "github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
 
 //=============================================================================
 

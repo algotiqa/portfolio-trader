@@ -25,8 +25,8 @@ THE SOFTWARE.
 package filter
 
 import (
-	"github.com/tradalia/portfolio-trader/pkg/business/filter/algorithm/optimization"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"log/slog"
 )
 

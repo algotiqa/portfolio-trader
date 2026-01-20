@@ -30,10 +30,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/tradalia/portfolio-trader/pkg/app"
-	"github.com/tradalia/portfolio-trader/pkg/core"
-	"github.com/tradalia/portfolio-trader/pkg/db"
-	"github.com/tradalia/portfolio-trader/pkg/platform"
+	"github.com/algotiqa/portfolio-trader/pkg/app"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/platform"
 	"github.com/vicanso/go-charts/v2"
 	"github.com/wcharczuk/go-chart/v2/drawing"
 	"gorm.io/gorm"
@@ -87,16 +87,16 @@ func run(cfg *app.Config) {
 
 //=============================================================================
 
-func getUsersWithTradingSystems() ([]string, error){
+func getUsersWithTradingSystems() ([]string, error) {
 	var list []string
 	var err error
 
-	err = db.RunInTransaction(func (tx *gorm.DB) error {
+	err = db.RunInTransaction(func(tx *gorm.DB) error {
 		list, err = db.GetUsersWithTradingSystems(tx)
 		return err
 	})
 
-	return list,err
+	return list, err
 }
 
 //=============================================================================
@@ -116,16 +116,16 @@ func updateSystemsForUser(user string) {
 
 //=============================================================================
 
-func getTradingSystemsByUser(user string) (*[]db.TradingSystem, error){
+func getTradingSystemsByUser(user string) (*[]db.TradingSystem, error) {
 	var list *[]db.TradingSystem
 	var err error
 
-	err = db.RunInTransaction(func (tx *gorm.DB) error {
-		list, err = db.GetTradingSystemsByUser(tx,  user)
+	err = db.RunInTransaction(func(tx *gorm.DB) error {
+		list, err = db.GetTradingSystemsByUser(tx, user)
 		return err
 	})
 
-	return list,err
+	return list, err
 }
 
 //=============================================================================
@@ -139,7 +139,7 @@ func updateTradingSystem(ts *db.TradingSystem) {
 		updateLastStats(ts, trades)
 		err = updateChart(ts, trades, lastDays)
 		if err == nil {
-			err = db.RunInTransaction(func (tx *gorm.DB) error {
+			err = db.RunInTransaction(func(tx *gorm.DB) error {
 				return db.UpdateTradingSystem(tx, ts)
 			})
 			if err != nil {
@@ -157,33 +157,33 @@ func getTradingSystemTrades(id uint, lastDays int) (*[]db.Trade, error) {
 
 	fromDate := time.Now().Add(-time.Hour * 24 * time.Duration(lastDays))
 
-	err = db.RunInTransaction(func (tx *gorm.DB) error {
+	err = db.RunInTransaction(func(tx *gorm.DB) error {
 		list, err = db.FindTradesByTsIdFromTime(tx, id, &fromDate, nil)
 		return err
 	})
 
-	return list,err
+	return list, err
 }
 
 //=============================================================================
 
 func updateLastStats(ts *db.TradingSystem, trades *[]db.Trade) {
 	grossProfit := 0.0
-	netProfit   := 0.0
-	numTrades   := 0
+	netProfit := 0.0
+	numTrades := 0
 
-	var grossEquity   []float64
+	var grossEquity []float64
 	//var grossDrawdown []float64
-	var netEquity     []float64
+	var netEquity []float64
 	//var netDrawdown   []float64
 
 	for _, trade := range *trades {
 		grossProfit += trade.GrossProfit
-		netProfit   += trade.GrossProfit - 2 * ts.CostPerOperation
+		netProfit += trade.GrossProfit - 2*ts.CostPerOperation
 		numTrades++
 
-		grossEquity   = append(grossEquity, grossProfit)
-		netEquity     = append(netEquity,   netProfit)
+		grossEquity = append(grossEquity, grossProfit)
+		netEquity = append(netEquity, netProfit)
 		//grossDrawdown = append(grossDrawdown, 0)
 		//netDrawdown   = append(netDrawdown,   0)
 	}
@@ -191,8 +191,8 @@ func updateLastStats(ts *db.TradingSystem, trades *[]db.Trade) {
 	//maxGrossDD := core.CalcDrawDown(&grossEquity, &grossDrawdown)
 	//maxNetDD   := core.CalcDrawDown(&netEquity,   &netDrawdown)
 
-	ts.LastNetProfit   = core.Trunc2d(netProfit)
-	ts.LastNumTrades   = numTrades
+	ts.LastNetProfit = core.Trunc2d(netProfit)
+	ts.LastNumTrades = numTrades
 	ts.LastNetAvgTrade = 0
 
 	if numTrades != 0 {
@@ -260,7 +260,7 @@ func buildEquityChartTime(ts *db.TradingSystem, trades *[]db.Trade, lastDays int
 	xAxis, values := calcEquityTime(trades, lastDays, float64(ts.CostPerOperation))
 
 	return charts.LineRender(
-		[][]float64{ values, },
+		[][]float64{values},
 		charts.XAxisDataOptionFunc(xAxis, charts.FalseFlag()),
 		func(opt *charts.ChartOption) {
 			opt.BackgroundColor = drawing.ColorFromHex("F6F9FF")
@@ -271,10 +271,10 @@ func buildEquityChartTime(ts *db.TradingSystem, trades *[]db.Trade, lastDays int
 			opt.ValueFormatter = func(f float64) string {
 				return fmt.Sprintf("%.0f", f)
 			}
-			opt.Width  = 400
+			opt.Width = 400
 			opt.Height = 200
-			opt.YAxisOptions = []charts.YAxisOption{ { FontSize: 8 }}
-			opt.Padding      = charts.Box{ Top: 8, Left: 4, Right: 4, Bottom: 0}
+			opt.YAxisOptions = []charts.YAxisOption{{FontSize: 8}}
+			opt.Padding = charts.Box{Top: 8, Left: 4, Right: 4, Bottom: 0}
 		},
 	)
 }
@@ -283,14 +283,14 @@ func buildEquityChartTime(ts *db.TradingSystem, trades *[]db.Trade, lastDays int
 
 func calcEquityTime(trades *[]db.Trade, lastDays int, costPerOper float64) ([]string, []float64) {
 	startDate := time.Now().Add(-time.Hour * 24 * time.Duration(lastDays))
-	startDate  = flatDate(&startDate)
-	xLabel    := startDate.Format(time.DateOnly)
+	startDate = flatDate(&startDate)
+	xLabel := startDate.Format(time.DateOnly)
 
-	var xAxis  []string
+	var xAxis []string
 	var values []float64
 
-	for i := 0; i<=lastDays; i++ {
-		xAxis  = append(xAxis, xLabel)
+	for i := 0; i <= lastDays; i++ {
+		xAxis = append(xAxis, xLabel)
 		values = append(values, 0)
 
 		xLabel = ""
@@ -298,11 +298,11 @@ func calcEquityTime(trades *[]db.Trade, lastDays int, costPerOper float64) ([]st
 
 	for _, trade := range *trades {
 		day := trade.ExitDate.Sub(startDate) / (time.Hour * 24)
-		values[day] += trade.GrossProfit - 2 * costPerOper
+		values[day] += trade.GrossProfit - 2*costPerOper
 	}
 
-	for i := 1; i<len(values); i++ {
-		values[i] += values[i -1]
+	for i := 1; i < len(values); i++ {
+		values[i] += values[i-1]
 	}
 
 	return xAxis, values
@@ -318,7 +318,7 @@ func buildEquityChartTrades(ts *db.TradingSystem, trades *[]db.Trade) (*charts.P
 	}
 
 	return charts.LineRender(
-		[][]float64{ values, },
+		[][]float64{values},
 		charts.XAxisDataOptionFunc(xAxis, charts.FalseFlag()),
 		func(opt *charts.ChartOption) {
 			opt.BackgroundColor = drawing.ColorFromHex("F6F9FF")
@@ -329,10 +329,10 @@ func buildEquityChartTrades(ts *db.TradingSystem, trades *[]db.Trade) (*charts.P
 			opt.ValueFormatter = func(f float64) string {
 				return fmt.Sprintf("%.0f", f)
 			}
-			opt.Width  = 400
+			opt.Width = 400
 			opt.Height = 200
-			opt.YAxisOptions = []charts.YAxisOption{ { FontSize: 8 }}
-			opt.Padding      = charts.Box{ Top: 8, Left: 4, Right: 4, Bottom: 0}
+			opt.YAxisOptions = []charts.YAxisOption{{FontSize: 8}}
+			opt.Padding = charts.Box{Top: 8, Left: 4, Right: 4, Bottom: 0}
 		},
 	)
 }
@@ -340,15 +340,15 @@ func buildEquityChartTrades(ts *db.TradingSystem, trades *[]db.Trade) (*charts.P
 //=============================================================================
 
 func calcEquityTrades(trades *[]db.Trade, costPerOper float64) ([]string, []float64) {
-	var xAxis  []string
+	var xAxis []string
 	var values []float64
 
 	netProfit := 0.0
 
 	for i, trade := range *trades {
-		netProfit += trade.GrossProfit - 2 * costPerOper
+		netProfit += trade.GrossProfit - 2*costPerOper
 
-		xAxis  = append(xAxis,  strconv.Itoa(i +1))
+		xAxis = append(xAxis, strconv.Itoa(i+1))
 		values = append(values, netProfit)
 	}
 
@@ -359,7 +359,7 @@ func calcEquityTrades(trades *[]db.Trade, costPerOper float64) ([]string, []floa
 
 func flatDate(date *time.Time) time.Time {
 	y, m, d := date.Date()
-	return time.Date(y, m, d, 0,0,0,0, date.Location())
+	return time.Date(y, m, d, 0, 0, 0, 0, date.Location())
 }
 
 //=============================================================================

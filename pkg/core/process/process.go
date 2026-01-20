@@ -25,16 +25,16 @@ THE SOFTWARE.
 package process
 
 import (
-	"github.com/tradalia/portfolio-trader/pkg/app"
-	"github.com/tradalia/portfolio-trader/pkg/core/process/statsupdater"
-	"github.com/tradalia/portfolio-trader/pkg/core/process/statusupdater"
+	"github.com/algotiqa/portfolio-trader/pkg/app"
+	"github.com/algotiqa/portfolio-trader/pkg/core/process/statsupdater"
+	"github.com/algotiqa/portfolio-trader/pkg/core/process/statusupdater"
 )
 
 //=============================================================================
 
 func Init(cfg *app.Config) {
 	statusupdater.Init(cfg)
-	statsupdater .Init(cfg)
+	statsupdater.Init(cfg)
 }
 
 //=============================================================================

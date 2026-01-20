@@ -25,11 +25,11 @@ THE SOFTWARE.
 package business
 
 import (
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/core/req"
-	"github.com/tradalia/portfolio-trader/pkg/business/simulation"
-	"github.com/tradalia/portfolio-trader/pkg/core"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/portfolio-trader/pkg/business/simulation"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -56,7 +56,7 @@ func StartSimulation(tx *gorm.DB, c *auth.Context, tsId uint, rq *simulation.Req
 		return req.NewUnprocessableEntityError("no trades found for given time")
 	}
 
-	risk,err := core.CalcRisk(trades)
+	risk, err := core.CalcRisk(trades)
 	if err != nil {
 		return err
 	}

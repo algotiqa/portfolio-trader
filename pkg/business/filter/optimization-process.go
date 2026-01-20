@@ -25,9 +25,9 @@ THE SOFTWARE.
 package filter
 
 import (
-	"github.com/tradalia/portfolio-trader/pkg/business/filter/algorithm"
-	"github.com/tradalia/portfolio-trader/pkg/business/filter/algorithm/optimization"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"log/slog"
 	"math/rand"
 	"time"
@@ -55,13 +55,13 @@ type OptimizationProcess struct {
 //=============================================================================
 
 func (op *OptimizationProcess) Start() {
-	field     := op.optReq.FieldToOptimize
+	field := op.optReq.FieldToOptimize
 	startDate := op.optReq.StartDate
 
 	op.fitnessFunction = GetFitnessFunction(field)
 
 	algo := algorithm.New(op.optReq.Algorithm.Type)
-	ctx  := NewContext(op)
+	ctx := NewContext(op)
 	algo.Init(ctx)
 
 	fc := op.optReq.FilterConfig
@@ -96,7 +96,7 @@ func (op *OptimizationProcess) generate(algo optimization.Algorithm) {
 
 	algo.Optimize()
 
-	for ; !op.info.isStatusComplete(); {
+	for !op.info.isStatusComplete() {
 		time.Sleep(time.Second * 1)
 	}
 
@@ -117,11 +117,11 @@ func (op *OptimizationProcess) runAnalysis(filter *db.TradingFilter) float64 {
 
 func (op *OptimizationProcess) createRun(filter *db.TradingFilter, sum *Summary) *Run {
 	r := &Run{
-		Filter      : filter,
-		NetProfit   : sum.FilProfit,
-		AvgTrade    : sum.FilAverageTrade,
-		MaxDrawdown : sum.FilMaxDrawdown,
-		random      : rand.Int(),
+		Filter:      filter,
+		NetProfit:   sum.FilProfit,
+		AvgTrade:    sum.FilAverageTrade,
+		MaxDrawdown: sum.FilMaxDrawdown,
+		random:      rand.Int(),
 	}
 
 	r.FitnessValue = op.fitnessFunction(r)

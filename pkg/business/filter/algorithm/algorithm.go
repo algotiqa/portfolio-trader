@@ -25,28 +25,28 @@ THE SOFTWARE.
 package algorithm
 
 import (
-	"github.com/tradalia/portfolio-trader/pkg/business/filter/algorithm/genetic"
-	"github.com/tradalia/portfolio-trader/pkg/business/filter/algorithm/optimization"
-	"github.com/tradalia/portfolio-trader/pkg/business/filter/algorithm/simple"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/genetic"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/simple"
 )
 
 //=============================================================================
 
-const Simple  = "simple"
+const Simple = "simple"
 const Genetic = "genetic"
 
 //=============================================================================
 
 func New(name string) optimization.Algorithm {
 	switch name {
-		case Simple:
-			return simple.New()
+	case Simple:
+		return simple.New()
 
-		case Genetic:
-			return genetic.New()
+	case Genetic:
+		return genetic.New()
 
-		default:
-			panic("Unknown optimization algorithm : "+ name)
+	default:
+		panic("Unknown optimization algorithm : " + name)
 	}
 }
 

@@ -25,7 +25,7 @@ THE SOFTWARE.
 package business
 
 import (
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
 
 //=============================================================================

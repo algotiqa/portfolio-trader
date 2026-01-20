@@ -31,7 +31,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tradalia/core/datatype"
+	"github.com/algotiqa/core/datatype"
 )
 
 //=============================================================================
@@ -41,10 +41,10 @@ import (
 //=============================================================================
 
 type Portfolio struct {
-	Id        uint    `json:"id" gorm:"primaryKey"`
-	ParentId  uint    `json:"parentId"`
-	Username  string  `json:"username"`
-	Name      string  `json:"name"`
+	Id       uint   `json:"id" gorm:"primaryKey"`
+	ParentId uint   `json:"parentId"`
+	Username string `json:"username"`
+	Name     string `json:"name"`
 }
 
 //=============================================================================
@@ -64,79 +64,79 @@ const (
 type TsSuggAction int8
 
 const (
-	TsActionNone     TsSuggAction = 0
-	TsActionTurnOff  TsSuggAction = 1
-	TsActionTurnOn   TsSuggAction = 2
-	TsActionCheck    TsSuggAction = 3
+	TsActionNone    TsSuggAction = 0
+	TsActionTurnOff TsSuggAction = 1
+	TsActionTurnOn  TsSuggAction = 2
+	TsActionCheck   TsSuggAction = 3
 )
 
 //-----------------------------------------------------------------------------
 
 type TradingSystem struct {
-	Id                uint             `json:"id" gorm:"primaryKey"`
-	Username          string           `json:"username"`
-	Name              string           `json:"name"`
-	Timeframe         int              `json:"timeframe"`
-	DataProductId     uint             `json:"dataProductId"`
-	DataSymbol        string           `json:"dataSymbol"`
-	BrokerProductId   uint             `json:"brokerProductId"`
-	BrokerSymbol      string           `json:"brokerSymbol"`
-	PointValue        float64          `json:"pointValue"`
-	CostPerOperation  float64          `json:"costPerOperation"`
-	MarginValue       float64          `json:"marginValue"`
-	Increment         float64          `json:"increment"`
-	MarketType        string           `json:"marketType"`
-	CurrencyId        uint             `json:"currencyId"`
-	CurrencyCode      string           `json:"currencyCode"`
-	CurrencySymbol    string           `json:"currencySymbol"`
-	TradingSessionId  uint             `json:"tradingSessionId"`
-	SessionName       string           `json:"sessionName"`
-	SessionConfig     string           `json:"sessionConfig"`
-	AgentProfileId   *uint             `json:"agentProfileId"`
-	ExternalRef       string           `json:"externalRef"`
-	StrategyType      string           `json:"strategyType"`
-	Overnight         bool             `json:"overnight"`
-	Tags              string           `json:"tags"`
-	Finalized         bool             `json:"finalized"`
-	Trading           bool             `json:"trading"`
-	Running           bool             `json:"running"`
-	AutoActivation    bool             `json:"autoActivation"`
-	Active            bool             `json:"active"`
-	Status            TsStatus         `json:"status"`
-	SuggestedAction   TsSuggAction     `json:"suggestedAction"`
-	FirstTrade        *time.Time       `json:"firstTrade"`
-	LastTrade         *time.Time       `json:"lastTrade"`
-	LastNetProfit     float64          `json:"lastNetProfit"`
-	LastNetAvgTrade   float64          `json:"lastNetAvgTrade"`
-	LastNumTrades     int              `json:"lastNumTrades"`
-	PortfolioId       *uint            `json:"portfolioId"`
-	Timezone          string           `json:"timezone"`
-	InSampleFrom      datatype.IntDate `json:"inSampleFrom"`
-	InSampleTo        datatype.IntDate `json:"inSampleTo"`
-	EngineCode        string           `json:"engineCode"`
+	Id               uint             `json:"id" gorm:"primaryKey"`
+	Username         string           `json:"username"`
+	Name             string           `json:"name"`
+	Timeframe        int              `json:"timeframe"`
+	DataProductId    uint             `json:"dataProductId"`
+	DataSymbol       string           `json:"dataSymbol"`
+	BrokerProductId  uint             `json:"brokerProductId"`
+	BrokerSymbol     string           `json:"brokerSymbol"`
+	PointValue       float64          `json:"pointValue"`
+	CostPerOperation float64          `json:"costPerOperation"`
+	MarginValue      float64          `json:"marginValue"`
+	Increment        float64          `json:"increment"`
+	MarketType       string           `json:"marketType"`
+	CurrencyId       uint             `json:"currencyId"`
+	CurrencyCode     string           `json:"currencyCode"`
+	CurrencySymbol   string           `json:"currencySymbol"`
+	TradingSessionId uint             `json:"tradingSessionId"`
+	SessionName      string           `json:"sessionName"`
+	SessionConfig    string           `json:"sessionConfig"`
+	AgentProfileId   *uint            `json:"agentProfileId"`
+	ExternalRef      string           `json:"externalRef"`
+	StrategyType     string           `json:"strategyType"`
+	Overnight        bool             `json:"overnight"`
+	Tags             string           `json:"tags"`
+	Finalized        bool             `json:"finalized"`
+	Trading          bool             `json:"trading"`
+	Running          bool             `json:"running"`
+	AutoActivation   bool             `json:"autoActivation"`
+	Active           bool             `json:"active"`
+	Status           TsStatus         `json:"status"`
+	SuggestedAction  TsSuggAction     `json:"suggestedAction"`
+	FirstTrade       *time.Time       `json:"firstTrade"`
+	LastTrade        *time.Time       `json:"lastTrade"`
+	LastNetProfit    float64          `json:"lastNetProfit"`
+	LastNetAvgTrade  float64          `json:"lastNetAvgTrade"`
+	LastNumTrades    int              `json:"lastNumTrades"`
+	PortfolioId      *uint            `json:"portfolioId"`
+	Timezone         string           `json:"timezone"`
+	InSampleFrom     datatype.IntDate `json:"inSampleFrom"`
+	InSampleTo       datatype.IntDate `json:"inSampleTo"`
+	EngineCode       string           `json:"engineCode"`
 }
 
 //=============================================================================
 
 type TradingFilter struct {
-	TradingSystemId  uint   `json:"tradingSystemId" gorm:"primaryKey"`
-	EquAvgEnabled    bool   `json:"equAvgEnabled"`
-	EquAvgLen        int    `json:"equAvgLen"`
-	PosProEnabled    bool   `json:"posProEnabled"`
-	PosProLen        int    `json:"posProLen"`
-	WinPerEnabled    bool   `json:"winPerEnabled"`
-	WinPerLen        int    `json:"winPerLen"`
-	WinPerValue      int    `json:"winPerValue"`
-	OldNewEnabled    bool   `json:"oldNewEnabled"`
-	OldNewOldLen     int    `json:"oldNewOldLen"`
-	OldNewOldPerc    int    `json:"oldNewOldPerc"`
-	OldNewNewLen     int    `json:"oldNewNewLen"`
-	TrendlineEnabled bool   `json:"trendlineEnabled"`
-	TrendlineLen     int    `json:"trendlineLen"`
-	TrendlineValue   int    `json:"trendlineValue"`
-	DrawdownEnabled  bool   `json:"drawdownEnabled"`
-	DrawdownMin      int    `json:"drawdownMin"`
-	DrawdownMax      int    `json:"drawdownMax"`
+	TradingSystemId  uint `json:"tradingSystemId" gorm:"primaryKey"`
+	EquAvgEnabled    bool `json:"equAvgEnabled"`
+	EquAvgLen        int  `json:"equAvgLen"`
+	PosProEnabled    bool `json:"posProEnabled"`
+	PosProLen        int  `json:"posProLen"`
+	WinPerEnabled    bool `json:"winPerEnabled"`
+	WinPerLen        int  `json:"winPerLen"`
+	WinPerValue      int  `json:"winPerValue"`
+	OldNewEnabled    bool `json:"oldNewEnabled"`
+	OldNewOldLen     int  `json:"oldNewOldLen"`
+	OldNewOldPerc    int  `json:"oldNewOldPerc"`
+	OldNewNewLen     int  `json:"oldNewNewLen"`
+	TrendlineEnabled bool `json:"trendlineEnabled"`
+	TrendlineLen     int  `json:"trendlineLen"`
+	TrendlineValue   int  `json:"trendlineValue"`
+	DrawdownEnabled  bool `json:"drawdownEnabled"`
+	DrawdownMin      int  `json:"drawdownMin"`
+	DrawdownMax      int  `json:"drawdownMax"`
 }
 
 //=============================================================================
@@ -173,18 +173,18 @@ func (t Trade) String() string {
 	return fmt.Sprintf("%v|%v|%v|%v|%v|%v|%v|%v|%v",
 		t.TradeType,
 		t.EntryDate.UTC(), t.EntryPrice, t.EntryLabel,
-		t.ExitDate.UTC(),  t.ExitPrice,  t.ExitLabel,
+		t.ExitDate.UTC(), t.ExitPrice, t.ExitLabel,
 		t.GrossProfit, t.Contracts)
 }
 
 //=============================================================================
 
 type DailyReturn struct {
-	Id               uint             `json:"id" gorm:"primaryKey"`
-	TradingSystemId  uint             `json:"tradingSystemId"`
-	Day              datatype.IntDate `json:"day"`
-	GrossProfit      float64          `json:"grossProfit"`
-	Trades           int              `json:"trades"`
+	Id              uint             `json:"id" gorm:"primaryKey"`
+	TradingSystemId uint             `json:"tradingSystemId"`
+	Day             datatype.IntDate `json:"day"`
+	GrossProfit     float64          `json:"grossProfit"`
+	Trades          int              `json:"trades"`
 }
 
 //=============================================================================
@@ -195,9 +195,9 @@ type DailyReturn struct {
 
 func (TradingSystem) TableName() string { return "trading_system" }
 func (TradingFilter) TableName() string { return "trading_filter" }
-func (Trade)         TableName() string { return "trade"          }
-func (Portfolio)     TableName() string { return "portfolio"      }
-func (DailyReturn)   TableName() string { return "daily_return"   }
+func (Trade) TableName() string         { return "trade" }
+func (Portfolio) TableName() string     { return "portfolio" }
+func (DailyReturn) TableName() string   { return "daily_return" }
 
 //=============================================================================
 //===

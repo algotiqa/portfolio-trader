@@ -24,38 +24,38 @@ THE SOFTWARE.
 
 package inventory
 
-import "github.com/tradalia/core/datatype"
+import "github.com/algotiqa/core/datatype"
 
 //=============================================================================
 //=== Entities
 //=============================================================================
 
 type DataProduct struct {
-	Id               uint     `json:"id"`
-	ConnectionId     uint     `json:"connectionId"`
-	ExchangeId       uint     `json:"exchangeId"`
-	Username         string   `json:"username"`
-	Symbol           string   `json:"symbol"`
-	Name             string   `json:"name"`
-	MarketType       string   `json:"marketType"`
-	ProductType      string   `json:"productType"`
+	Id           uint   `json:"id"`
+	ConnectionId uint   `json:"connectionId"`
+	ExchangeId   uint   `json:"exchangeId"`
+	Username     string `json:"username"`
+	Symbol       string `json:"symbol"`
+	Name         string `json:"name"`
+	MarketType   string `json:"marketType"`
+	ProductType  string `json:"productType"`
 }
 
 //=============================================================================
 
 type BrokerProduct struct {
-	Id               uint     `json:"id"`
-	ConnectionId     uint     `json:"connectionId"`
-	ExchangeId       uint     `json:"exchangeId"`
-	Username         string   `json:"username"`
-	Symbol           string   `json:"symbol"`
-	Name             string   `json:"name"`
-	PointValue       float64  `json:"pointValue"`
-	CostPerOperation float64  `json:"costPerOperation"`
-	MarginValue      float64  `json:"marginValue"`
-	Increment        float64  `json:"increment"`
-	MarketType       string   `json:"marketType"`
-	ProductType      string   `json:"productType"`
+	Id               uint    `json:"id"`
+	ConnectionId     uint    `json:"connectionId"`
+	ExchangeId       uint    `json:"exchangeId"`
+	Username         string  `json:"username"`
+	Symbol           string  `json:"symbol"`
+	Name             string  `json:"name"`
+	PointValue       float64 `json:"pointValue"`
+	CostPerOperation float64 `json:"costPerOperation"`
+	MarginValue      float64 `json:"marginValue"`
+	Increment        float64 `json:"increment"`
+	MarketType       string  `json:"marketType"`
+	ProductType      string  `json:"productType"`
 }
 
 //=============================================================================
@@ -89,9 +89,9 @@ type Exchange struct {
 //=============================================================================
 
 type Currency struct {
-	Id     uint    `json:"id"`
-	Code   string  `json:"code"`
-	Symbol string  `json:"symbol"`
+	Id     uint   `json:"id"`
+	Code   string `json:"code"`
+	Symbol string `json:"symbol"`
 }
 
 //=============================================================================
@@ -105,22 +105,22 @@ type TradingSession struct {
 //=============================================================================
 
 type TradingSystem struct {
-	Id                uint             `json:"id"`
-	Username          string           `json:"username"`
-	Name              string           `json:"name"`
-	Timeframe         int              `json:"timeframe"`
-	DataProductId     uint             `json:"dataProductId"`
-	BrokerProductId   uint             `json:"brokerProductId"`
-	TradingSessionId  uint             `json:"tradingSessionId"`
-	AgentProfileId   *uint             `json:"agentProfileId"`
-	StrategyType      string           `json:"strategyType"`
-	Overnight         bool             `json:"overnight"`
-	Tags              string           `json:"tags"`
-	ExternalRef       string           `json:"externalRef"`
-	Finalized         bool             `json:"finalized"`
-	InSampleFrom      datatype.IntDate `json:"inSampleFrom"`
-	InSampleTo        datatype.IntDate `json:"inSampleTo"`
-	EngineCode        string           `json:"engineCode"`
+	Id               uint             `json:"id"`
+	Username         string           `json:"username"`
+	Name             string           `json:"name"`
+	Timeframe        int              `json:"timeframe"`
+	DataProductId    uint             `json:"dataProductId"`
+	BrokerProductId  uint             `json:"brokerProductId"`
+	TradingSessionId uint             `json:"tradingSessionId"`
+	AgentProfileId   *uint            `json:"agentProfileId"`
+	StrategyType     string           `json:"strategyType"`
+	Overnight        bool             `json:"overnight"`
+	Tags             string           `json:"tags"`
+	ExternalRef      string           `json:"externalRef"`
+	Finalized        bool             `json:"finalized"`
+	InSampleFrom     datatype.IntDate `json:"inSampleFrom"`
+	InSampleTo       datatype.IntDate `json:"inSampleTo"`
+	EngineCode       string           `json:"engineCode"`
 }
 
 //=============================================================================

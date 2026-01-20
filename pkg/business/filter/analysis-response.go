@@ -25,8 +25,8 @@ THE SOFTWARE.
 package filter
 
 import (
-	"github.com/tradalia/portfolio-trader/pkg/core"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"time"
 )
 
@@ -87,35 +87,35 @@ type Activation struct {
 //-----------------------------------------------------------------------------
 
 func (p *Activation) AddPoint(time time.Time, value int8) {
-	p.Time   = append(p.Time,   time)
+	p.Time = append(p.Time, time)
 	p.Values = append(p.Values, value)
 }
 
 //-----------------------------------------------------------------------------
 
 func (p *Activation) IsLastActive() bool {
-	return p.Values[len(p.Values) -1] != 0
+	return p.Values[len(p.Values)-1] != 0
 }
 
 //=============================================================================
 
 type Activations struct {
-	EquityVsAverage     *Activation `json:"equityVsAverage"`
-	PositiveProfit      *Activation `json:"positiveProfit"`
-	WinningPercentage   *Activation `json:"winningPercentage"`
-	OldVsNew            *Activation `json:"oldVsNew"`
-	Trendline           *Activation `json:"trendline"`
-	Drawdown            *Activation `json:"drawdown"`
+	EquityVsAverage   *Activation `json:"equityVsAverage"`
+	PositiveProfit    *Activation `json:"positiveProfit"`
+	WinningPercentage *Activation `json:"winningPercentage"`
+	OldVsNew          *Activation `json:"oldVsNew"`
+	Trendline         *Activation `json:"trendline"`
+	Drawdown          *Activation `json:"drawdown"`
 }
 
 //-----------------------------------------------------------------------------
 
 func (a *Activations) IsLastActive() bool {
 	equVsAvg := true
-	posProf  := true
-	winPerc  := true
-	oldNew   := true
-	trendline:= true
+	posProf := true
+	winPerc := true
+	oldNew := true
+	trendline := true
 	drawdown := true
 
 	if a.EquityVsAverage != nil {

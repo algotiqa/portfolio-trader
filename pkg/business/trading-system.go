@@ -25,17 +25,17 @@ THE SOFTWARE.
 package business
 
 import (
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/core/req"
-	"github.com/tradalia/portfolio-trader/pkg/db"
-	"github.com/tradalia/portfolio-trader/pkg/platform"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/platform"
 	"gorm.io/gorm"
 )
 
 //=============================================================================
 
 func GetTradingSystems(tx *gorm.DB, c *auth.Context, filter map[string]any, offset int, limit int, details bool) (*[]db.TradingSystem, error) {
-	if ! c.Session.IsAdmin() {
+	if !c.Session.IsAdmin() {
 		filter["username"] = c.Session.Username
 	}
 
@@ -45,7 +45,7 @@ func GetTradingSystems(tx *gorm.DB, c *auth.Context, filter map[string]any, offs
 //=============================================================================
 
 func GetTradingSystem(tx *gorm.DB, c *auth.Context, id uint) (*db.TradingSystem, error) {
-	ts,err := db.GetTradingSystemById(tx, id)
+	ts, err := db.GetTradingSystemById(tx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func GetTradingSystem(tx *gorm.DB, c *auth.Context, id uint) (*db.TradingSystem,
 		return nil, req.NewNotFoundError("trading system not found : %v", id)
 	}
 
-	if ! c.Session.IsAdmin() {
+	if !c.Session.IsAdmin() {
 		if ts.Username != c.Session.Username {
 			return nil, req.NewForbiddenError("user not allowed : %v", ts.Username)
 		}
@@ -115,11 +115,11 @@ func DeleteTrades(tx *gorm.DB, c *auth.Context, id uint) error {
 		return err
 	}
 
-	ts.FirstTrade      = nil
-	ts.LastTrade       = nil
-	ts.LastNetProfit   = 0
+	ts.FirstTrade = nil
+	ts.LastTrade = nil
+	ts.LastNetProfit = 0
 	ts.LastNetAvgTrade = 0
-	ts.LastNumTrades   = 0
+	ts.LastNumTrades = 0
 
 	err = db.UpdateTradingSystem(tx, ts)
 	if err != nil {

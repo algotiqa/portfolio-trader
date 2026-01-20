@@ -24,15 +24,15 @@ THE SOFTWARE.
 
 package optimization
 
-import "github.com/tradalia/portfolio-trader/pkg/db"
+import "github.com/algotiqa/portfolio-trader/pkg/db"
 
 //=============================================================================
 
 type Context interface {
-	FilterConfig()    *FilterConfig
+	FilterConfig() *FilterConfig
 	AlgorithmConfig() *AlgorithmConfig
-	IsStopping()      bool
-	Baseline()        db.TradingFilter
+	IsStopping() bool
+	Baseline() db.TradingFilter
 
 	RunAnalysis(filter *db.TradingFilter) float64
 	LogInfo(message string)
@@ -53,13 +53,12 @@ type Algorithm interface {
 //=============================================================================
 
 type SimpleConfig struct {
-
 }
 
 //=============================================================================
 
 type GeneticConfig struct {
-	PopulationSize int `json:"populationSize"`
+	PopulationSize int  `json:"populationSize"`
 	MinSteps       uint `json:"minSteps"`
 }
 

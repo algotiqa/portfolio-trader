@@ -27,15 +27,15 @@ package business
 import (
 	"time"
 
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/core/req"
-	"github.com/tradalia/portfolio-trader/pkg/db"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 )
 
 //=============================================================================
 
-func getTradingSystemAndCheckAccess(tx *gorm.DB, c *auth.Context, id uint) (*db.TradingSystem, error){
+func getTradingSystemAndCheckAccess(tx *gorm.DB, c *auth.Context, id uint) (*db.TradingSystem, error) {
 	ts, err := db.GetTradingSystemById(tx, id)
 	if err != nil {
 		c.Log.Error("getTradingSystem: Cannot get the trading system", "id", id, "error", err)
@@ -46,7 +46,7 @@ func getTradingSystemAndCheckAccess(tx *gorm.DB, c *auth.Context, id uint) (*db.
 		return nil, req.NewNotFoundError("Trading system was not found: %v", id)
 	}
 
-	if ! c.Session.IsAdmin() {
+	if !c.Session.IsAdmin() {
 		if ts.Username != c.Session.Username {
 			return nil, req.NewForbiddenError("Trading system not owned by user: %v", id)
 		}
@@ -67,7 +67,7 @@ func calcBackPeriod(daysBack int) *time.Time {
 	//--- Specific last days
 
 	fromTime := time.Now().UTC()
-	back     := time.Hour * time.Duration(24 * daysBack)
+	back := time.Hour * time.Duration(24*daysBack)
 	fromTime = fromTime.Add(-back)
 
 	return &fromTime
