@@ -47,6 +47,12 @@ func GetQualityAnalysis(ts *db.TradingSystem, trades *[]db.Trade, man *platform.
 	res := NewAnalysisResponse()
 	res.TradingSystem = ts
 
+	if man.DailyResults == nil || len(man.DailyResults) == 0 {
+		return &AnalysisResponse{
+			TradingSystem: ts,
+		}, nil
+	}
+
 	risk, err := core.CalcRisk(trades)
 	if err != nil {
 		return nil, err

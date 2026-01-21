@@ -32,24 +32,24 @@ import (
 
 type AnalysisResponse struct {
 	TradingSystem     *db.TradingSystem `json:"tradingSystem"`
-	QualityAllGross   [6][5]*Metrics    `json:"qualityAllGross"`
-	QualityLongGross  [6][5]*Metrics    `json:"qualityLongGross"`
-	QualityShortGross [6][5]*Metrics    `json:"qualityShortGross"`
-	QualityAllNet     [6][5]*Metrics    `json:"qualityAllNet"`
-	QualityLongNet    [6][5]*Metrics    `json:"qualityLongNet"`
-	QualityShortNet   [6][5]*Metrics    `json:"qualityShortNet"`
+	QualityAllGross   *[6][5]*Metrics   `json:"qualityAllGross"`
+	QualityLongGross  *[6][5]*Metrics   `json:"qualityLongGross"`
+	QualityShortGross *[6][5]*Metrics   `json:"qualityShortGross"`
+	QualityAllNet     *[6][5]*Metrics   `json:"qualityAllNet"`
+	QualityLongNet    *[6][5]*Metrics   `json:"qualityLongNet"`
+	QualityShortNet   *[6][5]*Metrics   `json:"qualityShortNet"`
 }
 
 //=============================================================================
 
 func NewAnalysisResponse() *AnalysisResponse {
 	return &AnalysisResponse{
-		QualityAllGross:   [6][5]*Metrics{},
-		QualityLongGross:  [6][5]*Metrics{},
-		QualityShortGross: [6][5]*Metrics{},
-		QualityAllNet:     [6][5]*Metrics{},
-		QualityLongNet:    [6][5]*Metrics{},
-		QualityShortNet:   [6][5]*Metrics{},
+		QualityAllGross:   &[6][5]*Metrics{},
+		QualityLongGross:  &[6][5]*Metrics{},
+		QualityShortGross: &[6][5]*Metrics{},
+		QualityAllNet:     &[6][5]*Metrics{},
+		QualityLongNet:    &[6][5]*Metrics{},
+		QualityShortNet:   &[6][5]*Metrics{},
 	}
 }
 
