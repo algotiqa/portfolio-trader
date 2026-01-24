@@ -43,8 +43,6 @@ func Init(router *gin.Engine, cfg *app.Config, logger *slog.Logger) {
 	router.GET("/api/portfolio/v1/trading-systems", ctrl.Secure(getTradingSystems, roles.Admin_User_Service))
 	router.GET("/api/portfolio/v1/trading-systems/:id", ctrl.Secure(getTradingSystem, roles.Admin_User_Service))
 	router.GET("/api/portfolio/v1/trading-systems/:id/trades", ctrl.Secure(getTrades, roles.Admin_User_Service))
-	router.DELETE("/api/portfolio/v1/trading-systems/:id/trades", ctrl.Secure(deleteTrades, roles.Admin_User_Service))
-	router.GET("/api/portfolio/v1/trading-systems/:id/filters", ctrl.Secure(getTradingFilters, roles.Admin_User_Service))
 	router.POST("/api/portfolio/v1/trading-systems/:id/filters", ctrl.Secure(setTradingFilters, roles.Admin_User_Service))
 	router.POST("/api/portfolio/v1/trading-systems/:id/filter-analysis", ctrl.Secure(runFilterAnalysis, roles.Admin_User_Service))
 	router.POST("/api/portfolio/v1/trading-systems/:id/trading", ctrl.Secure(setTradingSystemTrading, roles.Admin_User_Service))

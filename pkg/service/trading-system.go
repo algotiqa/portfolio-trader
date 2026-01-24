@@ -102,26 +102,6 @@ func getTrades(c *auth.Context) {
 
 //=============================================================================
 
-func deleteTrades(c *auth.Context) {
-	tsId, err := c.GetIdFromUrl()
-
-	if err == nil {
-		err = db.RunInTransaction(func(tx *gorm.DB) error {
-			err = business.DeleteTrades(tx, c, tsId)
-
-			if err != nil {
-				return err
-			}
-
-			return c.ReturnObject("")
-		})
-	}
-
-	c.ReturnError(err)
-}
-
-//=============================================================================
-
 func getTradingFilters(c *auth.Context) {
 	tsId, err := c.GetIdFromUrl()
 

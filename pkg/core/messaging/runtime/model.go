@@ -34,6 +34,7 @@ import (
 
 type TradeListMessage struct {
 	TradingSystemId uint               `json:"tradingSystemId"`
+	Reload          bool               `json:"reload"`
 	Trades          []*TradeItem       `json:"trades"`
 	DailyProfits    []*DailyProfitItem `json:"dailyProfits"`
 }

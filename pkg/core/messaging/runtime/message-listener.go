@@ -32,9 +32,9 @@ import (
 
 	"github.com/algotiqa/core/datatype"
 	"github.com/algotiqa/core/msg"
-	"github.com/algotiqa/portfolio-trader/pkg/business/filter"
 	"github.com/algotiqa/portfolio-trader/pkg/consts"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/platform"
 	"gorm.io/gorm"
 )
 
@@ -93,22 +93,24 @@ func handleNewTrades(tm *TradeListMessage) bool {
 			return nil
 		}
 
-		var trades *[]db.Trade
-		trades, err = db.FindTradesByTradingSystemId(tx, tsId)
-		if err == nil {
-			var dailyProfits *[]db.DailyReturn
-			dailyProfits, err = db.FindDailyReturnsByTradingSystemId(tx, tsId)
+		var trades = &[]db.Trade{}
+		var dailyProfits = &[]db.DailyReturn{}
+
+		if tm.Reload {
+			err = deleteTrades(tx, ts)
+		} else {
+			trades, err = db.FindTradesByTradingSystemId(tx, tsId)
 			if err == nil {
-				var tf *db.TradingFilter
-				tf, err = db.GetTradingFilterByTsId(tx, tsId)
+				dailyProfits, err = db.FindDailyReturnsByTradingSystemId(tx, tsId)
+			}
+		}
+
+		if err == nil {
+			trades, err = addNewTrades(tx, ts, trades, tm.Trades)
+			if err == nil {
+				err = addNewDailyProfits(tx, ts, dailyProfits, tm.DailyProfits)
 				if err == nil {
-					trades, err = addNewTrades(tx, ts, trades, tm.Trades)
-					if err == nil {
-						err = addNewDailyProfits(tx, ts, dailyProfits, tm.DailyProfits)
-						if err == nil {
-							err = updateTradingSystem(tx, ts, trades, tf)
-						}
-					}
+					err = updateTradingSystem(tx, ts)
 				}
 			}
 		}
@@ -116,7 +118,42 @@ func handleNewTrades(tm *TradeListMessage) bool {
 		return err
 	})
 
+	if err == nil {
+		slog.Info("handleNewTrades: Ending processing of new trades", "id", tsId)
+	} else {
+		slog.Error("handleNewTrades: Ending process with error", "id", tsId, "error", err)
+	}
 	return err == nil
+}
+
+//=============================================================================
+
+func deleteTrades(tx *gorm.DB, ts *db.TradingSystem) error {
+	slog.Info("deleteTrades: Deleting all trades on trading system", "id", ts.Id, "name", ts.Name)
+
+	err := db.DeleteAllTradesByTradingSystemId(tx, ts.Id)
+	if err != nil {
+		return err
+	}
+
+	err = db.DeleteAllDailyReturnsByTradingSystemId(tx, ts.Id)
+	if err != nil {
+		return err
+	}
+
+	ts.FirstTrade = nil
+	ts.LastTrade = nil
+	ts.LastNetProfit = 0
+	ts.LastNetAvgTrade = 0
+	ts.LastNumTrades = 0
+
+	err = platform.DeleteEquityChart(ts.Username, ts.Id)
+	if err != nil {
+		return err
+	}
+
+	slog.Info("deleteTrades: Operation ended", "id", ts.Id)
+	return nil
 }
 
 //=============================================================================
@@ -124,13 +161,12 @@ func handleNewTrades(tm *TradeListMessage) bool {
 func addNewTrades(tx *gorm.DB, ts *db.TradingSystem, trades *[]db.Trade, newTrades []*TradeItem) (*[]db.Trade, error) {
 	list := *trades
 
+	//--- Keep a map of the already saved trades. Some tools (like MultiCharts) may create duplicates
+
 	tradeSet := map[string]bool{}
 	for _, dbt := range *trades {
 		tradeSet[dbt.String()] = true
 	}
-
-	firstTrade := ts.FirstTrade
-	lastTrade := ts.LastTrade
 
 	for _, tr := range newTrades {
 		dbTr := toDbTrade(ts.Id, tr)
@@ -160,23 +196,20 @@ func addNewTrades(tx *gorm.DB, ts *db.TradingSystem, trades *[]db.Trade, newTrad
 			//--- It is better to use the exit date for first/last trade because a trade could last
 			//--- for 7+ days and the IDLE flag is impacted
 
-			if firstTrade == nil || firstTrade.After(*tr.ExitDate) {
-				firstTrade = tr.ExitDate
+			if ts.FirstTrade == nil || ts.FirstTrade.After(*tr.ExitDate) {
+				ts.FirstTrade = tr.ExitDate
 			}
 
-			if lastTrade == nil || lastTrade.Before(*tr.ExitDate) {
-				lastTrade = tr.ExitDate
+			if ts.LastTrade == nil || ts.LastTrade.Before(*tr.ExitDate) {
+				ts.LastTrade = tr.ExitDate
 			}
 		}
 	}
 
-	ts.FirstTrade = firstTrade
-	ts.LastTrade = lastTrade
-
 	//--- Sort final list as new trades could be in the past
 
 	sort.Slice(list, func(i, j int) bool {
-		return list[i].EntryDate.Before(*list[j].EntryDate)
+		return list[i].ExitDate.Before(*list[j].ExitDate)
 	})
 
 	return &list, nil
@@ -247,8 +280,7 @@ func toDbDailyProfit(tsId uint, p *DailyProfitItem) *db.DailyReturn {
 
 //=============================================================================
 
-func updateTradingSystem(tx *gorm.DB, ts *db.TradingSystem, trades *[]db.Trade, filter *db.TradingFilter) error {
-	updateActivationStatus(ts, trades, filter)
+func updateTradingSystem(tx *gorm.DB, ts *db.TradingSystem) error {
 
 	//--- If we got new trades, probably we have to set an idle/broken state to running
 
@@ -265,77 +297,65 @@ func updateTradingSystem(tx *gorm.DB, ts *db.TradingSystem, trades *[]db.Trade, 
 
 //=============================================================================
 
-func updateActivationStatus(ts *db.TradingSystem, trades *[]db.Trade, f *db.TradingFilter) {
-	if !ts.Running {
-		ts.SuggestedAction = db.TsActionNone
-		ts.Status = db.TsStatusOff
-		return
-	}
-
-	//--- The trading system is running (i.e. live)
-
-	activValue := false
-	if f != nil {
-		activValue = filter.CalcActivation(ts, f, *trades)
-	}
-
-	if ts.AutoActivation {
-		handleAutomaticActivation(ts, activValue)
-	} else {
-		handleManualActivation(ts, activValue)
-	}
-}
-
-//=============================================================================
-
-func handleManualActivation(ts *db.TradingSystem, activValue bool) {
-	if !ts.Active {
-		if !activValue {
-			ts.SuggestedAction = db.TsActionNone
-		} else {
-			ts.SuggestedAction = db.TsActionTurnOn
-		}
-	} else {
-		if !activValue {
-			ts.SuggestedAction = db.TsActionTurnOff
-		} else {
-			ts.SuggestedAction = db.TsActionNone
-		}
-	}
-}
+//func updateActivationStatus(ts *db.TradingSystem, trades *[]db.Trade, f *db.TradingFilter) {
+//	if !ts.Running {
+//		ts.SuggestedAction = db.TsActionNone
+//		ts.Status = db.TsStatusOff
+//		return
+//	}
+//
+//	//--- The trading system is running (i.e. live)
+//
+//	activValue := false
+//	if f != nil {
+//		activValue = filter.CalcActivation(ts, f, *trades)
+//	}
+//
+//	if ts.AutoActivation {
+//		handleAutomaticActivation(ts, activValue)
+//	} else {
+//		handleManualActivation(ts, activValue)
+//	}
+//}
 
 //=============================================================================
 
-func handleAutomaticActivation(ts *db.TradingSystem, activValue bool) {
-	ts.SuggestedAction = db.TsActionNone
-
-	if !ts.Active {
-		if activValue {
-			ts.Status = db.TsStatusRunning
-			ts.Active = true
-			activate(ts)
-			notifyRuntime(ts)
-		}
-	} else {
-		if !activValue {
-			ts.Status = db.TsStatusPaused
-			ts.Active = false
-			activate(ts)
-			notifyRuntime(ts)
-		}
-	}
-}
+//func handleManualActivation(ts *db.TradingSystem, activValue bool) {
+//	if !ts.Active {
+//		if !activValue {
+//			ts.SuggestedAction = db.TsActionNone
+//		} else {
+//			ts.SuggestedAction = db.TsActionTurnOn
+//		}
+//	} else {
+//		if !activValue {
+//			ts.SuggestedAction = db.TsActionTurnOff
+//		} else {
+//			ts.SuggestedAction = db.TsActionNone
+//		}
+//	}
+//}
 
 //=============================================================================
 
-func activate(ts *db.TradingSystem) {
-	//TODO
-}
-
-//=============================================================================
-
-func notifyRuntime(ts *db.TradingSystem) {
-	//TODO
-}
+//func handleAutomaticActivation(ts *db.TradingSystem, activValue bool) {
+//	ts.SuggestedAction = db.TsActionNone
+//
+//	if !ts.Active {
+//		if activValue {
+//			ts.Status = db.TsStatusRunning
+//			ts.Active = true
+//			activate(ts)
+//			notifyRuntime(ts)
+//		}
+//	} else {
+//		if !activValue {
+//			ts.Status = db.TsStatusPaused
+//			ts.Active = false
+//			activate(ts)
+//			notifyRuntime(ts)
+//		}
+//	}
+//}
 
 //=============================================================================

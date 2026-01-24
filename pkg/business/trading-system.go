@@ -28,7 +28,6 @@ import (
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
-	"github.com/algotiqa/portfolio-trader/pkg/platform"
 	"gorm.io/gorm"
 )
 
@@ -93,46 +92,6 @@ func GetTrades(tx *gorm.DB, c *auth.Context, id uint) (*[]db.Trade, error) {
 	}
 
 	return db.FindTradesByTradingSystemId(tx, id)
-}
-
-//=============================================================================
-
-func DeleteTrades(tx *gorm.DB, c *auth.Context, id uint) error {
-	c.Log.Info("DeleteTrades: Deleting all trades on trading system", "id", id)
-
-	ts, err := getTradingSystemAndCheckAccess(tx, c, id)
-	if err != nil {
-		return err
-	}
-
-	err = db.DeleteAllTradesByTradingSystemId(tx, id)
-	if err != nil {
-		return err
-	}
-
-	err = db.DeleteAllDailyReturnsByTradingSystemId(tx, id)
-	if err != nil {
-		return err
-	}
-
-	ts.FirstTrade = nil
-	ts.LastTrade = nil
-	ts.LastNetProfit = 0
-	ts.LastNetAvgTrade = 0
-	ts.LastNumTrades = 0
-
-	err = db.UpdateTradingSystem(tx, ts)
-	if err != nil {
-		return err
-	}
-
-	err = platform.DeleteEquityChart(c.Session.Username, id)
-	if err != nil {
-
-	}
-
-	c.Log.Info("DeleteTrades: Operation ended", "id", id)
-	return nil
 }
 
 //=============================================================================
