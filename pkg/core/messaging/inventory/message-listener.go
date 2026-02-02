@@ -119,10 +119,10 @@ func setTradingSystem(tsm *TradingSystemMessage, create bool) bool {
 
 		if ts == nil {
 			ts = &db.TradingSystem{}
-			ts.Running = false
-			ts.AutoActivation = false
-			ts.Status = db.TsStatusOff
-			ts.Active = false
+			ts.Running         = false
+			ts.AutoActivation  = false
+			ts.Status          = db.TsStatusOff
+			ts.Active          = false
 			ts.SuggestedAction = db.TsActionNone
 		} else {
 			isNew = false
@@ -133,35 +133,36 @@ func setTradingSystem(tsm *TradingSystemMessage, create bool) bool {
 			}
 		}
 
-		ts.Id = tsm.TradingSystem.Id
-		ts.Username = tsm.TradingSystem.Username
-		ts.Name = tsm.TradingSystem.Name
-		ts.Timeframe = tsm.TradingSystem.Timeframe
-		ts.DataProductId = tsm.TradingSystem.DataProductId
-		ts.DataSymbol = tsm.DataProduct.Symbol
-		ts.BrokerProductId = tsm.TradingSystem.BrokerProductId
-		ts.BrokerSymbol = tsm.BrokerProduct.Symbol
-		ts.PointValue = tsm.BrokerProduct.PointValue
+		ts.Id               = tsm.TradingSystem.Id
+		ts.Username         = tsm.TradingSystem.Username
+		ts.Name             = tsm.TradingSystem.Name
+		ts.Timeframe        = tsm.TradingSystem.Timeframe
+		ts.DataProductId    = tsm.TradingSystem.DataProductId
+		ts.DataSymbol       = tsm.DataProduct.Symbol
+		ts.BrokerProductId  = tsm.TradingSystem.BrokerProductId
+		ts.BrokerSymbol     = tsm.BrokerProduct.Symbol
+		ts.PointValue       = tsm.BrokerProduct.PointValue
 		ts.CostPerOperation = tsm.BrokerProduct.CostPerOperation
-		ts.MarginValue = tsm.BrokerProduct.MarginValue
-		ts.Increment = tsm.BrokerProduct.Increment
-		ts.MarketType = tsm.BrokerProduct.MarketType
-		ts.CurrencyId = tsm.Currency.Id
-		ts.CurrencyCode = tsm.Currency.Code
-		ts.CurrencySymbol = tsm.Currency.Symbol
+		ts.MarginValue      = tsm.BrokerProduct.MarginValue
+		ts.Increment        = tsm.BrokerProduct.Increment
+		ts.MarketType       = tsm.BrokerProduct.MarketType
+		ts.CurrencyId       = tsm.Currency.Id
+		ts.CurrencyCode     = tsm.Currency.Code
+		ts.CurrencySymbol   = tsm.Currency.Symbol
 		ts.TradingSessionId = tsm.TradingSession.Id
-		ts.SessionName = tsm.TradingSession.Name
-		ts.SessionConfig = tsm.TradingSession.Config
-		ts.StrategyType = tsm.TradingSystem.StrategyType
-		ts.Overnight = tsm.TradingSystem.Overnight
-		ts.Tags = tsm.TradingSystem.Tags
-		ts.Finalized = tsm.TradingSystem.Finalized
-		ts.Timezone = tsm.Exchange.Timezone
-		ts.AgentProfileId = tsm.TradingSystem.AgentProfileId
-		ts.ExternalRef = tsm.TradingSystem.ExternalRef
-		ts.InSampleFrom = tsm.TradingSystem.InSampleFrom
-		ts.InSampleTo = tsm.TradingSystem.InSampleTo
-		ts.EngineCode = tsm.TradingSystem.EngineCode
+		ts.SessionName      = tsm.TradingSession.Name
+		ts.SessionConfig    = tsm.TradingSession.Config
+		ts.StrategyType     = tsm.TradingSystem.StrategyType
+		ts.Overnight        = tsm.TradingSystem.Overnight
+		ts.Tags             = tsm.TradingSystem.Tags
+		ts.Finalized        = tsm.TradingSystem.Finalized
+		ts.Timezone         = tsm.Exchange.Timezone
+		ts.AgentProfileId   = tsm.TradingSystem.AgentProfileId
+		ts.ExternalRef      = tsm.TradingSystem.ExternalRef
+		ts.InSampleFrom     = tsm.TradingSystem.InSampleFrom
+		ts.InSampleTo       = tsm.TradingSystem.InSampleTo
+		ts.EngineCode       = tsm.TradingSystem.EngineCode
+		ts.Trading          = isNew && tsm.TradingSystem.Finalized
 
 		err = db.UpdateTradingSystem(tx, ts)
 
