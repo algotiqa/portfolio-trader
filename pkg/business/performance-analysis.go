@@ -72,7 +72,12 @@ func RunPerformanceAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, req *perfor
 		return nil, err
 	}
 
-	res := performance.GetPerformanceAnalysis(ts, trades, returns)
+	livePeriods, err := db.FindLivePeriodsByTradingSystemId(tx, ts.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	res := performance.GetPerformanceAnalysis(ts, trades, returns, livePeriods)
 
 	return res, nil
 }

@@ -35,7 +35,8 @@ import (
 
 //=============================================================================
 
-func GetPerformanceAnalysis(ts *db.TradingSystem, trades *[]db.Trade, returns *[]db.DailyReturn) *AnalysisResponse {
+func GetPerformanceAnalysis(ts *db.TradingSystem, trades *[]db.Trade, returns *[]db.DailyReturn,
+	livePeriods *[]db.LivePeriod) *AnalysisResponse {
 	res := AnalysisResponse{}
 	res.TradingSystem = ts
 	res.Trades = trades
@@ -73,6 +74,7 @@ func GetPerformanceAnalysis(ts *db.TradingSystem, trades *[]db.Trade, returns *[
 	updateGeneralInfo(&res)
 	calcDistributions(&res, returns)
 	calcRolling(&res)
+	calcLivePeriods(&res, livePeriods)
 
 	return &res
 }
@@ -327,6 +329,48 @@ func updateYoY(list []*YoYRolling, year int, tr *db.Trade, slot int, costPerOper
 	updateRollingInfo(tr, yoy.Data[slot], costPerOper)
 
 	return list
+}
+
+//=============================================================================
+
+func calcLivePeriods(res *AnalysisResponse, livePeriods *[]db.LivePeriod) {
+	list := []*LivePeriod{}
+
+	if livePeriods != nil && len(*livePeriods) > 0 {
+		var currPer *LivePeriod
+
+		for _, lp := range *livePeriods {
+			//--- Skip initial inactive states
+			if currPer == nil && !lp.Active {
+				continue
+			}
+
+			//--- First active state
+			if currPer == nil && lp.Active {
+				currPer = &LivePeriod{
+					From: &lp.Period,
+				}
+			}
+
+			//--- We have a starting active period. Skip other active periods
+			if currPer != nil && lp.Active {
+				continue
+			}
+
+			//--- Close the active period
+			if currPer != nil && !lp.Active {
+				currPer.To = &lp.Period
+				list = append(list, currPer)
+				currPer = nil
+			}
+		}
+
+		if currPer != nil {
+			list = append(list, currPer)
+		}
+	}
+
+	res.LivePeriods = list
 }
 
 //=============================================================================

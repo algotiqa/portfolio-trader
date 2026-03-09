@@ -201,6 +201,13 @@ type Rolling struct {
 
 //=============================================================================
 
+type LivePeriod struct {
+	From *time.Time `json:"from"`
+	To   *time.Time `json:"to"`
+}
+
+//=============================================================================
+
 type AnalysisResponse struct {
 	General       General           `json:"general"`
 	TradingSystem *db.TradingSystem `json:"tradingSystem"`
@@ -213,6 +220,7 @@ type AnalysisResponse struct {
 	Aggregates    Aggregates        `json:"aggregates"`
 	Distributions Distributions     `json:"distributions"`
 	Rolling       Rolling           `json:"rolling"`
+	LivePeriods   []*LivePeriod     `json:"livePeriods"`
 }
 
 //=============================================================================

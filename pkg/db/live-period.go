@@ -1,6 +1,6 @@
 //=============================================================================
 /*
-Copyright © 2024 Andrea Carboni andrea.carboni71@gmail.com
+Copyright © 2025 Andrea Carboni andrea.carboni71@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,81 +22,42 @@ THE SOFTWARE.
 */
 //=============================================================================
 
-package business
+package db
 
 import (
-	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/core/req"
-	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 )
 
 //=============================================================================
 
-func GetTradingSystems(tx *gorm.DB, c *auth.Context, filter map[string]any, offset int, limit int, details bool) (*[]db.TradingSystem, error) {
-	if !c.Session.IsAdmin() {
-		filter["username"] = c.Session.Username
+func FindLivePeriodsByTradingSystemId(tx *gorm.DB, tsId uint) (*[]LivePeriod, error) {
+	var list []LivePeriod
+
+	filter := map[string]any{}
+	filter["trading_system_id"] = tsId
+
+	res := tx.Where(filter).Order("period").Find(&list)
+
+	if res.Error != nil {
+		return nil, req.NewServerErrorByError(res.Error)
 	}
 
-	return db.GetTradingSystems(tx, filter, offset, limit)
+	return &list, nil
 }
 
 //=============================================================================
 
-func GetTradingSystem(tx *gorm.DB, c *auth.Context, id uint) (*db.TradingSystem, error) {
-	ts, err := db.GetTradingSystemById(tx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	if ts == nil {
-		return nil, req.NewNotFoundError("trading system not found : %v", id)
-	}
-
-	if !c.Session.IsAdmin() {
-		if ts.Username != c.Session.Username {
-			return nil, req.NewForbiddenError("user not allowed : %v", ts.Username)
-		}
-	}
-
-	return ts, nil
+func AddLivePeriod(tx *gorm.DB, lp *LivePeriod) error {
+	err := tx.Create(lp).Error
+	return req.NewServerErrorByError(err)
 }
 
 //=============================================================================
 
-func DeleteTradingSystem(tx *gorm.DB, id uint) error {
-	err := db.DeleteAllTradesByTradingSystemId(tx, id)
-	if err != nil {
-		return err
-	}
-
-	err = db.DeleteAllDailyReturnsByTradingSystemId(tx, id)
-	if err != nil {
-		return err
-	}
-
-	err = db.DeleteAllLivePeriodsByTradingSystemId(tx, id)
-	if err != nil {
-		return err
-	}
-
-	err = db.DeleteTradingFilter(tx, id)
-	if err != nil {
-		return err
-	}
-
-	return db.DeleteTradingSystem(tx, id)
-}
-
-//=============================================================================
-
-func GetTrades(tx *gorm.DB, c *auth.Context, id uint) (*[]db.Trade, error) {
-	_, err := getTradingSystemAndCheckAccess(tx, c, id)
-	if err != nil {
-		return nil, err
-	}
-
-	return db.FindTradesByTradingSystemId(tx, id)
+func DeleteAllLivePeriodsByTradingSystemId(tx *gorm.DB, id uint) error {
+	err := tx.Delete(&LivePeriod{}, "trading_system_id", id).Error
+	return req.NewServerErrorByError(err)
 }
 
 //=============================================================================

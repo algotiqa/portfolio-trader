@@ -188,6 +188,15 @@ type DailyReturn struct {
 }
 
 //=============================================================================
+
+type LivePeriod struct {
+	Id              uint      `json:"id" gorm:"primaryKey"`
+	TradingSystemId uint      `json:"tradingSystemId"`
+	Period          time.Time `json:"period"`
+	Active          bool      `json:"active"`
+}
+
+//=============================================================================
 //===
 //=== Table names
 //===
@@ -198,6 +207,7 @@ func (TradingFilter) TableName() string { return "trading_filter" }
 func (Trade) TableName() string         { return "trade" }
 func (Portfolio) TableName() string     { return "portfolio" }
 func (DailyReturn) TableName() string   { return "daily_return" }
+func (LivePeriod) TableName() string    { return "live_period" }
 
 //=============================================================================
 //===

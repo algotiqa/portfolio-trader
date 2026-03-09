@@ -25,6 +25,8 @@ THE SOFTWARE.
 package business
 
 import (
+	"time"
+
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
@@ -142,6 +144,11 @@ func SetTradingSystemRunning(tx *gorm.DB, c *auth.Context, tsId uint, req *Tradi
 		return nil, err
 	}
 
+	err = updateLivePeriod(tx, ts)
+	if err != nil {
+		return nil, err
+	}
+
 	err = updateRewind(ts)
 	if err != nil {
 		return nil, err
@@ -218,6 +225,11 @@ func SetTradingSystemActive(tx *gorm.DB, c *auth.Context, tsId uint, req *Tradin
 		return nil, err
 	}
 
+	err = updateLivePeriod(tx, ts)
+	if err != nil {
+		return nil, err
+	}
+
 	err = updateRewind(ts)
 
 	c.Log.Info("SetTradingSystemActive: Active property changed", "id", tsId, "value", req.Value)
@@ -244,6 +256,18 @@ func updateStatus(ts *db.TradingSystem) {
 	} else {
 		ts.Status = db.TsStatusPaused
 	}
+}
+
+//============================================================================
+
+func updateLivePeriod(tx *gorm.DB, ts *db.TradingSystem) error {
+	lp := &db.LivePeriod{
+		TradingSystemId: ts.Id,
+		Period:          time.Now(),
+		Active:          ts.Running && ts.Active,
+	}
+
+	return db.AddLivePeriod(tx, lp)
 }
 
 //============================================================================

@@ -141,6 +141,11 @@ func deleteTrades(tx *gorm.DB, ts *db.TradingSystem) error {
 		return err
 	}
 
+	err = db.DeleteAllLivePeriodsByTradingSystemId(tx, ts.Id)
+	if err != nil {
+		return err
+	}
+
 	ts.FirstTrade = nil
 	ts.LastTrade = nil
 	ts.LastNetProfit = 0
