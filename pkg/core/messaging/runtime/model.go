@@ -27,7 +27,7 @@ package runtime
 import (
 	"time"
 
-	"github.com/algotiqa/core/datatype"
+	"github.com/algotiqa/types"
 )
 
 //=============================================================================
@@ -56,9 +56,9 @@ type TradeItem struct {
 //=============================================================================
 
 type DailyProfitItem struct {
-	Day         datatype.IntDate `json:"day"`
-	GrossProfit float64          `json:"grossProfit"`
-	Trades      int              `json:"trades"`
+	Day         types.Date `json:"day"`
+	GrossProfit float64    `json:"grossProfit"`
+	Trades      int        `json:"trades"`
 }
 
 //=============================================================================

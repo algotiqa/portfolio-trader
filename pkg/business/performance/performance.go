@@ -27,10 +27,10 @@ package performance
 import (
 	"time"
 
-	"github.com/algotiqa/core/datatype"
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/core/stats"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
+	"github.com/algotiqa/types"
 )
 
 //=============================================================================
@@ -184,15 +184,15 @@ func calcFromToDates(res *AnalysisResponse) {
 		firstTrade := (*res.Trades)[0].ExitDate
 		lastTrade := (*res.Trades)[numTrades-1].ExitDate
 
-		res.General.FromDate = NewIntDate(firstTrade)
-		res.General.ToDate = NewIntDate(lastTrade)
+		res.General.FromDate = NewDate(firstTrade)
+		res.General.ToDate = NewDate(lastTrade)
 	}
 }
 
 //=============================================================================
 
-func NewIntDate(t *time.Time) datatype.IntDate {
-	return datatype.IntDate(t.Year()*10000 + int(t.Month())*100 + t.Day())
+func NewDate(t *time.Time) types.Date {
+	return types.Date(t.Year()*10000 + int(t.Month())*100 + t.Day())
 }
 
 //=============================================================================

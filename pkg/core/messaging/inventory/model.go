@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package inventory
 
-import "github.com/algotiqa/core/datatype"
+import "github.com/algotiqa/types"
 
 //=============================================================================
 //=== Entities
@@ -105,22 +105,22 @@ type TradingSession struct {
 //=============================================================================
 
 type TradingSystem struct {
-	Id               uint             `json:"id"`
-	Username         string           `json:"username"`
-	Name             string           `json:"name"`
-	Timeframe        int              `json:"timeframe"`
-	DataProductId    uint             `json:"dataProductId"`
-	BrokerProductId  uint             `json:"brokerProductId"`
-	TradingSessionId uint             `json:"tradingSessionId"`
-	AgentProfileId   *uint            `json:"agentProfileId"`
-	StrategyType     string           `json:"strategyType"`
-	Overnight        bool             `json:"overnight"`
-	Tags             string           `json:"tags"`
-	ExternalRef      string           `json:"externalRef"`
-	Finalized        bool             `json:"finalized"`
-	InSampleFrom     datatype.IntDate `json:"inSampleFrom"`
-	InSampleTo       datatype.IntDate `json:"inSampleTo"`
-	EngineCode       string           `json:"engineCode"`
+	Id               uint       `json:"id"`
+	Username         string     `json:"username"`
+	Name             string     `json:"name"`
+	Timeframe        int        `json:"timeframe"`
+	DataProductId    uint       `json:"dataProductId"`
+	BrokerProductId  uint       `json:"brokerProductId"`
+	TradingSessionId uint       `json:"tradingSessionId"`
+	AgentProfileId   *uint      `json:"agentProfileId"`
+	StrategyType     string     `json:"strategyType"`
+	Overnight        bool       `json:"overnight"`
+	Tags             string     `json:"tags"`
+	ExternalRef      string     `json:"externalRef"`
+	Finalized        bool       `json:"finalized"`
+	InSampleFrom     types.Date `json:"inSampleFrom"`
+	InSampleTo       types.Date `json:"inSampleTo"`
+	EngineCode       string     `json:"engineCode"`
 }
 
 //=============================================================================

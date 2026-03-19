@@ -32,9 +32,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/algotiqa/core/datatype"
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
+	"github.com/algotiqa/types"
 	"github.com/go-analyze/charts"
 	"golang.org/x/exp/stats"
 )
@@ -133,16 +133,16 @@ func (p *Process) GetResult() *Result {
 
 //=============================================================================
 
-func (p *Process) GetFirstTradeDate() datatype.IntDate {
+func (p *Process) GetFirstTradeDate() types.Date {
 	t := *p.trades
-	return datatype.ToIntDate(t[0].ExitDate)
+	return types.ToDate(t[0].ExitDate)
 }
 
 //=============================================================================
 
-func (p *Process) GetLastTradeDate() datatype.IntDate {
+func (p *Process) GetLastTradeDate() types.Date {
 	t := *p.trades
-	return datatype.ToIntDate(t[len(*p.trades)-1].ExitDate)
+	return types.ToDate(t[len(*p.trades)-1].ExitDate)
 }
 
 //=============================================================================

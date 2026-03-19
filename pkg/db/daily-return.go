@@ -27,8 +27,8 @@ package db
 import (
 	"time"
 
-	"github.com/algotiqa/core/datatype"
 	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/types"
 	"gorm.io/gorm"
 )
 
@@ -52,15 +52,15 @@ func FindDailyReturnsByTradingSystemId(tx *gorm.DB, tsId uint) (*[]DailyReturn, 
 //=============================================================================
 
 func FindDailyReturnsByTsIdFromTime(tx *gorm.DB, tsId uint, fromTime *time.Time, toTime *time.Time) (*[]DailyReturn, error) {
-	to := datatype.Today(time.UTC)
+	to := types.Today(time.UTC)
 	from := to.AddDays(-50 * 365)
 
 	if fromTime != nil {
-		from = datatype.ToIntDate(fromTime)
+		from = types.ToDate(fromTime)
 	}
 
 	if toTime != nil {
-		to = datatype.ToIntDate(toTime)
+		to = types.ToDate(toTime)
 	}
 
 	var list []DailyReturn

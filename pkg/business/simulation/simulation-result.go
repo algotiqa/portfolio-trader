@@ -27,18 +27,18 @@ package simulation
 import (
 	"time"
 
-	"github.com/algotiqa/core/datatype"
+	"github.com/algotiqa/types"
 )
 
 //=============================================================================
 
 type Result struct {
-	FirstTradeDate datatype.IntDate `json:"firstTradeDate"`
-	LastTradeDate  datatype.IntDate `json:"lastTradeDate"`
-	Runs           int              `json:"runs"`
-	InitialCapital float64          `json:"initialCapital"`
-	RuinPercentage int              `json:"ruinPercentage"`
-	Risk           float64          `json:"risk"`
+	FirstTradeDate types.Date `json:"firstTradeDate"`
+	LastTradeDate  types.Date `json:"lastTradeDate"`
+	Runs           int        `json:"runs"`
+	InitialCapital float64    `json:"initialCapital"`
+	RuinPercentage int        `json:"ruinPercentage"`
+	Risk           float64    `json:"risk"`
 
 	Status    string    `json:"status"`
 	StartTime time.Time `json:"startTime"`
@@ -55,7 +55,7 @@ type Result struct {
 
 //=============================================================================
 
-func NewResult(first, last datatype.IntDate, runs int, initialCapital float64, ruinPerc int, risk float64) *Result {
+func NewResult(first, last types.Date, runs int, initialCapital float64, ruinPerc int, risk float64) *Result {
 	return &Result{
 		FirstTradeDate: first,
 		LastTradeDate:  last,

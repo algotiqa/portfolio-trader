@@ -28,11 +28,11 @@ import (
 	"time"
 
 	"github.com/algotiqa/core/auth"
-	"github.com/algotiqa/core/datatype"
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/portfolio-trader/pkg/business/performance"
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
+	"github.com/algotiqa/types"
 	"gorm.io/gorm"
 )
 
@@ -84,7 +84,7 @@ func RunPerformanceAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, req *perfor
 
 //=============================================================================
 
-func calcPerformancePeriod(daysBack int, fromDate, toDate datatype.IntDate, loc *time.Location) (*time.Time, *time.Time, error) {
+func calcPerformancePeriod(daysBack int, fromDate, toDate types.Date, loc *time.Location) (*time.Time, *time.Time, error) {
 	//--- All
 
 	if daysBack == 0 {

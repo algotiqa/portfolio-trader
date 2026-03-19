@@ -25,16 +25,16 @@ THE SOFTWARE.
 package performance
 
 import (
-	"github.com/algotiqa/core/datatype"
+	"github.com/algotiqa/types"
 )
 
 //=============================================================================
 
 type AnalysisRequest struct {
-	DaysBack int              `json:"daysBack" binding:"max=10000"`
-	Timezone string           `json:"timezone" binding:"required"`
-	FromDate datatype.IntDate `json:"fromDate"`
-	ToDate   datatype.IntDate `json:"toDate"`
+	DaysBack int        `json:"daysBack" binding:"max=10000"`
+	Timezone string     `json:"timezone" binding:"required"`
+	FromDate types.Date `json:"fromDate"`
+	ToDate   types.Date `json:"toDate"`
 }
 
 //=============================================================================

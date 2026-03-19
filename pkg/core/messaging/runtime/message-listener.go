@@ -30,11 +30,11 @@ import (
 	"sort"
 	"time"
 
-	"github.com/algotiqa/core/datatype"
 	"github.com/algotiqa/core/msg"
 	"github.com/algotiqa/portfolio-trader/pkg/consts"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"github.com/algotiqa/portfolio-trader/pkg/platform"
+	"github.com/algotiqa/types"
 	"gorm.io/gorm"
 )
 
@@ -251,7 +251,7 @@ func toDbTrade(tsId uint, t *TradeItem) *db.Trade {
 //=============================================================================
 
 func addNewDailyProfits(tx *gorm.DB, ts *db.TradingSystem, profits *[]db.DailyReturn, newProfits []*DailyProfitItem) error {
-	profitSet := map[datatype.IntDate]bool{}
+	profitSet := map[types.Date]bool{}
 	for _, dp := range *profits {
 		profitSet[dp.Day] = true
 	}

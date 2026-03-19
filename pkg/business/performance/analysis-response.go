@@ -27,10 +27,10 @@ package performance
 import (
 	"time"
 
-	"github.com/algotiqa/core/datatype"
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/core/stats"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
+	"github.com/algotiqa/types"
 )
 
 //=============================================================================
@@ -64,8 +64,8 @@ type Equities struct {
 //=============================================================================
 
 type General struct {
-	FromDate datatype.IntDate `json:"fromDate"`
-	ToDate   datatype.IntDate `json:"toDate"`
+	FromDate types.Date `json:"fromDate"`
+	ToDate   types.Date `json:"toDate"`
 }
 
 //=============================================================================

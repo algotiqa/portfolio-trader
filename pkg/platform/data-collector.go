@@ -28,8 +28,8 @@ import (
 	"fmt"
 
 	"github.com/algotiqa/core/auth"
-	"github.com/algotiqa/core/datatype"
 	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/types"
 )
 
 //=============================================================================
@@ -56,25 +56,25 @@ const (
 //=============================================================================
 
 type DataProductAnalysisResponse struct {
-	Id           uint             `json:"id"`
-	Symbol       string           `json:"symbol"`
-	From         datatype.IntDate `json:"from"`
-	To           datatype.IntDate `json:"to"`
-	Days         int              `json:"days"`
-	DailyResults []*DailyResult   `json:"dailyResults"`
+	Id           uint           `json:"id"`
+	Symbol       string         `json:"symbol"`
+	From         types.Date     `json:"from"`
+	To           types.Date     `json:"to"`
+	Days         int            `json:"days"`
+	DailyResults []*DailyResult `json:"dailyResults"`
 }
 
 //=============================================================================
 
 type DailyResult struct {
-	Date            datatype.IntDate `json:"date"`
-	Price           float64          `json:"price"`
-	PercDailyChange float64          `json:"percDailyChange"`
-	Sqn100          float64          `json:"sqn100"`
-	TrueRange       float64          `json:"trueRange"`
-	PercAtr20       float64          `json:"percAtr20"`
-	Direction       int              `json:"direction"`
-	Volatility      int              `json:"volatility"`
+	Date            types.Date `json:"date"`
+	Price           float64    `json:"price"`
+	PercDailyChange float64    `json:"percDailyChange"`
+	Sqn100          float64    `json:"sqn100"`
+	TrueRange       float64    `json:"trueRange"`
+	PercAtr20       float64    `json:"percAtr20"`
+	Direction       int        `json:"direction"`
+	Volatility      int        `json:"volatility"`
 }
 
 //=============================================================================

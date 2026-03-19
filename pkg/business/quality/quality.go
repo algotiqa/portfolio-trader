@@ -27,10 +27,10 @@ package quality
 import (
 	"math"
 
-	"github.com/algotiqa/core/datatype"
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"github.com/algotiqa/portfolio-trader/pkg/platform"
+	"github.com/algotiqa/types"
 	"golang.org/x/exp/stats"
 )
 
@@ -93,8 +93,8 @@ func GetQualityAnalysis(ts *db.TradingSystem, trades *[]db.Trade, man *platform.
 //===
 //=============================================================================
 
-func buildMarketMap(list []*platform.DailyResult) map[datatype.IntDate]*platform.DailyResult {
-	res := make(map[datatype.IntDate]*platform.DailyResult)
+func buildMarketMap(list []*platform.DailyResult) map[types.Date]*platform.DailyResult {
+	res := make(map[types.Date]*platform.DailyResult)
 
 	for _, dr := range list {
 		res[dr.Date] = dr
@@ -105,7 +105,7 @@ func buildMarketMap(list []*platform.DailyResult) map[datatype.IntDate]*platform
 
 //=============================================================================
 
-func calcQualityCell(res *AnalysisResponse, trades *[]db.Trade, dir int, vol int, risk float64, costPerOperation float64, marketMap map[datatype.IntDate]*platform.DailyResult) {
+func calcQualityCell(res *AnalysisResponse, trades *[]db.Trade, dir int, vol int, risk float64, costPerOperation float64, marketMap map[types.Date]*platform.DailyResult) {
 	res.QualityAllGross[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeAll, dir, vol, risk, 0, marketMap)
 	res.QualityLongGross[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeLong, dir, vol, risk, 0, marketMap)
 	res.QualityShortGross[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeShort, dir, vol, risk, 0, marketMap)
@@ -117,7 +117,7 @@ func calcQualityCell(res *AnalysisResponse, trades *[]db.Trade, dir int, vol int
 
 //=============================================================================
 
-func calcQualityMetrics(trades *[]db.Trade, tradeType string, direction int, volatility int, risk float64, costPerOper float64, marketMap map[datatype.IntDate]*platform.DailyResult) *Metrics {
+func calcQualityMetrics(trades *[]db.Trade, tradeType string, direction int, volatility int, risk float64, costPerOper float64, marketMap map[types.Date]*platform.DailyResult) *Metrics {
 
 	//--- Step 1: Collect relevant trades
 
@@ -152,8 +152,8 @@ func calcQualityMetrics(trades *[]db.Trade, tradeType string, direction int, vol
 
 //=============================================================================
 
-func mapTrade(trade *db.Trade, marketMap map[datatype.IntDate]*platform.DailyResult) (int, int) {
-	date := datatype.ToIntDate(trade.EntryDate)
+func mapTrade(trade *db.Trade, marketMap map[types.Date]*platform.DailyResult) (int, int) {
+	date := types.ToDate(trade.EntryDate)
 	dr, ok := marketMap[date]
 	if !ok {
 		return 10, 10
