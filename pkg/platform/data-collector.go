@@ -26,9 +26,11 @@ package platform
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"github.com/algotiqa/types"
 )
 
@@ -56,23 +58,28 @@ const (
 //=============================================================================
 
 type DataProductAnalysisResponse struct {
-	Id           uint           `json:"id"`
-	Symbol       string         `json:"symbol"`
-	From         types.Date     `json:"from"`
-	To           types.Date     `json:"to"`
-	Days         int            `json:"days"`
-	DailyResults []*DailyResult `json:"dailyResults"`
+	Id         uint          `json:"id"`
+	Symbol     string        `json:"symbol"`
+	From       types.Date    `json:"from"`
+	To         types.Date    `json:"to"`
+	Bars       int           `json:"bars"`
+	Timeframe  int           `json:"timeframe"`
+	AtrLength  int           `json:"atrLength"`
+	BarResults []*BarResult  `json:"barResults"`
 }
 
 //=============================================================================
 
-type DailyResult struct {
-	Date            types.Date `json:"date"`
-	Price           float64    `json:"price"`
-	PercDailyChange float64    `json:"percDailyChange"`
-	Sqn100          float64    `json:"sqn100"`
+type BarResult struct {
+	Time            time.Time  `json:"time"`
+	Close           float64    `json:"close"`
+	BarChangePerc   float64    `json:"barChangePerc"`
 	TrueRange       float64    `json:"trueRange"`
-	PercAtr20       float64    `json:"percAtr20"`
+	Sqn100          float64    `json:"sqn100"`
+	Atr             float64    `json:"atr"`
+	AtrPerc         float64    `json:"atrPerc"`
+	AtrMeanPerc     float64    `json:"atrMeanPerc"`
+	AtrStdDevPerc   float64    `json:"atrStdDevPerc"`
 	Direction       int        `json:"direction"`
 	Volatility      int        `json:"volatility"`
 }
@@ -83,18 +90,20 @@ type DailyResult struct {
 //===
 //=============================================================================
 
-func AnalyzeDataProduct(c *auth.Context, id uint, backDays int) (*DataProductAnalysisResponse, error) {
+func AnalyzeDataProduct(c *auth.Context, ts *db.TradingSystem, backDays, atrLen int, timeframe int) (*DataProductAnalysisResponse, error) {
+	id := ts.DataProductId
 	c.Log.Info("AnalyzeDataProduct: Asking data product analysis to data collector", "id", id, "backDays", backDays)
 
 	token := c.Token
 	client := req.GetClient("bf")
-	url := fmt.Sprintf("%s/v1/data-products/%d/analysis?backDays=%d", platform.Data, id, backDays)
+	url := fmt.Sprintf("%s/v1/data-products/%d/analysis?backDays=%d&timeframe=%d&sessionId=%d&atrLen=%d",
+						platform.Data, id, backDays, timeframe, ts.TradingSessionId, atrLen)
 
 	var res DataProductAnalysisResponse
 	err := req.DoGet(client, url, &res, token)
 	if err != nil {
 		c.Log.Error("AnalyzeDataProduct: Got an error when accessing the data-collector", "id", id, "error", err.Error())
-		return nil, req.NewServerError("Cannot communicate with data-manager: %v", err.Error())
+		return nil, err
 	}
 
 	c.Log.Info("AnalyzeDataProduct: Analysis received", "id", id)

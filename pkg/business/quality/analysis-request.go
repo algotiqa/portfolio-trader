@@ -27,7 +27,9 @@ package quality
 //=============================================================================
 
 type AnalysisRequest struct {
-	DaysBack int `json:"daysBack" binding:"max=20000"`
+	DaysBack      int    `json:"daysBack"      binding:"min=0,max=20000"`
+	TimeframeType string `json:"timeframeType"`
+	AtrLength     int    `json:"atrLength"     binding:"min=5,max=50"`
 }
 
 //=============================================================================

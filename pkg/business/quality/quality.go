@@ -25,12 +25,13 @@ THE SOFTWARE.
 package quality
 
 import (
+	"log/slog"
 	"math"
+	"time"
 
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"github.com/algotiqa/portfolio-trader/pkg/platform"
-	"github.com/algotiqa/types"
 	"golang.org/x/exp/stats"
 )
 
@@ -43,46 +44,53 @@ const (
 
 //=============================================================================
 
-func GetQualityAnalysis(ts *db.TradingSystem, trades *[]db.Trade, man *platform.DataProductAnalysisResponse) (*AnalysisResponse, error) {
+func GetQualityAnalysis(ts *db.TradingSystem, trades *[]db.Trade, man *platform.DataProductAnalysisResponse,
+						timeframe int) (*AnalysisResponse, error) {
 	res := NewAnalysisResponse()
 	res.TradingSystem = ts
 
-	if man.DailyResults == nil || len(man.DailyResults) == 0 {
+	if man.BarResults == nil || len(man.BarResults) == 0 {
 		return &AnalysisResponse{
 			TradingSystem: ts,
 		}, nil
 	}
+
+	prodLoc,err := time.LoadLocation(ts.Timezone)
+	if err != nil {
+		slog.Error("GetQualityAnalysis: Failed to load timezone '%s'", ts.Timezone)
+		return nil, err
+	}
+
+	marketRegime := NewMarketRegime(man.BarResults, timeframe, prodLoc)
 
 	risk, err := core.CalcRisk(trades)
 	if err != nil {
 		return nil, err
 	}
 
-	marketMap := buildMarketMap(man.DailyResults)
-
 	//--- Calc all standard metrics
 
 	for dir := platform.DirectionStrongBear; dir <= platform.DirectionStrongBull; dir++ {
 		for vol := platform.VolatilityQuiet; vol <= platform.VolatilityVeryVolatile; vol++ {
-			calcQualityCell(res, trades, dir, vol, risk, ts.CostPerOperation, marketMap)
+			calcQualityCell(res, trades, dir, vol, risk, ts.CostPerOperation, marketRegime)
 		}
 	}
 
 	//--- Calc summary by direction
 
 	for dir := platform.DirectionStrongBear; dir <= platform.DirectionStrongBull; dir++ {
-		calcQualityCell(res, trades, dir, VolatilityAll, risk, ts.CostPerOperation, marketMap)
+		calcQualityCell(res, trades, dir, VolatilityAll, risk, ts.CostPerOperation, marketRegime)
 	}
 
 	//--- Calc summary by volatility
 
 	for vol := platform.VolatilityQuiet; vol <= platform.VolatilityVeryVolatile; vol++ {
-		calcQualityCell(res, trades, DirectionAll, vol, risk, ts.CostPerOperation, marketMap)
+		calcQualityCell(res, trades, DirectionAll, vol, risk, ts.CostPerOperation, marketRegime)
 	}
 
 	//--- Calc overall
 
-	calcQualityCell(res, trades, DirectionAll, VolatilityAll, risk, ts.CostPerOperation, marketMap)
+	calcQualityCell(res, trades, DirectionAll, VolatilityAll, risk, ts.CostPerOperation, marketRegime)
 
 	return res, nil
 }
@@ -93,31 +101,21 @@ func GetQualityAnalysis(ts *db.TradingSystem, trades *[]db.Trade, man *platform.
 //===
 //=============================================================================
 
-func buildMarketMap(list []*platform.DailyResult) map[types.Date]*platform.DailyResult {
-	res := make(map[types.Date]*platform.DailyResult)
+func calcQualityCell(res *AnalysisResponse, trades *[]db.Trade, dir int, vol int, risk float64, costPerOperation float64,
+					 marketRegime MarketRegime) {
+	res.QualityAllGross  [dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeAll,   dir, vol, risk, 0, marketRegime)
+	res.QualityLongGross [dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeLong,  dir, vol, risk, 0, marketRegime)
+	res.QualityShortGross[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeShort, dir, vol, risk, 0, marketRegime)
 
-	for _, dr := range list {
-		res[dr.Date] = dr
-	}
-
-	return res
+	res.QualityAllNet  [dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeAll,   dir, vol, risk, costPerOperation, marketRegime)
+	res.QualityLongNet [dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeLong,  dir, vol, risk, costPerOperation, marketRegime)
+	res.QualityShortNet[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeShort, dir, vol, risk, costPerOperation, marketRegime)
 }
 
 //=============================================================================
 
-func calcQualityCell(res *AnalysisResponse, trades *[]db.Trade, dir int, vol int, risk float64, costPerOperation float64, marketMap map[types.Date]*platform.DailyResult) {
-	res.QualityAllGross[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeAll, dir, vol, risk, 0, marketMap)
-	res.QualityLongGross[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeLong, dir, vol, risk, 0, marketMap)
-	res.QualityShortGross[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeShort, dir, vol, risk, 0, marketMap)
-
-	res.QualityAllNet[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeAll, dir, vol, risk, costPerOperation, marketMap)
-	res.QualityLongNet[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeLong, dir, vol, risk, costPerOperation, marketMap)
-	res.QualityShortNet[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeShort, dir, vol, risk, costPerOperation, marketMap)
-}
-
-//=============================================================================
-
-func calcQualityMetrics(trades *[]db.Trade, tradeType string, direction int, volatility int, risk float64, costPerOper float64, marketMap map[types.Date]*platform.DailyResult) *Metrics {
+func calcQualityMetrics(trades *[]db.Trade, tradeType string, direction int, volatility int, risk float64, costPerOper float64,
+						marketRegime MarketRegime) *Metrics {
 
 	//--- Step 1: Collect relevant trades
 
@@ -125,7 +123,11 @@ func calcQualityMetrics(trades *[]db.Trade, tradeType string, direction int, vol
 
 	for _, t := range *trades {
 		if t.TradeType == tradeType || tradeType == db.TradeTypeAll {
-			tradeDir, tradeVol := mapTrade(&t, marketMap)
+			tradeDir, tradeVol := marketRegime.MapTrade(&t)
+			if tradeVol == -1 {
+				slog.Warn("calcQualityMetrics: Cannot find market bar for trade", "tradeId", t.Id)
+				continue
+			}
 
 			if direction == DirectionAll || direction == tradeDir {
 				if volatility == VolatilityAll || volatility == tradeVol {
@@ -152,25 +154,13 @@ func calcQualityMetrics(trades *[]db.Trade, tradeType string, direction int, vol
 
 //=============================================================================
 
-func mapTrade(trade *db.Trade, marketMap map[types.Date]*platform.DailyResult) (int, int) {
-	date := types.ToDate(trade.EntryDate)
-	dr, ok := marketMap[date]
-	if !ok {
-		return 10, 10
-	}
-
-	return dr.Direction, dr.Volatility
-}
-
-//=============================================================================
-
 func calcMetrics(list []float64, cell *Metrics) {
 	mean, stdd := stats.MeanAndStdDev(list)
 	listLen := float64(len(list))
 	capLen := math.Min(listLen, 100)
 
 	if stdd > 0.0 {
-		cell.Sqn = core.Trunc2d(mean / stdd * math.Sqrt(listLen))
+		cell.Sqn    = core.Trunc2d(mean / stdd * math.Sqrt(listLen))
 		cell.Sqn100 = core.Trunc2d(mean / stdd * math.Sqrt(capLen))
 	}
 

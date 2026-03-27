@@ -26,6 +26,7 @@ package business
 
 import (
 	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/portfolio-trader/pkg/business/quality"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"github.com/algotiqa/portfolio-trader/pkg/platform"
@@ -34,8 +35,13 @@ import (
 
 //=============================================================================
 
-func RunQualityAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, req *quality.AnalysisRequest) (*quality.AnalysisResponse, error) {
+const (
+	TimeframeSystem = "ts"
+	TimeframeDaily  = "daily"
+)
+//=============================================================================
 
+func RunQualityAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, req *quality.AnalysisRequest) (*quality.AnalysisResponse, error) {
 	//--- Get trading system
 
 	ts, err := getTradingSystemAndCheckAccess(tx, c, tsId)
@@ -45,17 +51,43 @@ func RunQualityAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, req *quality.An
 
 	fromTime := calcBackPeriod(req.DaysBack)
 
+	timeframe, err := parseTimeframeType(req.TimeframeType, ts)
+	if err != nil {
+		return nil, err
+	}
+
 	trades, err := db.FindTradesByTsIdFromTime(tx, ts.Id, fromTime, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	man, err := platform.AnalyzeDataProduct(c, ts.DataProductId, 0)
+	history := 0
+	if req.DaysBack != 0 {
+		//--- We are going back 100 solar days in the past but aggregation on data collector is done on
+		//--- 100 trading days. So, 100 trading days are (roughly) 150 solar days (we take some buffer)
+		history = req.DaysBack + 150
+	}
+
+	man, err := platform.AnalyzeDataProduct(c, ts, history, req.AtrLength, timeframe)
 	if err != nil {
 		return nil, err
 	}
 
-	return quality.GetQualityAnalysis(ts, trades, man)
+	return quality.GetQualityAnalysis(ts, trades, man, timeframe)
+}
+
+//=============================================================================
+
+func parseTimeframeType(tfType string, ts *db.TradingSystem) (int, error) {
+	if tfType == "" || tfType == TimeframeDaily {
+		return 1440, nil
+	}
+
+	if tfType == TimeframeSystem {
+		return ts.Timeframe, nil
+	}
+
+	return 0, req.NewBadRequestError("invalid timeframe type: " + tfType +" (must be one of 'ts','daily' )")
 }
 
 //=============================================================================
