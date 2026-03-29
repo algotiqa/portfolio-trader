@@ -94,14 +94,22 @@ func (mr *DailyMarketRegime) MapTrade(trade *db.Trade) (int, int) {
 
 	br, ok := mr.dayMap[date]
 
+
 	if !ok || entryDate.After(br.Time) {
 		//--- We probably need to go to the next day because there is a missing
 		//--- day (maybe a holiday) but the trade started in the afternoon of that holiday.
 		//--- If entryDate>endSessionDate, we need to go to the next session
 
-		br, ok = mr.dayMap[date.AddDays(1)]
-		if !ok {
-			return -1, -1
+		br2, ok2 := mr.dayMap[date.AddDays(1)]
+		if !ok2 {
+			//--- If the trade is not on the next day, the session may have been reduced
+			//--- because of holidays. Let's check if the current day exists
+
+			if !ok {
+				return -1, -1
+			}
+		} else {
+			br = br2
 		}
 	}
 
