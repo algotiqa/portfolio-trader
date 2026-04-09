@@ -28,11 +28,9 @@ import (
 	"time"
 
 	"github.com/algotiqa/core/auth"
-	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/portfolio-trader/pkg/business/performance"
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
-	"github.com/algotiqa/types"
 	"gorm.io/gorm"
 )
 
@@ -55,7 +53,7 @@ func RunPerformanceAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, req *perfor
 		return nil, err
 	}
 
-	fromTime, toTime, err := calcPerformancePeriod(req.DaysBack, req.FromDate, req.ToDate, loc)
+	fromTime, toTime, err := core.CalcSelectedPeriod(&req.SelectedPeriod, loc)
 	if err != nil {
 		c.Log.Error("RunPerformanceAnalysis: Bad fromDate or toDate", "fromDate", req.FromDate, "toDate", req.ToDate, "error", err)
 		return nil, err
@@ -76,6 +74,7 @@ func RunPerformanceAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, req *perfor
 	if err != nil {
 		return nil, err
 	}
+	shiftLiveTimezone(livePeriods, loc)
 
 	res := performance.GetPerformanceAnalysis(ts, trades, returns, livePeriods)
 
@@ -84,62 +83,23 @@ func RunPerformanceAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, req *perfor
 
 //=============================================================================
 
-func calcPerformancePeriod(daysBack int, fromDate, toDate types.Date, loc *time.Location) (*time.Time, *time.Time, error) {
-	//--- All
-
-	if daysBack == 0 {
-		return nil, nil, nil
+func shiftTradesTimezone(trades *[]db.Trade, loc *time.Location) {
+	for i := 0; i < len(*trades); i++ {
+		tr := &(*trades)[i]
+		tr.EntryDate         = shiftLocation(tr.EntryDate,         loc)
+		tr.ExitDate          = shiftLocation(tr.ExitDate,          loc)
+		tr.EntryDateAtBroker = shiftLocation(tr.EntryDateAtBroker, loc)
+		tr.ExitDateAtBroker  = shiftLocation(tr.ExitDateAtBroker,  loc)
 	}
-
-	//--- Specific last days
-
-	if daysBack > 0 {
-		fromTime := time.Now().UTC()
-		back := time.Hour * time.Duration(24*daysBack)
-		fromTime = fromTime.Add(-back)
-
-		return &fromTime, nil, nil
-	}
-
-	//--- Custom range
-
-	if daysBack == -1 {
-		var from *time.Time
-		var to *time.Time
-
-		if !fromDate.IsNil() {
-			if !fromDate.IsValid() {
-				return nil, nil, req.NewBadRequestError("Invalid fromDate parameter: %d", fromDate)
-			}
-
-			tt := fromDate.ToDateTime(false, loc)
-			from = &tt
-		}
-
-		if !toDate.IsNil() {
-			if !toDate.IsValid() {
-				return nil, nil, req.NewBadRequestError("Invalid toDate parameter: %d", toDate)
-			}
-
-			tt := toDate.ToDateTime(true, loc)
-			to = &tt
-		}
-
-		return from, to, nil
-	}
-
-	return nil, nil, req.NewBadRequestError("Invalid daysBack parameter: %d", daysBack)
 }
 
 //=============================================================================
 
-func shiftTradesTimezone(trades *[]db.Trade, loc *time.Location) {
-	for i := 0; i < len(*trades); i++ {
-		tr := &(*trades)[i]
-		tr.EntryDate = shiftLocation(tr.EntryDate, loc)
-		tr.ExitDate = shiftLocation(tr.ExitDate, loc)
-		tr.EntryDateAtBroker = shiftLocation(tr.EntryDateAtBroker, loc)
-		tr.ExitDateAtBroker = shiftLocation(tr.ExitDateAtBroker, loc)
+func shiftLiveTimezone(periods *[]db.LivePeriod, loc *time.Location) {
+	for i := 0; i < len(*periods); i++ {
+		lp := &(*periods)[i]
+		aux := shiftLocation(&lp.Period, loc)
+		lp.Period = *aux
 	}
 }
 

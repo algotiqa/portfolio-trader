@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 package filter
 
-import "time"
+import "github.com/algotiqa/portfolio-trader/pkg/core"
 
 //=============================================================================
 //===
@@ -33,7 +33,7 @@ import "time"
 //=============================================================================
 
 type AnalysisRequest struct {
-	StartDate *time.Time      `json:"startDate,omitempty"`
+	core.SelectedPeriod
 	Filter    *TradingFilter  `json:"filter,omitempty"`
 }
 

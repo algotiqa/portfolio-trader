@@ -25,6 +25,8 @@ THE SOFTWARE.
 package business
 
 import (
+	"time"
+
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/portfolio-trader/pkg/business/simulation"
@@ -45,9 +47,12 @@ func StartSimulation(tx *gorm.DB, c *auth.Context, tsId uint, rq *simulation.Req
 
 	c.Log.Info("StartSimulation: Starting", "id", tsId, "name", ts.Name, "runs", rq.Runs)
 
-	fromTime := calcBackPeriod(rq.DaysBack)
+	fromDate,toDate,err := core.CalcSelectedPeriod(&rq.SelectedPeriod, time.UTC)
+	if err != nil {
+		return err
+	}
 
-	trades, err := db.FindTradesByTsIdFromTime(tx, ts.Id, fromTime, nil)
+	trades, err := db.FindTradesByTsIdFromTime(tx, ts.Id, fromDate, toDate)
 	if err != nil {
 		return err
 	}

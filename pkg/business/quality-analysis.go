@@ -25,9 +25,12 @@ THE SOFTWARE.
 package business
 
 import (
+	"time"
+
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/portfolio-trader/pkg/business/quality"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"github.com/algotiqa/portfolio-trader/pkg/platform"
 	"gorm.io/gorm"
@@ -49,26 +52,29 @@ func RunQualityAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, req *quality.An
 		return nil, err
 	}
 
-	fromTime := calcBackPeriod(req.DaysBack)
+	fromDate,toDate,err := core.CalcSelectedPeriod(&req.SelectedPeriod, time.UTC)
+	if err != nil {
+		return nil, err
+	}
 
 	timeframe, err := parseTimeframeType(req.TimeframeType, ts)
 	if err != nil {
 		return nil, err
 	}
 
-	trades, err := db.FindTradesByTsIdFromTime(tx, ts.Id, fromTime, nil)
+	trades, err := db.FindTradesByTsIdFromTime(tx, ts.Id, fromDate, toDate)
 	if err != nil {
 		return nil, err
 	}
 
-	history := 0
-	if req.DaysBack != 0 {
+	if fromDate != nil {
 		//--- We are going back 100 solar days in the past but aggregation on data collector is done on
 		//--- 100 trading days. So, 100 trading days are (roughly) 150 solar days (we take some buffer)
-		history = req.DaysBack + 150
+		tmp := fromDate.Add(-time.Hour * time.Duration(24 * 150))
+		fromDate = &tmp
 	}
 
-	man, err := platform.AnalyzeDataProduct(c, ts, history, req.AtrLength, timeframe)
+	man, err := platform.AnalyzeDataProduct(c, ts, fromDate, toDate, req.AtrLength, timeframe)
 	if err != nil {
 		return nil, err
 	}

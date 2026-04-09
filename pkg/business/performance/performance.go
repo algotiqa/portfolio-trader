@@ -39,36 +39,36 @@ func GetPerformanceAnalysis(ts *db.TradingSystem, trades *[]db.Trade, returns *[
 	livePeriods *[]db.LivePeriod) *AnalysisResponse {
 	res := AnalysisResponse{}
 	res.TradingSystem = ts
-	res.Trades = trades
+	res.Trades        = trades
 
-	allEq, allMaxGrossDD, allMaxNetDD := calcEquities(ts, trades, db.TradeTypeAll)
-	longEq, longMaxGrossDD, longMaxNetDD := calcEquities(ts, trades, db.TradeTypeLong)
+	allEq,   allMaxGrossDD,   allMaxNetDD   := calcEquities(ts, trades, db.TradeTypeAll)
+	longEq,  longMaxGrossDD,  longMaxNetDD  := calcEquities(ts, trades, db.TradeTypeLong)
 	shortEq, shortMaxGrossDD, shortMaxNetDD := calcEquities(ts, trades, db.TradeTypeShort)
 
-	res.AllEquities = allEq
-	res.LongEquities = longEq
+	res.AllEquities   = allEq
+	res.LongEquities  = longEq
 	res.ShortEquities = shortEq
 
 	res.Gross.MaxDrawdown.Total = allMaxGrossDD
-	res.Gross.MaxDrawdown.Long = longMaxGrossDD
+	res.Gross.MaxDrawdown.Long  = longMaxGrossDD
 	res.Gross.MaxDrawdown.Short = shortMaxGrossDD
-	res.Net.MaxDrawdown.Total = allMaxNetDD
-	res.Net.MaxDrawdown.Long = longMaxNetDD
-	res.Net.MaxDrawdown.Short = shortMaxNetDD
+	res.Net  .MaxDrawdown.Total = allMaxNetDD
+	res.Net  .MaxDrawdown.Long  = longMaxNetDD
+	res.Net  .MaxDrawdown.Short = shortMaxNetDD
 
-	res.Gross.Profit.Total = calcProfit(allEq.GrossEquity)
-	res.Gross.Profit.Long = calcProfit(longEq.GrossEquity)
+	res.Gross.Profit.Total = calcProfit(allEq  .GrossEquity)
+	res.Gross.Profit.Long  = calcProfit(longEq .GrossEquity)
 	res.Gross.Profit.Short = calcProfit(shortEq.GrossEquity)
-	res.Net.Profit.Total = calcProfit(allEq.NetEquity)
-	res.Net.Profit.Long = calcProfit(longEq.NetEquity)
-	res.Net.Profit.Short = calcProfit(shortEq.NetEquity)
+	res.Net  .Profit.Total = calcProfit(allEq  .NetEquity)
+	res.Net  .Profit.Long  = calcProfit(longEq .NetEquity)
+	res.Net  .Profit.Short = calcProfit(shortEq.NetEquity)
 
-	res.Gross.AverageTrade.Total = calcAvgTrade(res.Gross.Profit.Total, allEq.Trades)
-	res.Gross.AverageTrade.Long = calcAvgTrade(res.Gross.Profit.Long, longEq.Trades)
+	res.Gross.AverageTrade.Total = calcAvgTrade(res.Gross.Profit.Total, allEq  .Trades)
+	res.Gross.AverageTrade.Long  = calcAvgTrade(res.Gross.Profit.Long,  longEq .Trades)
 	res.Gross.AverageTrade.Short = calcAvgTrade(res.Gross.Profit.Short, shortEq.Trades)
-	res.Net.AverageTrade.Total = calcAvgTrade(res.Net.Profit.Total, allEq.Trades)
-	res.Net.AverageTrade.Long = calcAvgTrade(res.Net.Profit.Long, longEq.Trades)
-	res.Net.AverageTrade.Short = calcAvgTrade(res.Net.Profit.Short, shortEq.Trades)
+	res.Net  .AverageTrade.Total = calcAvgTrade(res.Net  .Profit.Total, allEq  .Trades)
+	res.Net  .AverageTrade.Long  = calcAvgTrade(res.Net  .Profit.Long,  longEq .Trades)
+	res.Net  .AverageTrade.Short = calcAvgTrade(res.Net  .Profit.Short, shortEq.Trades)
 
 	calcAggregates(&res)
 	updateGeneralInfo(&res)
@@ -90,10 +90,10 @@ func calcEquities(ts *db.TradingSystem, trades *[]db.Trade, tradeType string) (*
 	netProfits := core.BuildNetProfits(grossProfits, ts.CostPerOperation)
 
 	grossEquity := core.BuildEquity(grossProfits)
-	netEquity := core.BuildEquity(netProfits)
+	netEquity   := core.BuildEquity(netProfits)
 
 	grossDD, maxGrossDD := core.BuildDrawDown(grossEquity)
-	netDD, maxNetDD := core.BuildDrawDown(netEquity)
+	netDD,   maxNetDD   := core.BuildDrawDown(netEquity)
 
 	return &Equities{
 		Time:          timeSlice,
@@ -185,7 +185,7 @@ func calcFromToDates(res *AnalysisResponse) {
 		lastTrade := (*res.Trades)[numTrades-1].ExitDate
 
 		res.General.FromDate = NewDate(firstTrade)
-		res.General.ToDate = NewDate(lastTrade)
+		res.General.ToDate   = NewDate(lastTrade)
 	}
 }
 
@@ -215,7 +215,7 @@ func calcDistributions(res *AnalysisResponse, returns *[]db.DailyReturn) {
 	allNet := core.BuildNetProfits(allGross, res.TradingSystem.CostPerOperation)
 
 	dist.TradesAllGross = calcDistribution(*allGross)
-	dist.TradesAllNet = calcDistribution(*allNet)
+	dist.TradesAllNet   = calcDistribution(*allNet)
 
 	//--- Long (gross + net)
 
@@ -223,7 +223,7 @@ func calcDistributions(res *AnalysisResponse, returns *[]db.DailyReturn) {
 	longNet := core.BuildNetProfits(longGross, res.TradingSystem.CostPerOperation)
 
 	dist.TradesLongGross = calcDistribution(*longGross)
-	dist.TradesLongNet = calcDistribution(*longNet)
+	dist.TradesLongNet   = calcDistribution(*longNet)
 
 	//--- Short (gross + net)
 
@@ -231,7 +231,7 @@ func calcDistributions(res *AnalysisResponse, returns *[]db.DailyReturn) {
 	shortNet := core.BuildNetProfits(shortGross, res.TradingSystem.CostPerOperation)
 
 	dist.TradesShortGross = calcDistribution(*shortGross)
-	dist.TradesShortNet = calcDistribution(*shortNet)
+	dist.TradesShortNet   = calcDistribution(*shortNet)
 }
 
 //=============================================================================
@@ -241,12 +241,12 @@ func calcDistribution(data []float64) *Distribution {
 		return nil
 	}
 
-	mean := stats.Mean(data)
-	median := stats.Median(data)
-	stdDev := stats.StdDev(data, mean)
-	sharpeR := stats.SharpeRatio(mean, stdDev)
+	mean     := stats.Mean(data)
+	median   := stats.Median(data)
+	stdDev   := stats.StdDev(data, mean)
+	sharpeR  := stats.SharpeRatio(mean, stdDev)
 	skewness := stats.Skewness(mean, median, stdDev)
-	percen := stats.NewPercentile(data)
+	percen   := stats.NewPercentile(data)
 
 	perc01 := percen.Get(1) - mean
 	perc30 := percen.Get(30) - mean
@@ -284,7 +284,7 @@ func calcRolling(res *AnalysisResponse) {
 		updateRollingInfo(&tr, dowRI, costPerOper)
 		updateRollingInfo(&tr, monRI, costPerOper)
 
-		res.Rolling.DayYoY = updateYoY(res.Rolling.DayYoY, year, &tr, dow, costPerOper, 7)
+		res.Rolling.DayYoY   = updateYoY(res.Rolling.DayYoY,   year, &tr, dow, costPerOper, 7)
 		res.Rolling.MonthYoY = updateYoY(res.Rolling.MonthYoY, year, &tr, mon, costPerOper, 12)
 	}
 }
@@ -294,16 +294,16 @@ func calcRolling(res *AnalysisResponse) {
 func updateRollingInfo(tr *db.Trade, ri *RollingInfo, costPerOper float64) {
 	ri.Trades.Total++
 	ri.GrossReturns.Total += tr.GrossProfit
-	ri.NetReturns.Total += tr.GrossProfit - 2*costPerOper
+	ri.NetReturns  .Total += tr.GrossProfit - 2*costPerOper
 
 	if tr.TradeType == db.TradeTypeLong {
 		ri.Trades.Long++
 		ri.GrossReturns.Long += tr.GrossProfit
-		ri.NetReturns.Long += tr.GrossProfit - 2*costPerOper
+		ri.NetReturns  .Long += tr.GrossProfit - 2*costPerOper
 	} else {
 		ri.Trades.Short++
 		ri.GrossReturns.Short += tr.GrossProfit
-		ri.NetReturns.Short += tr.GrossProfit - 2*costPerOper
+		ri.NetReturns  .Short += tr.GrossProfit - 2*costPerOper
 	}
 }
 

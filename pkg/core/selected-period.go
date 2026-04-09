@@ -1,6 +1,6 @@
 //=============================================================================
 /*
-Copyright © 2025 Andrea Carboni andrea.carboni71@gmail.com
+Copyright © 2026 Andrea Carboni andrea.carboni71@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,35 +22,74 @@ THE SOFTWARE.
 */
 //=============================================================================
 
-package business
+package core
 
 import (
-	"github.com/algotiqa/core/auth"
+	"time"
+
 	"github.com/algotiqa/core/req"
-	"github.com/algotiqa/portfolio-trader/pkg/db"
-	"gorm.io/gorm"
+	"github.com/algotiqa/types"
 )
 
 //=============================================================================
 
-func getTradingSystemAndCheckAccess(tx *gorm.DB, c *auth.Context, id uint) (*db.TradingSystem, error) {
-	ts, err := db.GetTradingSystemById(tx, id)
-	if err != nil {
-		c.Log.Error("getTradingSystem: Cannot get the trading system", "id", id, "error", err)
-		return nil, err
-	}
+type SelectedPeriod struct {
+	DaysBack *int       `json:"daysBack"`
+	FromDate types.Date `json:"fromDate"`
+	ToDate   types.Date `json:"toDate"`
+}
 
-	if ts == nil {
-		return nil, req.NewNotFoundError("Trading system was not found: %v", id)
-	}
+//=============================================================================
 
-	if !c.Session.IsAdmin() {
-		if ts.Username != c.Session.Username {
-			return nil, req.NewForbiddenError("Trading system not owned by user: %v", id)
+func CalcSelectedPeriod(period *SelectedPeriod, loc *time.Location) (*time.Time, *time.Time, error) {
+	daysBack := period.DaysBack
+	fromDate := period.FromDate
+	toDate   := period.ToDate
+
+	if daysBack == nil {
+		var from *time.Time
+		var to   *time.Time
+
+		if !fromDate.IsNil() {
+			if !fromDate.IsValid() {
+				return nil, nil, req.NewBadRequestError("Invalid fromDate parameter: %d", fromDate)
+			}
+
+			tt := fromDate.ToDateTime(false, loc)
+			from = &tt
 		}
+
+		if !toDate.IsNil() {
+			if !toDate.IsValid() {
+				return nil, nil, req.NewBadRequestError("Invalid toDate parameter: %d", toDate)
+			}
+
+			tt := toDate.ToDateTime(true, loc)
+			to = &tt
+		}
+
+		return from, to, nil
 	}
 
-	return ts, nil
+	//--- All
+
+	if *daysBack == 0 {
+		return nil, nil, nil
+	}
+
+	//--- Specific last days
+
+	if *daysBack > 0 && *daysBack <= 20000 {
+		fromTime := time.Now().UTC()
+		back     := time.Hour * time.Duration(24 * *daysBack)
+		fromTime = fromTime.Add(-back)
+
+		return &fromTime, nil, nil
+	}
+
+	//--- Custom range
+
+	return nil, nil, req.NewBadRequestError("Invalid daysBack parameter: %d", daysBack)
 }
 
 //=============================================================================

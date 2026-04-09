@@ -25,8 +25,11 @@ THE SOFTWARE.
 package business
 
 import (
+	"time"
+
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 )
@@ -77,7 +80,12 @@ func RunFilterAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, far *filter.Anal
 		filters = convert(far.Filter)
 	}
 
-	trades, err := db.FindTradesByTsIdFromTime(tx, ts.Id, far.StartDate, nil)
+	fromTime, toTime, err := core.CalcSelectedPeriod(&far.SelectedPeriod, time.UTC)
+	if err != nil {
+		return nil, err
+	}
+
+	trades, err := db.FindTradesByTsIdFromTime(tx, ts.Id, fromTime, toTime)
 	if err != nil {
 		return nil, err
 	}

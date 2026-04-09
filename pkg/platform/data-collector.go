@@ -26,6 +26,7 @@ package platform
 
 import (
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/algotiqa/core/auth"
@@ -90,17 +91,23 @@ type BarResult struct {
 //===
 //=============================================================================
 
-func AnalyzeDataProduct(c *auth.Context, ts *db.TradingSystem, backDays, atrLen int, timeframe int) (*DataProductAnalysisResponse, error) {
+func AnalyzeDataProduct(c *auth.Context, ts *db.TradingSystem, from,to *time.Time, atrLen int, timeframe int) (*DataProductAnalysisResponse, error) {
 	id := ts.DataProductId
-	c.Log.Info("AnalyzeDataProduct: Asking data product analysis to data collector", "id", id, "backDays", backDays)
+	c.Log.Info("AnalyzeDataProduct: Asking data product analysis to data collector", "id", id, "from", from, "to", to)
 
-	token := c.Token
+	token  := c.Token
 	client := req.GetClient("bf")
-	url := fmt.Sprintf("%s/v1/data-products/%d/analysis?backDays=%d&timeframe=%d&sessionId=%d&atrLen=%d",
-						platform.Data, id, backDays, timeframe, ts.TradingSessionId, atrLen)
+	srvUrl := fmt.Sprintf("%s/v1/data-products/%d/analysis?timeframe=%d&sessionId=%d&atrLen=%d",
+						platform.Data, id, timeframe, ts.TradingSessionId, atrLen)
+	if from != nil {
+		srvUrl = srvUrl + "&from="+ url.QueryEscape(from.Format(time.DateTime))
+	}
+	if to != nil {
+		srvUrl = srvUrl + "&to="+ url.QueryEscape(to.Format(time.DateTime))
+	}
 
 	var res DataProductAnalysisResponse
-	err := req.DoGet(client, url, &res, token)
+	err := req.DoGet(client, srvUrl, &res, token)
 	if err != nil {
 		c.Log.Error("AnalyzeDataProduct: Got an error when accessing the data-collector", "id", id, "error", err.Error())
 		return nil, err
@@ -111,3 +118,4 @@ func AnalyzeDataProduct(c *auth.Context, ts *db.TradingSystem, backDays, atrLen 
 }
 
 //=============================================================================
+

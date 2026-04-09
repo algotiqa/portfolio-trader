@@ -25,16 +25,14 @@ THE SOFTWARE.
 package performance
 
 import (
-	"github.com/algotiqa/types"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
 )
 
 //=============================================================================
 
 type AnalysisRequest struct {
-	DaysBack int        `json:"daysBack" binding:"max=10000"`
-	Timezone string     `json:"timezone" binding:"required"`
-	FromDate types.Date `json:"fromDate"`
-	ToDate   types.Date `json:"toDate"`
+	core.SelectedPeriod
+	Timezone string `json:"timezone" binding:"required"`
 }
 
 //=============================================================================

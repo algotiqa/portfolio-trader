@@ -24,10 +24,12 @@ THE SOFTWARE.
 
 package simulation
 
+import "github.com/algotiqa/portfolio-trader/pkg/core"
+
 //=============================================================================
 
 type Request struct {
-	DaysBack        int      `json:"daysBack"       binding:"max=20000"`
+	core.SelectedPeriod
 	Runs            int      `json:"runs"           binding:"max=50000"`
 	Width           int      `json:"width"          binding:"max=4000"`
 	Height          int      `json:"height"         binding:"max=3000"`

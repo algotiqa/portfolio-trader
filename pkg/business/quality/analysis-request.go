@@ -24,10 +24,12 @@ THE SOFTWARE.
 
 package quality
 
+import "github.com/algotiqa/portfolio-trader/pkg/core"
+
 //=============================================================================
 
 type AnalysisRequest struct {
-	DaysBack      int    `json:"daysBack"      binding:"min=0,max=20000"`
+	core.SelectedPeriod
 	TimeframeType string `json:"timeframeType"`
 	AtrLength     int    `json:"atrLength"     binding:"min=5,max=50"`
 }
