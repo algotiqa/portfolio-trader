@@ -62,7 +62,7 @@ func init() {
 //===
 //=============================================================================
 
-func Start(req *Request, ts *db.TradingSystem, trades *[]db.Trade, risk float64) {
+func Start(req *Request, ts *db.TradingSystem, trades *[]db.Trade) {
 	jobs.Lock()
 	defer jobs.Unlock()
 
@@ -73,7 +73,7 @@ func Start(req *Request, ts *db.TradingSystem, trades *[]db.Trade, risk float64)
 		delete(jobs.m, ts.Id)
 	}
 
-	sp = NewProcess(ts, trades, req, risk)
+	sp = NewProcess(ts, trades, req)
 	workers.Submit(sp.Start)
 
 	jobs.m[ts.Id] = sp

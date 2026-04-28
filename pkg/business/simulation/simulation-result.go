@@ -27,6 +27,7 @@ package simulation
 import (
 	"time"
 
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"github.com/algotiqa/types"
 )
 
@@ -36,14 +37,13 @@ type Result struct {
 	FirstTradeDate types.Date `json:"firstTradeDate"`
 	LastTradeDate  types.Date `json:"lastTradeDate"`
 	Runs           int        `json:"runs"`
-	InitialCapital float64    `json:"initialCapital"`
-	RuinPercentage int        `json:"ruinPercentage"`
-	Risk           float64    `json:"risk"`
 
-	Status    string    `json:"status"`
-	StartTime time.Time `json:"startTime"`
-	EndTime   time.Time `json:"endTime"`
-	Step      int       `json:"step"`
+	CostPerOper    float64    `json:"costPerOper"`
+	CurrencyCode   string     `json:"currencyCode"`
+	Status         string     `json:"status"`
+	StartTime      time.Time  `json:"startTime"`
+	EndTime        time.Time  `json:"endTime"`
+	Step           int        `json:"step"`
 
 	GrossAll   *Details `json:"grossAll"`
 	GrossLong  *Details `json:"grossLong"`
@@ -55,22 +55,34 @@ type Result struct {
 
 //=============================================================================
 
-func NewResult(first, last types.Date, runs int, initialCapital float64, ruinPerc int, risk float64) *Result {
+func NewResult(first, last types.Date, runs int, ts *db.TradingSystem) *Result {
 	return &Result{
 		FirstTradeDate: first,
-		LastTradeDate:  last,
-		Runs:           runs,
-		InitialCapital: initialCapital,
-		RuinPercentage: ruinPerc,
-		Risk:           risk,
+		LastTradeDate : last,
+		Runs          : runs,
+		Status        : SimStatusRunning,
+		StartTime     : time.Now(),
+		CostPerOper   : ts.CostPerOperation,
+		CurrencyCode  : ts.CurrencyCode,
 	}
 }
 
 //=============================================================================
 
 type Details struct {
-	Equities     string        `json:"equities"`
-	MaxDrawdowns *Distribution `json:"maxDrawdowns"`
+	DetectedRisk         float64       `json:"detectedRisk"`
+	NumberOfTrades       int           `json:"numberOfTrades"`
+	EquitiesImage        string        `json:"equitiesImage"`
+	MaxDrawdownDistr     *Distribution `json:"maxDrawdownDistr"`
+	MaxDrawdownProb      *Distribution `json:"maxDrawdownProb"`
+	EquityReturn         float64       `json:"equityReturn"`
+	EquityMaxDD          float64       `json:"equityMaxDD"`
+	EquityReturnDDRatio  float64       `json:"equityReturnDDRatio"`
+	EquityAverageTrade   float64       `json:"equityAverageTrade"`
+	MedianReturn         float64       `json:"medianReturn"`
+	MedianMaxDD          float64       `json:"medianMaxDD"`
+	MedianReturnDDRatio  float64       `json:"medianReturnDDRatio"`
+	MedianAverageTrade   float64       `json:"medianAverageTrade"`
 }
 
 //=============================================================================

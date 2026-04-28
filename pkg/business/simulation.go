@@ -61,12 +61,7 @@ func StartSimulation(tx *gorm.DB, c *auth.Context, tsId uint, rq *simulation.Req
 		return req.NewUnprocessableEntityError("no trades found for given time")
 	}
 
-	risk, err := core.CalcRisk(trades)
-	if err != nil {
-		return err
-	}
-
-	simulation.Start(rq, ts, trades, risk)
+	simulation.Start(rq, ts, trades)
 	c.Log.Info("StartSimulation: Ending", "id", tsId, "name", ts.Name, "runs", rq.Runs)
 	return nil
 }

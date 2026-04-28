@@ -49,26 +49,24 @@ type Process struct {
 	ts       *db.TradingSystem
 	trades   *[]db.Trade
 	req      *Request
-	risk     float64
 	result   *Result
 	stopping bool
 }
 
 //=============================================================================
 
-const SimStatusIdle = "idle"
-const SimStatusWaiting = "waiting"
-const SimStatusRunning = "running"
+const SimStatusIdle     = "idle"
+const SimStatusWaiting  = "waiting"
+const SimStatusRunning  = "running"
 const SimStatusComplete = "complete"
 
 //=============================================================================
 
-func NewProcess(ts *db.TradingSystem, trades *[]db.Trade, req *Request, risk float64) *Process {
+func NewProcess(ts *db.TradingSystem, trades *[]db.Trade, req *Request) *Process {
 	return &Process{
-		ts:     ts,
+		ts    : ts,
 		trades: trades,
-		req:    req,
-		risk:   risk,
+		req   : req,
 		result: &Result{
 			Status: SimStatusWaiting,
 		},
@@ -80,33 +78,24 @@ func NewProcess(ts *db.TradingSystem, trades *[]db.Trade, req *Request, risk flo
 func (p *Process) Start() {
 	slog.Info("SimulationProcess: Starting", "id", p.ts.Id)
 
-	p.result = NewResult(p.GetFirstTradeDate(), p.GetLastTradeDate(), p.req.Runs, p.req.InitialCapital, p.req.RuinPercentage, p.risk)
-	p.result.Status = SimStatusRunning
-	p.result.StartTime = time.Now()
+	p.result = NewResult(p.GetFirstTradeDate(), p.GetLastTradeDate(), p.req.Runs, p.ts)
 
-	rMultGrossAll := core.CalcRMultiple(p.trades, db.TradeTypeAll, p.risk, 0)
-	rMultGrossLong := core.CalcRMultiple(p.trades, db.TradeTypeLong, p.risk, 0)
-	rMultGrossShort := core.CalcRMultiple(p.trades, db.TradeTypeShort, p.risk, 0)
-	rMultNetAll := core.CalcRMultiple(p.trades, db.TradeTypeAll, p.risk, p.ts.CostPerOperation)
-	rMultNetLong := core.CalcRMultiple(p.trades, db.TradeTypeLong, p.risk, p.ts.CostPerOperation)
-	rMultNetShort := core.CalcRMultiple(p.trades, db.TradeTypeShort, p.risk, p.ts.CostPerOperation)
-
-	p.result.GrossAll = run(rMultGrossAll, p.req)
+	p.result.GrossAll = run(p.req, p.trades, db.TradeTypeAll, 0)
 	p.result.Step++
 	if !p.stopping {
-		p.result.GrossLong = run(rMultGrossLong, p.req)
+		p.result.GrossLong = run(p.req, p.trades, db.TradeTypeLong, 0)
 		p.result.Step++
 		if !p.stopping {
-			p.result.GrossShort = run(rMultGrossShort, p.req)
+			p.result.GrossShort = run(p.req, p.trades, db.TradeTypeShort, 0)
 			p.result.Step++
 			if !p.stopping {
-				p.result.NetAll = run(rMultNetAll, p.req)
+				p.result.NetAll = run(p.req, p.trades, db.TradeTypeAll, p.ts.CostPerOperation)
 				p.result.Step++
 				if !p.stopping {
-					p.result.NetLong = run(rMultNetLong, p.req)
+					p.result.NetLong = run(p.req, p.trades, db.TradeTypeLong, p.ts.CostPerOperation)
 					p.result.Step++
 					if !p.stopping {
-						p.result.NetShort = run(rMultNetShort, p.req)
+						p.result.NetShort = run(p.req, p.trades, db.TradeTypeShort, p.ts.CostPerOperation)
 						p.result.Step++
 					}
 				}
@@ -151,14 +140,32 @@ func (p *Process) GetLastTradeDate() types.Date {
 //===
 //=============================================================================
 
-func run(list []float64, req *Request) *Details {
-	size := len(list)
+func run(req *Request, trades *[]db.Trade, tradeType string, costPerOper float64) *Details {
+	returns := core.GetReturns(trades, tradeType, costPerOper)
+	size := len(returns)
 	if size == 0 {
 		return &Details{}
 	}
 
-	sampleSet, maxDrawdowns := buildSampleSet(list, req.Runs)
+	risk,err := core.CalcRisk(returns, costPerOper)
+	if err != nil {
+		return &Details{}
+	}
+
+	list         := core.CalcRMultiple(returns, risk)
+	origEquity   := core.BuildEquity(&list)
+	_, origDD    := core.BuildDrawDown(origEquity)
+	origReturn   := (*origEquity)[size-1]
+	origAvgTrade := origReturn / float64(size)
+
+	sampleSet, equityReturns, maxDrawdowns := buildSampleSet(list, req.Runs)
 	sampleSet = addMeanAndStdDev(sampleSet, size)
+	sampleSet = append(sampleSet, *origEquity)
+
+	medianReturn := stats.Median(equityReturns)
+	medianMaxDD  := stats.Median(maxDrawdowns)
+	ddDistrib    := buildDDDistrib(maxDrawdowns)
+	ddProbab     := buildDDProbab (ddDistrib)
 
 	p, err := buildChart(sampleSet, req.Width, req.Height)
 	if err != nil {
@@ -171,18 +178,30 @@ func run(list []float64, req *Request) *Details {
 	}
 
 	return &Details{
-		Equities:     base64.StdEncoding.EncodeToString(buf),
-		MaxDrawdowns: buildDDDistrib(maxDrawdowns),
+		DetectedRisk       : risk,
+		NumberOfTrades     : len(list),
+		EquitiesImage      : base64.StdEncoding.EncodeToString(buf),
+		MaxDrawdownDistr   : ddDistrib,
+		MaxDrawdownProb    : ddProbab,
+		EquityReturn       : core.Trunc2d(origReturn),
+		EquityMaxDD        : core.Trunc2d(origDD),
+		EquityReturnDDRatio: calcRatio(origReturn, origDD),
+		EquityAverageTrade : core.Trunc2d(origAvgTrade),
+		MedianReturn       : core.Trunc2d(medianReturn),
+		MedianMaxDD        : core.Trunc2d(medianMaxDD),
+		MedianReturnDDRatio: calcRatio(medianReturn, medianMaxDD),
+		MedianAverageTrade : core.Trunc2d(medianReturn / float64(size)),
 	}
 }
 
 //=============================================================================
 
-func buildSampleSet(list []float64, runs int) ([][]float64, []float64) {
+func buildSampleSet(list []float64, runs int) ([][]float64, []float64, []float64) {
 	size := len(list)
 
 	var sampleSet [][]float64
-	var maxDrawdowns []float64
+	var equityReturns []float64
+	var maxDrawdowns  []float64
 
 	for i := 0; i < runs; i++ {
 		var sample = make([]float64, size)
@@ -197,9 +216,12 @@ func buildSampleSet(list []float64, runs int) ([][]float64, []float64) {
 
 		_, maxDD := core.BuildDrawDown(equity)
 		maxDrawdowns = append(maxDrawdowns, maxDD)
+
+		er := (*equity)[len(*equity) -1]
+		equityReturns = append(equityReturns, er)
 	}
 
-	return sampleSet, maxDrawdowns
+	return sampleSet, equityReturns, maxDrawdowns
 }
 
 //=============================================================================
@@ -219,7 +241,7 @@ func addMeanAndStdDev(sampleSet [][]float64, size int) [][]float64 {
 //=============================================================================
 
 func buildMeanAndStdDev(sampleSet [][]float64, size int) ([]float64, []float64) {
-	var mean []float64
+	var mean   []float64
 	var stdDev []float64
 
 	for i := 0; i < size; i++ {
@@ -231,7 +253,7 @@ func buildMeanAndStdDev(sampleSet [][]float64, size int) ([]float64, []float64) 
 
 		m, s := stats.MeanAndStdDev(serie)
 
-		mean = append(mean, m)
+		mean   = append(mean, m)
 		stdDev = append(stdDev, s)
 	}
 
@@ -241,11 +263,11 @@ func buildMeanAndStdDev(sampleSet [][]float64, size int) ([]float64, []float64) 
 //=============================================================================
 
 func buildUpAndLowStdDev(mean, stdDev []float64) ([]float64, []float64) {
-	var upStdDev []float64
+	var upStdDev   []float64
 	var downStdDev []float64
 
 	for i, v := range mean {
-		upStdDev = append(upStdDev, v+stdDev[i])
+		upStdDev   = append(upStdDev,   v+stdDev[i])
 		downStdDev = append(downStdDev, v-stdDev[i])
 	}
 
@@ -254,8 +276,8 @@ func buildUpAndLowStdDev(mean, stdDev []float64) ([]float64, []float64) {
 
 //=============================================================================
 
-func buildDDDistrib(data []float64) *Distribution {
-	minv := core.CalcMin(data)
+func buildDDDistrib(maxDrawdowns []float64) *Distribution {
+	minv := core.CalcMin(maxDrawdowns)
 	size := int(math.Trunc(math.Abs(minv))) + 1
 
 	var xAxis []string
@@ -265,13 +287,37 @@ func buildDDDistrib(data []float64) *Distribution {
 
 	yAxis := make([]float64, size)
 
-	for _, value := range data {
+	for _, value := range maxDrawdowns {
 		index := size + int(math.Trunc(value)) - 1
 		yAxis[index]++
 	}
 
 	return &Distribution{
 		XAxis: xAxis,
+		YAxis: yAxis,
+	}
+}
+
+//=============================================================================
+
+func buildDDProbab(d * Distribution) *Distribution {
+	yAxis := make([]float64, len(d.YAxis))
+
+	for i, value := range d.YAxis {
+		yAxis[i] = value
+		if i>0 {
+			yAxis[i] += yAxis[i -1]
+		}
+	}
+
+	maxVal := yAxis[len(d.YAxis)-1]
+
+	for i, value := range yAxis {
+		yAxis[i] = math.Round(value * 100 / maxVal)
+	}
+
+	return &Distribution{
+		XAxis: d.XAxis,
 		YAxis: yAxis,
 	}
 }
@@ -284,7 +330,7 @@ func buildChart(sampleSet [][]float64, width, height int) (*charts.Painter, erro
 	xAxis := calcXAxis(len(sampleSet[0]))
 
 	opt := charts.NewLineChartOptionWithData(sampleSet)
-	opt.XAxis.Title = "Trades"
+	opt.XAxis.Title  = "Trades"
 	opt.XAxis.Labels = xAxis
 	opt.XAxis.LabelFontStyle.FontSize = 8
 	opt.YAxis[0].Title = "Cumulative R multiples"
@@ -319,16 +365,27 @@ func calcXAxis(size int) []string {
 func buildColors(size int) []charts.Color {
 	var list []charts.Color
 
-	for i := 0; i < size-4; i++ {
+	for i := 0; i < size-5; i++ {
 		list = append(list, charts.Color{192, 192, 192, 96})
 	}
 
 	list = append(list, charts.Color{128, 128, 128, 255})
-	list = append(list, charts.Color{16, 16, 16, 255})
-	list = append(list, charts.Color{80, 80, 80, 255})
-	list = append(list, charts.Color{80, 80, 80, 255})
+	list = append(list, charts.Color{ 16,  16,  16, 255})
+	list = append(list, charts.Color{ 80,  80,  80, 255})
+	list = append(list, charts.Color{ 80,  80,  80, 255})
+	list = append(list, charts.Color{  0, 100, 200, 255})
 
 	return list
+}
+
+//=============================================================================
+
+func calcRatio(ret, dd float64) float64 {
+	if dd != 0 {
+		return -core.Trunc2d(ret/dd)
+	}
+
+	return 100
 }
 
 //=============================================================================

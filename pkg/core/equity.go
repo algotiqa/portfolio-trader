@@ -80,10 +80,10 @@ func BuildEquity(profits *[]float64) *[]float64 {
 //=============================================================================
 
 func BuildDrawDown(equity *[]float64) (*[]float64, float64) {
-	maxProfit := 0.0
+	maxProfit    := 0.0
 	currDrawDown := 0.0
-	maxDrawDown := 0.0
-	drawDown := []float64{}
+	maxDrawDown  := 0.0
+	drawDown     := []float64{}
 
 	for _, currProfit := range *equity {
 		if currProfit >= maxProfit {
@@ -142,7 +142,7 @@ func CalcAverageTrade(profits []float64, filter []int8) float64 {
 		}
 	}
 
-	return float64(int(sum*100/num)) / 100
+	return Trunc2d(sum/num)
 }
 
 //=============================================================================

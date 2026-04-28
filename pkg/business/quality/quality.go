@@ -63,34 +63,29 @@ func GetQualityAnalysis(ts *db.TradingSystem, trades *[]db.Trade, man *platform.
 
 	marketRegime := NewMarketRegime(man.BarResults, timeframe, prodLoc)
 
-	risk, err := core.CalcRisk(trades)
-	if err != nil {
-		return nil, err
-	}
-
 	//--- Calc all standard metrics
 
 	for dir := platform.DirectionStrongBear; dir <= platform.DirectionStrongBull; dir++ {
 		for vol := platform.VolatilityQuiet; vol <= platform.VolatilityVeryVolatile; vol++ {
-			calcQualityCell(res, trades, dir, vol, risk, ts.CostPerOperation, marketRegime)
+			calcQualityCell(res, trades, dir, vol, ts.CostPerOperation, marketRegime)
 		}
 	}
 
 	//--- Calc summary by direction
 
 	for dir := platform.DirectionStrongBear; dir <= platform.DirectionStrongBull; dir++ {
-		calcQualityCell(res, trades, dir, VolatilityAll, risk, ts.CostPerOperation, marketRegime)
+		calcQualityCell(res, trades, dir, VolatilityAll, ts.CostPerOperation, marketRegime)
 	}
 
 	//--- Calc summary by volatility
 
 	for vol := platform.VolatilityQuiet; vol <= platform.VolatilityVeryVolatile; vol++ {
-		calcQualityCell(res, trades, DirectionAll, vol, risk, ts.CostPerOperation, marketRegime)
+		calcQualityCell(res, trades, DirectionAll, vol, ts.CostPerOperation, marketRegime)
 	}
 
 	//--- Calc overall
 
-	calcQualityCell(res, trades, DirectionAll, VolatilityAll, risk, ts.CostPerOperation, marketRegime)
+	calcQualityCell(res, trades, DirectionAll, VolatilityAll, ts.CostPerOperation, marketRegime)
 
 	return res, nil
 }
@@ -101,21 +96,29 @@ func GetQualityAnalysis(ts *db.TradingSystem, trades *[]db.Trade, man *platform.
 //===
 //=============================================================================
 
-func calcQualityCell(res *AnalysisResponse, trades *[]db.Trade, dir int, vol int, risk float64, costPerOperation float64,
+func calcQualityCell(res *AnalysisResponse, trades *[]db.Trade, dir int, vol int, costPerOperation float64,
 					 marketRegime MarketRegime) {
-	res.QualityAllGross  [dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeAll,   dir, vol, risk, 0, marketRegime)
-	res.QualityLongGross [dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeLong,  dir, vol, risk, 0, marketRegime)
-	res.QualityShortGross[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeShort, dir, vol, risk, 0, marketRegime)
+	res.QualityAllGross  [dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeAll,   dir, vol, 0, marketRegime)
+	res.QualityLongGross [dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeLong,  dir, vol, 0, marketRegime)
+	res.QualityShortGross[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeShort, dir, vol, 0, marketRegime)
 
-	res.QualityAllNet  [dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeAll,   dir, vol, risk, costPerOperation, marketRegime)
-	res.QualityLongNet [dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeLong,  dir, vol, risk, costPerOperation, marketRegime)
-	res.QualityShortNet[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeShort, dir, vol, risk, costPerOperation, marketRegime)
+	res.QualityAllNet  [dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeAll,   dir, vol, costPerOperation, marketRegime)
+	res.QualityLongNet [dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeLong,  dir, vol, costPerOperation, marketRegime)
+	res.QualityShortNet[dir+2][vol] = calcQualityMetrics(trades, db.TradeTypeShort, dir, vol, costPerOperation, marketRegime)
 }
 
 //=============================================================================
 
-func calcQualityMetrics(trades *[]db.Trade, tradeType string, direction int, volatility int, risk float64, costPerOper float64,
+func calcQualityMetrics(trades *[]db.Trade, tradeType string, direction int, volatility int, costPerOper float64,
 						marketRegime MarketRegime) *Metrics {
+
+	returns   := core.GetReturns(trades, tradeType, costPerOper)
+	risk, err := core.CalcRisk(returns, costPerOper)
+	if err != nil {
+		return &Metrics{
+			Trades: 0,
+		}
+	}
 
 	//--- Step 1: Collect relevant trades
 
@@ -131,8 +134,8 @@ func calcQualityMetrics(trades *[]db.Trade, tradeType string, direction int, vol
 
 			if direction == DirectionAll || direction == tradeDir {
 				if volatility == VolatilityAll || volatility == tradeVol {
-					returns := t.GrossProfit - 2*costPerOper
-					list = append(list, returns/risk)
+					ret := t.GrossProfit - 2*costPerOper
+					list = append(list, ret/risk)
 				}
 			}
 		}

@@ -30,11 +30,9 @@ import "github.com/algotiqa/portfolio-trader/pkg/core"
 
 type Request struct {
 	core.SelectedPeriod
-	Runs            int      `json:"runs"           binding:"max=50000"`
-	Width           int      `json:"width"          binding:"max=4000"`
-	Height          int      `json:"height"         binding:"max=3000"`
-	InitialCapital  float64  `json:"initialCapital" binding:"min=1"`
-	RuinPercentage  int      `json:"ruinPercentage" binding:"min=5,max=95"`
+	Runs   int `json:"runs"   binding:"max=50000"`
+	Width  int `json:"width"  binding:"max=4000"`
+	Height int `json:"height" binding:"max=3000"`
 }
 
 //=============================================================================
