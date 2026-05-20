@@ -25,9 +25,10 @@ THE SOFTWARE.
 package db
 
 import (
+	"time"
+
 	"github.com/algotiqa/core/req"
 	"gorm.io/gorm"
-	"time"
 )
 
 //=============================================================================
@@ -65,6 +66,19 @@ func GetTradingSystemById(tx *gorm.DB, id uint) (*TradingSystem, error) {
 func GetTradingSystemsByUser(tx *gorm.DB, name string) (*[]TradingSystem, error) {
 	var list []TradingSystem
 	res := tx.Find(&list, "username = ?", name)
+
+	if res.Error != nil {
+		return nil, req.NewServerErrorByError(res.Error)
+	}
+
+	return &list, nil
+}
+
+//=============================================================================
+
+func GetTradingSystemsById(tx *gorm.DB, username string, ids []uint) (*[]TradingSystem, error) {
+	var list []TradingSystem
+	res := tx.Find(&list, "username = ? and id in ?", username, ids)
 
 	if res.Error != nil {
 		return nil, req.NewServerErrorByError(res.Error)

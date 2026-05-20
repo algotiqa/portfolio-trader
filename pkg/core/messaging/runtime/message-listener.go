@@ -30,6 +30,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/algotiqa/core/dbms"
 	"github.com/algotiqa/core/msg"
 	"github.com/algotiqa/portfolio-trader/pkg/consts"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
@@ -76,7 +77,7 @@ func handleNewTrades(tm *TradeListMessage) bool {
 
 	slog.Info("handleNewTrades: Processing new trades for trading systems", "id", tsId)
 
-	err := db.RunInTransaction(func(tx *gorm.DB) error {
+	err := dbms.RunInTransaction(func(tx *gorm.DB) error {
 		ts, err := db.GetTradingSystemById(tx, tsId)
 		if err != nil {
 			slog.Error("handleNewTrades: Cannot retrieve trading system", "id", tsId, "error", err.Error())

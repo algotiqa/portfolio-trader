@@ -48,6 +48,19 @@ func FindLivePeriodsByTradingSystemId(tx *gorm.DB, tsId uint) (*[]LivePeriod, er
 
 //=============================================================================
 
+func FindLivePeriodsByTradingSystemsId(tx *gorm.DB, ids []uint) (*[]LivePeriod, error) {
+	var list []LivePeriod
+	res := tx.Find(&list, "trading_system_id in ?", ids)
+
+	if res.Error != nil {
+		return nil, req.NewServerErrorByError(res.Error)
+	}
+
+	return &list, nil
+}
+
+//=============================================================================
+
 func AddLivePeriod(tx *gorm.DB, lp *LivePeriod) error {
 	err := tx.Create(lp).Error
 	return req.NewServerErrorByError(err)

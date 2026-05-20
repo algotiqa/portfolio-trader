@@ -27,6 +27,7 @@ package business
 import (
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/portfolio-trader/pkg/business/importexport"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 )
@@ -97,6 +98,41 @@ func GetTrades(tx *gorm.DB, c *auth.Context, id uint) (*[]db.Trade, error) {
 	}
 
 	return db.FindTradesByTradingSystemId(tx, id)
+}
+
+//=============================================================================
+
+func ExportTradingSystems(tx *gorm.DB, c *auth.Context, ids []uint) (*importexport.ExportedData, error){
+	c.Log.Info("ExportTradingSystems: Exporting trading systems", "count", len(ids))
+
+	systems, err1 := db.GetTradingSystemsById(tx, c.Session.Username, ids)
+	if err1 != nil {
+		return nil, err1
+	}
+
+	filters, err2 := db.GetTradingFiltersByTsId(tx, ids)
+	if err2 != nil {
+		return nil, err2
+	}
+
+	trades,  err3 := db.FindTradesByTradingSystemsId(tx, ids)
+	if err3 != nil {
+		return nil, err3
+	}
+
+	dailys,  err4 := db.FindDailyReturnsByTradingSystemsId(tx, ids)
+	if err4 != nil {
+		return nil, err4
+	}
+
+	periods, err5 := db.FindLivePeriodsByTradingSystemsId(tx, ids)
+	if err5 != nil {
+		return nil, err5
+	}
+
+	tss := importexport.BuildTradingSystems(systems, filters, trades, dailys, periods)
+
+	return importexport.EncodeTradingSystems(tss)
 }
 
 //=============================================================================

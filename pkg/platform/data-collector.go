@@ -96,7 +96,7 @@ func AnalyzeDataProduct(c *auth.Context, ts *db.TradingSystem, from,to *time.Tim
 	c.Log.Info("AnalyzeDataProduct: Asking data product analysis to data collector", "id", id, "from", from, "to", to)
 
 	token  := c.Token
-	client := req.GetClient("bf")
+	client := req.GetDefaultClient()
 	srvUrl := fmt.Sprintf("%s/v1/data-products/%d/analysis?timeframe=%d&sessionId=%d&atrLen=%d",
 						platform.Data, id, timeframe, ts.TradingSessionId, atrLen)
 	if from != nil {

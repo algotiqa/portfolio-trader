@@ -38,7 +38,7 @@ import (
 
 func Init(router *gin.Engine, cfg *app.Config, logger *slog.Logger) {
 
-	ctrl := auth.NewOidcController(cfg.Authentication.Authority, req.GetClient("bf"), logger, cfg)
+	ctrl := auth.NewOidcController(cfg.Authentication.Authority, req.GetDefaultClient(), logger, cfg)
 
 	router.GET   ("/api/portfolio/v1/trading-systems",                           ctrl.Secure(getTradingSystems,          roles.Admin_User_Service))
 	router.GET   ("/api/portfolio/v1/trading-systems/:id",                       ctrl.Secure(getTradingSystem,           roles.Admin_User_Service))
@@ -59,6 +59,8 @@ func Init(router *gin.Engine, cfg *app.Config, logger *slog.Logger) {
 	router.GET   ("/api/portfolio/v1/trading-systems/:id/simulation",            ctrl.Secure(getSimulationResult,    roles.Admin_User_Service))
 	router.POST  ("/api/portfolio/v1/trading-systems/:id/simulation",            ctrl.Secure(startSimulation,        roles.Admin_User_Service))
 	router.DELETE("/api/portfolio/v1/trading-systems/:id/simulation",            ctrl.Secure(stopSimulation,         roles.Admin_User_Service))
+
+	router.GET   ("/api/portfolio/v1/trading-systems/export",                    ctrl.Secure(exportTradingSystems,  roles.Admin_User_Service))
 
 	router.GET   ("/api/inventory/v1/portfolios",                                ctrl.Secure(getPortfolios,          roles.Admin_User_Service))
 	router.GET   ("/api/inventory/v1/portfolio/tree",                            ctrl.Secure(getPortfolioTree,       roles.Admin_User_Service))

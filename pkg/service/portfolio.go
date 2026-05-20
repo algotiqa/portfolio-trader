@@ -26,8 +26,8 @@ package service
 
 import (
 	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/dbms"
 	"github.com/algotiqa/portfolio-trader/pkg/business"
-	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -38,7 +38,7 @@ func getPortfolios(c *auth.Context) {
 	offset, limit, err := c.GetPagingParams()
 
 	if err == nil {
-		err = db.RunInTransaction(func(tx *gorm.DB) error {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 			list, err := business.GetPortfolios(tx, c, filter, offset, limit)
 
 			if err != nil {
@@ -59,7 +59,7 @@ func getPortfolioTree(c *auth.Context) {
 	offset, limit, err := c.GetPagingParams()
 
 	if err == nil {
-		err = db.RunInTransaction(func(tx *gorm.DB) error {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 			list, err := business.GetPortfolioTree(tx, c, filter, offset, limit)
 
 			if err != nil {
@@ -80,7 +80,7 @@ func getPortfolioMonitoring(c *auth.Context) {
 	err := c.BindParamsFromBody(&params)
 
 	if err == nil {
-		err = db.RunInTransaction(func(tx *gorm.DB) error {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 			result, err := business.GetPortfolioMonitoring(tx, &params)
 
 			if err != nil {

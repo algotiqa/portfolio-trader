@@ -26,8 +26,8 @@ package service
 
 import (
 	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/dbms"
 	"github.com/algotiqa/portfolio-trader/pkg/business"
-	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -41,7 +41,7 @@ func setTradingSystemTrading(c *auth.Context) {
 		err = c.BindParamsFromBody(&req)
 
 		if err == nil {
-			err = db.RunInTransaction(func(tx *gorm.DB) error {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 				rep, err := business.SetTradingSystemTrading(tx, c, tsId, &req)
 
 				if err != nil {
@@ -66,7 +66,7 @@ func setTradingSystemRunning(c *auth.Context) {
 		err = c.BindParamsFromBody(&req)
 
 		if err == nil {
-			err = db.RunInTransaction(func(tx *gorm.DB) error {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 				rep, err := business.SetTradingSystemRunning(tx, c, tsId, &req)
 
 				if err != nil {
@@ -91,7 +91,7 @@ func setTradingSystemActivation(c *auth.Context) {
 		err = c.BindParamsFromBody(&req)
 
 		if err == nil {
-			err = db.RunInTransaction(func(tx *gorm.DB) error {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 				rep, err := business.SetTradingSystemActivation(tx, c, tsId, &req)
 
 				if err != nil {
@@ -116,7 +116,7 @@ func setTradingSystemActive(c *auth.Context) {
 		err = c.BindParamsFromBody(&req)
 
 		if err == nil {
-			err = db.RunInTransaction(func(tx *gorm.DB) error {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 				rep, err := business.SetTradingSystemActive(tx, c, tsId, &req)
 
 				if err != nil {

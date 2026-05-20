@@ -25,12 +25,14 @@ THE SOFTWARE.
 package statusupdater
 
 import (
+	"log/slog"
+	"time"
+
+	"github.com/algotiqa/core/dbms"
 	"github.com/algotiqa/portfolio-trader/pkg/app"
 	"github.com/algotiqa/portfolio-trader/pkg/consts"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
-	"log/slog"
-	"time"
 )
 
 //=============================================================================
@@ -81,7 +83,7 @@ func GetTradingSystemsInIdle() (*[]db.TradingSystem, error) {
 	var list *[]db.TradingSystem
 	var err error
 
-	err = db.RunInTransaction(func(tx *gorm.DB) error {
+	err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 		list, err = db.GetTradingSystemsInIdle(tx, consts.IdleDays)
 		return err
 	})
@@ -105,7 +107,7 @@ func updateTradingSystem(ts *db.TradingSystem) error {
 		return nil
 	}
 
-	return db.RunInTransaction(func(tx *gorm.DB) error {
+	return dbms.RunInTransaction(func(tx *gorm.DB) error {
 		return db.UpdateTradingSystem(tx, ts)
 	})
 }

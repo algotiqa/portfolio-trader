@@ -49,6 +49,20 @@ func FindTradesByTradingSystemId(tx *gorm.DB, tsId uint) (*[]Trade, error) {
 }
 
 //=============================================================================
+
+func FindTradesByTradingSystemsId(tx *gorm.DB, ids []uint) (*[]Trade, error) {
+	var list []Trade
+	res := tx.Find(&list, "trading_system_id in ?", ids)
+
+	if res.Error != nil {
+		return nil, req.NewServerErrorByError(res.Error)
+	}
+
+	return &list, nil
+}
+
+//=============================================================================
+
 // We MUST order by entry_date because we may have cases like:
 // entry_date,       exit_date
 // 2025-1-1 03:00    2025-1-2 06:00

@@ -52,6 +52,19 @@ func GetTradingFilterByTsId(tx *gorm.DB, tsId uint) (*TradingFilter, error) {
 
 //=============================================================================
 
+func GetTradingFiltersByTsId(tx *gorm.DB, ids []uint) (*[]TradingFilter, error) {
+	var list []TradingFilter
+	res := tx.Find(&list, "trading_system_id in ?", ids)
+
+	if res.Error != nil {
+		return nil, req.NewServerErrorByError(res.Error)
+	}
+
+	return &list, nil
+}
+
+//=============================================================================
+
 func SetTradingFilter(tx *gorm.DB, tf *TradingFilter) error {
 	return tx.Save(tf).Error
 }

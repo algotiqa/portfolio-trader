@@ -28,6 +28,7 @@ import (
 	"encoding/json"
 	"log/slog"
 
+	"github.com/algotiqa/core/dbms"
 	"github.com/algotiqa/core/msg"
 	"github.com/algotiqa/portfolio-trader/pkg/business"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
@@ -108,7 +109,7 @@ func handleMessage(m *msg.Message) bool {
 func setTradingSystem(tsm *TradingSystemMessage, create bool) bool {
 	slog.Info("setTradingSystem: Trading system change received", "create", create, "id", tsm.TradingSystem.Id)
 
-	err := db.RunInTransaction(func(tx *gorm.DB) error {
+	err := dbms.RunInTransaction(func(tx *gorm.DB) error {
 		isNew := true
 
 		ts, err := db.GetTradingSystemById(tx, tsm.TradingSystem.Id)
@@ -189,7 +190,7 @@ func setTradingSystem(tsm *TradingSystemMessage, create bool) bool {
 func deleteTradingSystem(tsm *TradingSystemMessage) bool {
 	slog.Info("deleteTradingSystem: Trading system deletion received", "id", tsm.TradingSystem.Id)
 
-	err := db.RunInTransaction(func(tx *gorm.DB) error {
+	err := dbms.RunInTransaction(func(tx *gorm.DB) error {
 		id := tsm.TradingSystem.Id
 		return business.DeleteTradingSystem(tx, id)
 	})
@@ -208,7 +209,7 @@ func deleteTradingSystem(tsm *TradingSystemMessage) bool {
 func updateDataProduct(dpm *DataProductMessage) bool {
 	slog.Info("updateDataProduct: Data product change received", "sourceId", dpm.DataProduct.Id)
 
-	err := db.RunInTransaction(func(tx *gorm.DB) error {
+	err := dbms.RunInTransaction(func(tx *gorm.DB) error {
 		values := map[string]interface{}{
 			//--- data_symbol cannot be changed, anyway
 			"data_symbol": dpm.DataProduct.Symbol,
@@ -231,7 +232,7 @@ func updateDataProduct(dpm *DataProductMessage) bool {
 func updateBrokerProduct(bpm *BrokerProductMessage) bool {
 	slog.Info("updateBrokerProduct: Broker product change received", "sourceId", bpm.BrokerProduct.Id)
 
-	err := db.RunInTransaction(func(tx *gorm.DB) error {
+	err := dbms.RunInTransaction(func(tx *gorm.DB) error {
 		values := map[string]interface{}{
 			"broker_symbol":      bpm.BrokerProduct.Symbol,
 			"point_value":        bpm.BrokerProduct.PointValue,

@@ -1,6 +1,6 @@
 //=============================================================================
 /*
-Copyright © 2023 Andrea Carboni andrea.carboni71@gmail.com
+Copyright © 2026 Andrea Carboni andrea.carboni71@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,54 +22,77 @@ THE SOFTWARE.
 */
 //=============================================================================
 
-package db
+package importexport
 
 import (
-	"github.com/algotiqa/core"
-	"gorm.io/driver/mysql"
-	"log/slog"
-	"time"
+	"encoding/json"
 
-	"gorm.io/gorm"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
+	"golang.org/x/exp/maps"
 )
 
 //=============================================================================
 
-var dbms *gorm.DB
+func BuildTradingSystems(systems *[]db.TradingSystem, filters *[]db.TradingFilter, trades *[]db.Trade,
+						 dailys *[]db.DailyReturn, periods *[]db.LivePeriod) []*TradingSystem {
 
-//=============================================================================
+	tsMap := map[uint]*TradingSystem{}
 
-func InitDatabase(cfg *core.Database) {
-
-	slog.Info("Starting database...")
-	url := cfg.Username + ":" + cfg.Password + "@tcp(" + cfg.Address + ")/" + cfg.Name + "?charset=utf8mb4&parseTime=True"
-
-	dialector := mysql.New(mysql.Config{
-		DSN:                       url,
-		DefaultStringSize:         256,
-		DisableDatetimePrecision:  false,
-		DontSupportRenameIndex:    false,
-		DontSupportRenameColumn:   true,
-		SkipInitializeWithVersion: false,
-	})
-
-	db, err := gorm.Open(dialector, &gorm.Config{})
-	if err != nil {
-		core.ExitWithMessage("Failed to connect to the database: " + err.Error())
+	for _,ts := range *systems {
+		tsMap[ts.Id] = NewTradingSystem(&ts)
 	}
 
-	sqlDB, err := db.DB()
-	sqlDB.SetConnMaxLifetime(time.Minute * 3)
-	sqlDB.SetMaxOpenConns(50)
-	sqlDB.SetMaxIdleConns(10)
+	for _, f := range *filters {
+		ts,ok := tsMap[f.TradingSystemId]
+		if ok {
+			ts.TradingFilter = NewTradingFilter(&f)
+		}
+	}
 
-	dbms = db
+	for _, tr := range *trades {
+		ts,ok := tsMap[tr.TradingSystemId]
+		if ok {
+			ts.Trades = append(ts.Trades, NewTrade(&tr))
+		}
+	}
+
+	for _, dr := range *dailys {
+		ts,ok := tsMap[dr.TradingSystemId]
+		if ok {
+			ts.DailyReturns = append(ts.DailyReturns, NewDailyReturn(&dr))
+		}
+	}
+
+	for _, lp := range *periods {
+		ts,ok := tsMap[lp.TradingSystemId]
+		if ok {
+			ts.LivePeriods = append(ts.LivePeriods, NewLivePeriod(&lp))
+		}
+	}
+
+	return maps.Values(tsMap)
 }
 
 //=============================================================================
 
-func RunInTransaction(f func(tx *gorm.DB) error) error {
-	return dbms.Transaction(f)
+func EncodeTradingSystems(list []*TradingSystem) (*ExportedData, error) {
+	ed := &ExportedData{}
+
+	for _, ts := range list {
+		data, err := json.MarshalIndent(ts, "", "\t")
+		if err != nil {
+			return nil, err
+		}
+
+		es := &EncodedSystem{
+			Id: ts.Id,
+			JsonData: data,
+		}
+
+		ed.TradingSystems = append(ed.TradingSystems, es)
+	}
+
+	return ed, nil
 }
 
 //=============================================================================

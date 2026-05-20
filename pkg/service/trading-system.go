@@ -26,12 +26,13 @@ package service
 
 import (
 	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/dbms"
+	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/portfolio-trader/pkg/business"
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter"
 	"github.com/algotiqa/portfolio-trader/pkg/business/performance"
 	"github.com/algotiqa/portfolio-trader/pkg/business/quality"
 	"github.com/algotiqa/portfolio-trader/pkg/business/simulation"
-	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -45,7 +46,7 @@ func getTradingSystems(c *auth.Context) {
 		details, err := c.GetParamAsBool("details", false)
 
 		if err == nil {
-			err = db.RunInTransaction(func(tx *gorm.DB) error {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 				list, err := business.GetTradingSystems(tx, c, filter, offset, limit, details)
 
 				if err != nil {
@@ -66,7 +67,7 @@ func getTradingSystem(c *auth.Context) {
 	tsId, err := c.GetIdFromUrl()
 
 	if err == nil {
-		err = db.RunInTransaction(func(tx *gorm.DB) error {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 			ts, err2 := business.GetTradingSystem(tx, c, tsId)
 
 			if err2 != nil {
@@ -86,7 +87,7 @@ func getTrades(c *auth.Context) {
 	tsId, err := c.GetIdFromUrl()
 
 	if err == nil {
-		err = db.RunInTransaction(func(tx *gorm.DB) error {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 			list, err := business.GetTrades(tx, c, tsId)
 
 			if err != nil {
@@ -106,7 +107,7 @@ func getTradingFilters(c *auth.Context) {
 	tsId, err := c.GetIdFromUrl()
 
 	if err == nil {
-		err = db.RunInTransaction(func(tx *gorm.DB) error {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 			filters, err := business.GetTradingFilters(tx, c, tsId)
 
 			if err != nil {
@@ -130,7 +131,7 @@ func setTradingFilters(c *auth.Context) {
 		err = c.BindParamsFromBody(&filters)
 
 		if err == nil {
-			err = db.RunInTransaction(func(tx *gorm.DB) error {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 				err = business.SetTradingFilters(tx, c, tsId, &filters)
 
 				if err != nil {
@@ -155,7 +156,7 @@ func runFilterAnalysis(c *auth.Context) {
 		err = c.BindParamsFromBody(&req)
 
 		if err == nil {
-			err = db.RunInTransaction(func(tx *gorm.DB) error {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 				rep, err := business.RunFilterAnalysis(tx, c, tsId, &req)
 
 				if err != nil {
@@ -180,7 +181,7 @@ func runPerformanceAnalysis(c *auth.Context) {
 		err = c.BindParamsFromBody(&req)
 
 		if err == nil {
-			err = db.RunInTransaction(func(tx *gorm.DB) error {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 				res, err := business.RunPerformanceAnalysis(tx, c, tsId, &req)
 
 				if err != nil {
@@ -205,7 +206,7 @@ func runQualityAnalysis(c *auth.Context) {
 		err = c.BindParamsFromBody(&req)
 
 		if err == nil {
-			err = db.RunInTransaction(func(tx *gorm.DB) error {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 				res, err := business.RunQualityAnalysis(tx, c, tsId, &req)
 
 				if err != nil {
@@ -213,6 +214,27 @@ func runQualityAnalysis(c *auth.Context) {
 				}
 
 				return c.ReturnObject(res)
+			})
+		}
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================
+
+func exportTradingSystems(c *auth.Context) {
+	ids,err := c.GetIdsFromUrl()
+	if err == nil {
+		if len(ids) == 0 {
+			err = req.NewBadRequestError("Parameter 'id' is missing or empty")
+		} else {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+				res, terr := business.ExportTradingSystems(tx, c, ids)
+				if terr == nil {
+					return c.ReturnObject(res)
+				}
+				return terr
 			})
 		}
 	}
@@ -234,7 +256,7 @@ func startFilterOptimization(c *auth.Context) {
 		err = c.BindParamsFromBody(&req)
 
 		if err == nil {
-			err = db.RunInTransaction(func(tx *gorm.DB) error {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 				err := business.StartFilterOptimization(tx, c, tsId, &req)
 
 				if err != nil {
@@ -303,7 +325,7 @@ func startSimulation(c *auth.Context) {
 		err = c.BindParamsFromBody(&req)
 
 		if err == nil {
-			err = db.RunInTransaction(func(tx *gorm.DB) error {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 				err2 := business.StartSimulation(tx, c, tsId, &req)
 
 				if err2 != nil {

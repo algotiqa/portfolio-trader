@@ -61,7 +61,7 @@ func SetEquityChart(id uint, er *EquityRequest) error {
 		return err
 	}
 
-	client := req.GetClient("bf")
+	client := req.GetDefaultClient()
 	url := platform.Storage + "/v1/trading-systems/" + strconv.Itoa(int(id)) + "/equity-chart"
 
 	err = req.DoPut(client, url, &er, "", token)
@@ -84,7 +84,7 @@ func DeleteEquityChart(username string, id uint) error {
 		return err
 	}
 
-	client := req.GetClient("bf")
+	client := req.GetDefaultClient()
 	url := platform.Storage + "/v1/trading-systems/" + strconv.Itoa(int(id)) + "/equity-chart"
 	er := EquityRequest{
 		Username: username,

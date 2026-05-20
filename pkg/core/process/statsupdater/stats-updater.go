@@ -30,6 +30,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/algotiqa/core/dbms"
 	"github.com/algotiqa/portfolio-trader/pkg/app"
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
@@ -91,7 +92,7 @@ func getUsersWithTradingSystems() ([]string, error) {
 	var list []string
 	var err error
 
-	err = db.RunInTransaction(func(tx *gorm.DB) error {
+	err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 		list, err = db.GetUsersWithTradingSystems(tx)
 		return err
 	})
@@ -120,7 +121,7 @@ func getTradingSystemsByUser(user string) (*[]db.TradingSystem, error) {
 	var list *[]db.TradingSystem
 	var err error
 
-	err = db.RunInTransaction(func(tx *gorm.DB) error {
+	err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 		list, err = db.GetTradingSystemsByUser(tx, user)
 		return err
 	})
@@ -139,7 +140,7 @@ func updateTradingSystem(ts *db.TradingSystem) {
 		updateLastStats(ts, trades)
 		err = updateChart(ts, trades, lastDays)
 		if err == nil {
-			err = db.RunInTransaction(func(tx *gorm.DB) error {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 				return db.UpdateTradingSystem(tx, ts)
 			})
 			if err != nil {
@@ -157,7 +158,7 @@ func getTradingSystemTrades(id uint, lastDays int) (*[]db.Trade, error) {
 
 	fromDate := time.Now().Add(-time.Hour * 24 * time.Duration(lastDays))
 
-	err = db.RunInTransaction(func(tx *gorm.DB) error {
+	err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 		list, err = db.FindTradesByTsIdFromTime(tx, id, &fromDate, nil)
 		return err
 	})
