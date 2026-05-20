@@ -31,6 +31,7 @@ import (
 	"github.com/algotiqa/core/dbms"
 	"github.com/algotiqa/core/msg"
 	"github.com/algotiqa/portfolio-trader/pkg/business"
+	"github.com/algotiqa/portfolio-trader/pkg/business/importexport"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 )
@@ -168,9 +169,13 @@ func setTradingSystem(tsm *TradingSystemMessage, create bool) bool {
 		err = db.UpdateTradingSystem(tx, ts)
 
 		if err == nil && isNew {
-			err = db.SetTradingFilter(tx, &db.TradingFilter{
-				TradingSystemId: ts.Id,
-			})
+			if len(tsm.PortfolioPack) == 0 {
+				err = db.SetTradingFilter(tx, &db.TradingFilter{
+					TradingSystemId: ts.Id,
+				})
+			} else {
+				err = importexport.ImportTradingSystem(tx, ts, tsm.PortfolioPack)
+			}
 		}
 
 		return err

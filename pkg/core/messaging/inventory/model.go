@@ -150,6 +150,8 @@ type TradingSystemMessage struct {
 	Currency       Currency       `json:"currency"`
 	TradingSession TradingSession `json:"tradingSession"`
 	Exchange       Exchange       `json:"exchange"`
+	PortfolioPack  []byte         `json:"portfolioPack"`
+	StoragePack    []byte         `json:"storagePack"`
 }
 
 //=============================================================================
