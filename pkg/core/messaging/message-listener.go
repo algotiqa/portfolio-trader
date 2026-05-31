@@ -22,50 +22,23 @@ THE SOFTWARE.
 */
 //=============================================================================
 
-package main
+package messaging
 
 import (
 	"log/slog"
 
-	"github.com/algotiqa/core/auth"
-	"github.com/algotiqa/core/boot"
-	"github.com/algotiqa/core/dbms"
 	"github.com/algotiqa/core/msg"
-	"github.com/algotiqa/core/req"
-	"github.com/algotiqa/portfolio-trader/pkg/app"
-	"github.com/algotiqa/portfolio-trader/pkg/core/messaging"
-	"github.com/algotiqa/portfolio-trader/pkg/core/process"
-	"github.com/algotiqa/portfolio-trader/pkg/platform"
-	"github.com/algotiqa/portfolio-trader/pkg/service"
+	"github.com/algotiqa/portfolio-trader/pkg/core/messaging/inventory"
+	"github.com/algotiqa/portfolio-trader/pkg/core/messaging/runtime"
 )
 
 //=============================================================================
 
-const component = "portfolio-trader"
+func InitMessageListener() {
+	slog.Info("Starting message listeners...")
 
-//=============================================================================
-
-func main() {
-	cfg := &app.Config{}
-	boot.ReadConfig(component, cfg)
-	logger := boot.InitLogger(component, &cfg.Application)
-	engine := boot.InitEngine(logger, &cfg.Application)
-	initClients()
-	auth.InitAuthentication(&cfg.Authentication)
-	dbms.InitDatabase(&cfg.Database)
-	msg.InitMessaging(&cfg.Messaging)
-	service.Init(engine, cfg, logger)
-	process.Init(cfg)
-	messaging.InitMessageListener()
-	platform.InitPlatform(cfg)
-	boot.RunHttpServer(engine, &cfg.Application)
-}
-
-//=============================================================================
-
-func initClients() {
-	slog.Info("Initializing clients...")
-	req.AddDefaultClient("ca.crt", "server.crt", "server.key")
+	go msg.ReceiveMessages(msg.QuInventoryToPortfolio, inventory.HandleMessage)
+	go msg.ReceiveMessages(msg.QuRuntimeToPortfolio,   runtime.HandleMessage)
 }
 
 //=============================================================================

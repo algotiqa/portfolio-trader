@@ -41,15 +41,7 @@ import (
 
 //=============================================================================
 
-func InitMessageListener() {
-	slog.Info("Starting runtime message listener...")
-
-	go msg.ReceiveMessages(msg.QuRuntimeToPortfolio, handleMessage)
-}
-
-//=============================================================================
-
-func handleMessage(m *msg.Message) bool {
+func HandleMessage(m *msg.Message) bool {
 
 	slog.Info("New message received", "source", m.Source, "type", m.Type)
 

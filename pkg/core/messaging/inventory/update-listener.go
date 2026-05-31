@@ -38,15 +38,7 @@ import (
 
 //=============================================================================
 
-func InitMessageListener() {
-	slog.Info("Starting inventory message listener...")
-
-	go msg.ReceiveMessages(msg.QuInventoryToPortfolio, handleMessage)
-}
-
-//=============================================================================
-
-func handleMessage(m *msg.Message) bool {
+func HandleMessage(m *msg.Message) bool {
 
 	slog.Info("New message received", "source", m.Source, "type", m.Type)
 
@@ -84,8 +76,8 @@ func handleMessage(m *msg.Message) bool {
 			return updateDataProduct(&dpm)
 		}
 	} else if m.Source == msg.SourceBrokerProduct {
-		pbm := BrokerProductMessage{}
-		err := json.Unmarshal(m.Entity, &pbm)
+		bpm := BrokerProductMessage{}
+		err := json.Unmarshal(m.Entity, &bpm)
 		if err != nil {
 			slog.Error("Dropping badly formatted message!", "entity", string(m.Entity))
 			return true
@@ -95,10 +87,10 @@ func handleMessage(m *msg.Message) bool {
 			//--- If the broker product is new, there are no trading systems to update. Just return 'true'
 			return true
 		}
-
 		if m.Type == msg.TypeUpdate {
-			return updateBrokerProduct(&pbm)
+			return updateBrokerProduct(&bpm)
 		}
+		if m.Type == msg.TypeDelete { return true }
 	}
 
 	slog.Error("Dropping message with unknown source/type!", "source", m.Source, "type", m.Type)
@@ -193,17 +185,17 @@ func setTradingSystem(tsm *TradingSystemMessage, create bool) bool {
 //=============================================================================
 
 func deleteTradingSystem(tsm *TradingSystemMessage) bool {
-	slog.Info("deleteTradingSystem: Trading system deletion received", "id", tsm.TradingSystem.Id)
+	id := tsm.TradingSystem.Id
+	slog.Info("deleteTradingSystem: Trading system deletion received", "id", id)
 
 	err := dbms.RunInTransaction(func(tx *gorm.DB) error {
-		id := tsm.TradingSystem.Id
 		return business.DeleteTradingSystem(tx, id)
 	})
 
 	if err != nil {
-		slog.Error("Raised error while deleting trading system", "error", err.Error())
+		slog.Error("deleteTradingSystem: Raised error while deleting trading system", "error", err.Error())
 	} else {
-		slog.Info("deleteTradingSystem: Operation complete", "id", tsm.TradingSystem.Id)
+		slog.Info("deleteTradingSystem: Operation complete", "id", id)
 	}
 
 	return err == nil
