@@ -31,6 +31,7 @@ import (
 	"github.com/algotiqa/portfolio-trader/pkg/business"
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter"
 	"github.com/algotiqa/portfolio-trader/pkg/business/performance"
+	"github.com/algotiqa/portfolio-trader/pkg/business/position"
 	"github.com/algotiqa/portfolio-trader/pkg/business/quality"
 	"github.com/algotiqa/portfolio-trader/pkg/business/simulation"
 	"gorm.io/gorm"
@@ -362,6 +363,35 @@ func getSimulationResult(c *auth.Context) {
 		res := business.GetSimulationResult(c, tsId)
 		_ = c.ReturnObject(res)
 		return
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================
+//===
+//=== Position sizing
+//===
+//=============================================================================
+
+func runPositionAnalysis(c *auth.Context) {
+	tsId, err := c.GetIdFromUrl()
+
+	if err == nil {
+		rq := position.AnalysisRequest{}
+		err = c.BindParamsFromBody(&rq)
+
+		if err == nil {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+				rep, err := business.RunPositionAnalysis(tx, c, tsId, &rq)
+
+				if err != nil {
+					return err
+				}
+
+				return c.ReturnObject(rep)
+			})
+		}
 	}
 
 	c.ReturnError(err)

@@ -114,6 +114,8 @@ type TradingSystem struct {
 	InSampleFrom     types.Date   `json:"inSampleFrom"`
 	InSampleTo       types.Date   `json:"inSampleTo"`
 	EngineCode       string       `json:"engineCode"`
+	PositionModel    string       `json:"positionModel"`
+	PositionConfig   string       `json:"positionConfig"`
 }
 
 //=============================================================================

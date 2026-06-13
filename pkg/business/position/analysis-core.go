@@ -1,6 +1,6 @@
 //=============================================================================
 /*
-Copyright © 2024 Andrea Carboni andrea.carboni71@gmail.com
+Copyright © 2026 Andrea Carboni andrea.carboni71@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,32 +22,55 @@ THE SOFTWARE.
 */
 //=============================================================================
 
-package algorithm
+package position
 
 import (
-	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/genetic"
-	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
-	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/simple"
+	"github.com/algotiqa/portfolio-trader/pkg/business/position/model"
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
 
 //=============================================================================
-
-const Simple  = "simple"
-const Genetic = "genetic"
-
+//===
+//=== AnalysisResponse building
+//===
 //=============================================================================
 
-func New(name string) optimization.Algorithm {
-	switch name {
-	case Simple:
-		return simple.New()
+func RunAnalysis(ts *db.TradingSystem, model model.PositionModel, list *[]db.Trade) *AnalysisResponse {
+	res := &AnalysisResponse{}
+	//res.TradingSystem.Id = ts.Id
+	//res.TradingSystem.Name = ts.Name
+	//res.Filter = filter
+	//
+	////--- Creates slices
+	//
+	//if len(*list) == 0 {
+	//	return res
+	//}
+	//
+	//e := &res.Equities
+	//
+	////--- Calc unfiltered equity and days
+	//calcUnfilteredEquityAndProfit(e, ts, list)
+	//
+	//if res.Filter.EquAvgEnabled {
+	//	e.Average = calcAverageEquity(e.Time, e.UnfilteredEquity, res.Filter.EquAvgLen)
+	//}
+	//
+	//res.Activations = calcActivations(e, filter)
+	//calcFilterActivation(e, res.Activations, filter)
+	//calcFilteredEquity(res)
+	//
+	//unfilteredDrawdown, maxUnfDD := core.BuildDrawDown(&e.UnfilteredEquity)
+	//filteredDrawdown, maxFilDD := core.BuildDrawDown(&e.FilteredEquity)
+	//
+	//e.UnfilteredDrawdown = *unfilteredDrawdown
+	//e.FilteredDrawdown = *filteredDrawdown
+	//
+	//calcSummary(res, maxUnfDD, maxFilDD)
 
-	case Genetic:
-		return genetic.New()
-
-	default:
-		panic("Unknown optimization algorithm : " + name)
-	}
+	return res
 }
+
+//=============================================================================
 
 //=============================================================================

@@ -1,6 +1,6 @@
 //=============================================================================
 /*
-Copyright © 2024 Andrea Carboni andrea.carboni71@gmail.com
+Copyright © 2026 Andrea Carboni andrea.carboni71@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,32 +22,43 @@ THE SOFTWARE.
 */
 //=============================================================================
 
-package algorithm
+package model
 
-import (
-	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/genetic"
-	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
-	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/simple"
-)
+import "encoding/json"
 
 //=============================================================================
 
-const Simple  = "simple"
-const Genetic = "genetic"
+const PercentVolatility = "PV"
 
 //=============================================================================
 
-func New(name string) optimization.Algorithm {
-	switch name {
-	case Simple:
-		return simple.New()
-
-	case Genetic:
-		return genetic.New()
-
-	default:
-		panic("Unknown optimization algorithm : " + name)
-	}
+type PercentVolatilityConfig struct {
+	AverageLength int     `json:"averageLength"`
+	MaxVolatility float64 `json:"maxVolatility"`
 }
+
+//=============================================================================
+
+type PercentVolatilityModel struct {
+	config *PercentVolatilityConfig
+}
+
+//=============================================================================
+
+func newPercentVolatilityModel(config string) (*PercentVolatilityModel,error) {
+	c := &PercentVolatilityConfig{}
+	err := json.Unmarshal([]byte(config), c)
+	if err != nil {
+		return nil, err
+	}
+
+	return &PercentVolatilityModel{
+		config: c,
+	}, nil
+}
+
+//=============================================================================
+
+func (fm *PercentVolatilityModel) Calc() {}
 
 //=============================================================================

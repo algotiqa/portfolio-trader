@@ -1,6 +1,6 @@
 //=============================================================================
 /*
-Copyright © 2024 Andrea Carboni andrea.carboni71@gmail.com
+Copyright © 2026 Andrea Carboni andrea.carboni71@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,32 +22,20 @@ THE SOFTWARE.
 */
 //=============================================================================
 
-package algorithm
+package position
 
-import (
-	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/genetic"
-	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
-	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/simple"
-)
+import "github.com/algotiqa/portfolio-trader/pkg/core"
 
 //=============================================================================
-
-const Simple  = "simple"
-const Genetic = "genetic"
-
+//===
+//=== AnalysisRequest
+//===
 //=============================================================================
 
-func New(name string) optimization.Algorithm {
-	switch name {
-	case Simple:
-		return simple.New()
-
-	case Genetic:
-		return genetic.New()
-
-	default:
-		panic("Unknown optimization algorithm : " + name)
-	}
+type AnalysisRequest struct {
+	core.SelectedPeriod
+	PositionModel  string   `json:"positionModel"`
+	PositionConfig string   `json:"positionConfig"`
 }
 
 //=============================================================================

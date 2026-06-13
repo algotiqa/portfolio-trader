@@ -32,6 +32,7 @@ import (
 	"github.com/algotiqa/core/msg"
 	"github.com/algotiqa/portfolio-trader/pkg/business"
 	"github.com/algotiqa/portfolio-trader/pkg/business/importexport"
+	"github.com/algotiqa/portfolio-trader/pkg/business/position/model"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 )
@@ -118,6 +119,15 @@ func setTradingSystem(tsm *TradingSystemMessage, create bool) bool {
 			ts.Status          = db.TsStatusOff
 			ts.Active          = false
 			ts.SuggestedAction = db.TsActionNone
+			ts.PositionModel   = model.FixedUnit
+
+			def := model.NewFixedUnitDefaultConfig()
+			defStr,errC := json.Marshal(def)
+			if errC != nil {
+				return errC
+			}
+
+			ts.PositionConfig = string(defStr)
 		} else {
 			isNew = false
 

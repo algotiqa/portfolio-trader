@@ -1,6 +1,6 @@
 //=============================================================================
 /*
-Copyright © 2024 Andrea Carboni andrea.carboni71@gmail.com
+Copyright © 2026 Andrea Carboni andrea.carboni71@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,32 +22,57 @@ THE SOFTWARE.
 */
 //=============================================================================
 
-package algorithm
+package model
 
-import (
-	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/genetic"
-	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
-	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/simple"
+import "encoding/json"
+
+//=============================================================================
+
+const PercentRisk = "PR"
+
+//=============================================================================
+
+type RpuType string
+
+//-----------------------------------------------------------------------------
+
+const (
+	RpuStopLoss   RpuType = "stopLoss"
+	RpuMaxLoss    RpuType = "maxLoss"
+	RpuAvgLoss    RpuType = "avgLoss"
+	RpuFixedValue RpuType = "fixedValue"
 )
 
-//=============================================================================
+//-----------------------------------------------------------------------------
 
-const Simple  = "simple"
-const Genetic = "genetic"
-
-//=============================================================================
-
-func New(name string) optimization.Algorithm {
-	switch name {
-	case Simple:
-		return simple.New()
-
-	case Genetic:
-		return genetic.New()
-
-	default:
-		panic("Unknown optimization algorithm : " + name)
-	}
+type PercentRiskConfig struct {
+	RiskPerTrade float64 `json:"riskPerTrade"`
+	RiskPerUnit  RpuType `json:"riskPerUnit"`
+	RiskValue    float64 `json:"riskValue"`
 }
+
+//=============================================================================
+
+type PercentRiskModel struct {
+	config *PercentRiskConfig
+}
+
+//=============================================================================
+
+func newPercentRiskModel(config string) (*PercentRiskModel,error) {
+	c := &PercentRiskConfig{}
+	err := json.Unmarshal([]byte(config), c)
+	if err != nil {
+		return nil, err
+	}
+
+	return &PercentRiskModel{
+		config : c,
+	},nil
+}
+
+//=============================================================================
+
+func (fm *PercentRiskModel) Calc() {}
 
 //=============================================================================

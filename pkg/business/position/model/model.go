@@ -1,6 +1,6 @@
 //=============================================================================
 /*
-Copyright © 2024 Andrea Carboni andrea.carboni71@gmail.com
+Copyright © 2026 Andrea Carboni andrea.carboni71@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,31 +22,40 @@ THE SOFTWARE.
 */
 //=============================================================================
 
-package algorithm
-
-import (
-	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/genetic"
-	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
-	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/simple"
-)
+package model
 
 //=============================================================================
 
-const Simple  = "simple"
-const Genetic = "genetic"
+type PositionModel interface {
+	Calc()
+}
 
 //=============================================================================
 
-func New(name string) optimization.Algorithm {
-	switch name {
-	case Simple:
-		return simple.New()
+func New(model, config string) (PositionModel, error) {
+	switch model {
+		case FixedUnit:
+			return newFixedUnitModel(config)
 
-	case Genetic:
-		return genetic.New()
+		case PercentRisk:
+			return newPercentRiskModel(config)
 
-	default:
-		panic("Unknown optimization algorithm : " + name)
+		case PercentVolatility:
+			return newPercentVolatilityModel(config)
+
+		case MarketMoney:
+			return newMarketMoneyModel(config)
+
+		default:
+		panic("Unknown position sizing model: " + model)
+	}
+}
+
+//=============================================================================
+
+func NewFixedUnitDefaultConfig() *FixedUnitConfig {
+	return &FixedUnitConfig{
+		Units: 1,
 	}
 }
 
