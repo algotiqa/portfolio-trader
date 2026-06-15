@@ -28,7 +28,6 @@ import (
 	"time"
 
 	"github.com/algotiqa/portfolio-trader/pkg/db"
-	"github.com/algotiqa/types"
 )
 
 //=============================================================================
@@ -51,7 +50,6 @@ type TradingSystem struct {
 	LastNumTrades    int            `json:"lastNumTrades"`
 	TradingFilter    *TradingFilter `json:"tradingFilter"`
 	Trades           []*Trade       `json:"trades"`
-	DailyReturns     []*DailyReturn `json:"dailyReturns"`
 	LivePeriods      []*LivePeriod  `json:"livePeriods"`
 }
 
@@ -80,27 +78,28 @@ type TradingFilter struct {
 //=============================================================================
 
 type Trade struct {
-	TradeType          string     `json:"tradeType"`
-	EntryDate          *time.Time `json:"entryDate"`
-	EntryPrice         float64    `json:"entryPrice"`
-	EntryLabel         string     `json:"entryLabel"`
-	ExitDate           *time.Time `json:"exitDate"`
-	ExitPrice          float64    `json:"exitPrice"`
-	ExitLabel          string     `json:"exitLabel"`
-	GrossProfit        float64    `json:"grossProfit"`
-	Contracts          int        `json:"contracts"`
-	EntryDateAtBroker  *time.Time `json:"entryDateAtBroker"`
-	EntryPriceAtBroker float64    `json:"entryPriceAtBroker"`
-	ExitDateAtBroker   *time.Time `json:"exitDateAtBroker"`
-	ExitPriceAtBroker  float64    `json:"exitPriceAtBroker"`
+	TradeType          string       `json:"tradeType"`
+	EntryDate          *time.Time   `json:"entryDate"`
+	EntryPrice         float64      `json:"entryPrice"`
+	EntryLabel         string       `json:"entryLabel"`
+	ExitDate           *time.Time   `json:"exitDate"`
+	ExitPrice          float64      `json:"exitPrice"`
+	ExitLabel          string       `json:"exitLabel"`
+	GrossReturn        float64      `json:"grossReturn"`
+	MaxContracts       int          `json:"maxContracts"`
+	EntryDateAtBroker  *time.Time   `json:"entryDateAtBroker"`
+	EntryPriceAtBroker float64      `json:"entryPriceAtBroker"`
+	ExitDateAtBroker   *time.Time   `json:"exitDateAtBroker"`
+	ExitPriceAtBroker  float64      `json:"exitPriceAtBroker"`
+	Equity             []*EquityBar `json:"equity"`
 }
 
 //=============================================================================
 
-type DailyReturn struct {
-	Day          types.Date `json:"day"`
-	GrossProfit  float64    `json:"grossProfit"`
-	Trades       int        `json:"trades"`
+type EquityBar struct {
+	Date        time.Time `json:"date"`
+	GrossReturn float64    `json:"grossReturn"`
+	Contracts   int        `json:"contracts"`
 }
 
 //=============================================================================
@@ -153,23 +152,23 @@ func NewTradingSystem(ts *db.TradingSystem) *TradingSystem {
 
 func NewTradingFilter(f *db.TradingFilter) *TradingFilter {
 	return &TradingFilter{
-		EquAvgEnabled:    f.EquAvgEnabled,
-		EquAvgLen:        f.EquAvgLen,
-		PosProEnabled:    f.PosProEnabled,
-		PosProLen:        f.PosProLen,
-		WinPerEnabled:    f.WinPerEnabled,
-		WinPerLen:        f.WinPerLen,
-		WinPerValue:      f.WinPerValue,
-		OldNewEnabled:    f.OldNewEnabled,
-		OldNewOldLen:     f.OldNewOldLen,
-		OldNewOldPerc:    f.OldNewOldPerc,
-		OldNewNewLen:     f.OldNewNewLen,
+		EquAvgEnabled   : f.EquAvgEnabled,
+		EquAvgLen       : f.EquAvgLen,
+		PosProEnabled   : f.PosProEnabled,
+		PosProLen       : f.PosProLen,
+		WinPerEnabled   : f.WinPerEnabled,
+		WinPerLen       : f.WinPerLen,
+		WinPerValue     : f.WinPerValue,
+		OldNewEnabled   : f.OldNewEnabled,
+		OldNewOldLen    : f.OldNewOldLen,
+		OldNewOldPerc   : f.OldNewOldPerc,
+		OldNewNewLen    : f.OldNewNewLen,
 		TrendlineEnabled: f.TrendlineEnabled,
-		TrendlineLen:     f.TrendlineLen,
-		TrendlineValue:   f.TrendlineValue,
-		DrawdownEnabled:  f.DrawdownEnabled,
-		DrawdownMin:      f.DrawdownMin,
-		DrawdownMax:      f.DrawdownMax,
+		TrendlineLen    : f.TrendlineLen,
+		TrendlineValue  : f.TrendlineValue,
+		DrawdownEnabled : f.DrawdownEnabled,
+		DrawdownMin     : f.DrawdownMin,
+		DrawdownMax     : f.DrawdownMax,
 	}
 }
 
