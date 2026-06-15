@@ -1,6 +1,6 @@
 //=============================================================================
 /*
-Copyright © 2023 Andrea Carboni andrea.carboni71@gmail.com
+Copyright © 2025 Andrea Carboni andrea.carboni71@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,25 +22,25 @@ THE SOFTWARE.
 */
 //=============================================================================
 
-package messaging
+package system
 
-import (
-	"log/slog"
+//=============================================================================
 
-	"github.com/algotiqa/core/msg"
-	"github.com/algotiqa/portfolio-trader/pkg/core/messaging/inventory"
-	"github.com/algotiqa/portfolio-trader/pkg/core/messaging/runtime"
-	"github.com/algotiqa/portfolio-trader/pkg/core/messaging/system"
+type ConnectionStatus int
+
+const (
+	ConnectionStatusDisconnected = 0
+	ConnectionStatusConnecting   = 1
+	ConnectionStatusConnected    = 2
 )
 
 //=============================================================================
 
-func InitMessageListener() {
-	slog.Info("Starting message listeners...")
-
-	go msg.ReceiveMessages(msg.QuInventoryToPortfolio, inventory.HandleMessage)
-	go msg.ReceiveMessages(msg.QuRuntimeToPortfolio,   runtime.HandleMessage)
-	go msg.ReceiveMessages(msg.QuSystemToPortfolio,    system.HandleMessage)
+type ConnectionChangeSystemMessage struct {
+	Username       string           `json:"username"`
+	ConnectionCode string           `json:"connectionCode"`
+	SystemCode     string           `json:"systemCode"`
+	Status         ConnectionStatus `json:"status"`
 }
 
 //=============================================================================
