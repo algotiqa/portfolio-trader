@@ -25,12 +25,13 @@ THE SOFTWARE.
 package business
 
 import (
+	"sort"
+	"time"
+
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
-	"sort"
-	"time"
 )
 
 //=============================================================================
@@ -148,8 +149,8 @@ func buildTradingSystemMonitoring(ts *db.TradingSystem, list []*db.Trade) *Tradi
 	//--- build data for a single trading system
 
 	for _, tr := range list {
-		currRawProfit += tr.GrossProfit
-		currNetProfit += tr.GrossProfit - float64(ts.CostPerOperation)*2
+		currRawProfit += tr.GrossReturn
+		currNetProfit += tr.GrossReturn - float64(ts.CostPerOperation)*2
 
 		//tsa.Time[i]        = *tr.ExitDate
 		//tsa.GrossProfit[i] = currRawProfit

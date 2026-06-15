@@ -26,39 +26,38 @@ package runtime
 
 import (
 	"time"
-
-	"github.com/algotiqa/types"
 )
 
 //=============================================================================
 
 type TradeListMessage struct {
-	TradingSystemId uint               `json:"tradingSystemId"`
-	Reload          bool               `json:"reload"`
-	Trades          []*TradeItem       `json:"trades"`
-	DailyProfits    []*DailyProfitItem `json:"dailyProfits"`
+	TradingSystemId uint             `json:"tradingSystemId"`
+	Reload          bool             `json:"reload"`
+	Trades          []*TradeItem     `json:"trades"`
+	OpenTrade       []*EquityBarItem `json:"openTrade"`
 }
 
 //=============================================================================
 
 type TradeItem struct {
-	TradeType   string     `json:"tradeType"`
-	EntryDate   *time.Time `json:"entryDate"`
-	EntryPrice  float64    `json:"entryPrice"`
-	EntryLabel  string     `json:"entryLabel"`
-	ExitDate    *time.Time `json:"exitDate"`
-	ExitPrice   float64    `json:"exitPrice"`
-	ExitLabel   string     `json:"exitLabel"`
-	GrossProfit float64    `json:"grossProfit"`
-	Contracts   int        `json:"contracts"`
+	TradeType    string           `json:"tradeType"`
+	EntryDate    *time.Time       `json:"entryDate"`
+	EntryPrice   float64          `json:"entryPrice"`
+	EntryLabel   string           `json:"entryLabel"`
+	ExitDate     *time.Time       `json:"exitDate"`
+	ExitPrice    float64          `json:"exitPrice"`
+	ExitLabel    string           `json:"exitLabel"`
+	GrossReturn  float64          `json:"grossReturn"`
+	MaxContracts int              `json:"maxContracts"`
+	Equity       []*EquityBarItem `json:"equity"`
 }
 
 //=============================================================================
 
-type DailyProfitItem struct {
-	Day         types.Date `json:"day"`
-	GrossProfit float64    `json:"grossProfit"`
-	Trades      int        `json:"trades"`
+type EquityBarItem struct {
+	Date        time.Time  `json:"date"`
+	GrossReturn float64    `json:"grossReturn"`
+	Contracts   int        `json:"contracts"`
 }
 
 //=============================================================================

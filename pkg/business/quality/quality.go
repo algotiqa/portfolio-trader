@@ -134,7 +134,7 @@ func calcQualityMetrics(trades *[]db.Trade, tradeType string, direction int, vol
 
 			if direction == DirectionAll || direction == tradeDir {
 				if volatility == VolatilityAll || volatility == tradeVol {
-					ret := t.GrossProfit - 2*costPerOper
+					ret := t.GrossReturn - 2*costPerOper
 					list = append(list, ret/risk)
 				}
 			}

@@ -35,7 +35,7 @@ import (
 //=============================================================================
 
 func BuildTradingSystems(systems *[]db.TradingSystem, filters *[]db.TradingFilter, trades *[]db.Trade,
-						 dailys *[]db.DailyReturn, periods *[]db.LivePeriod) []*TradingSystem {
+						 periods *[]db.LivePeriod) []*TradingSystem {
 
 	tsMap := map[uint]*TradingSystem{}
 
@@ -54,13 +54,6 @@ func BuildTradingSystems(systems *[]db.TradingSystem, filters *[]db.TradingFilte
 		ts,ok := tsMap[tr.TradingSystemId]
 		if ok {
 			ts.Trades = append(ts.Trades, NewTrade(&tr))
-		}
-	}
-
-	for _, dr := range *dailys {
-		ts,ok := tsMap[dr.TradingSystemId]
-		if ok {
-			ts.DailyReturns = append(ts.DailyReturns, NewDailyReturn(&dr))
 		}
 	}
 
@@ -86,7 +79,7 @@ func EncodeTradingSystems(list []*TradingSystem) (*ExportedData, error) {
 		}
 
 		es := &EncodedSystem{
-			Id: ts.Id,
+			Id      : ts.Id,
 			JsonData: data,
 		}
 
@@ -108,10 +101,7 @@ func ImportTradingSystem(tx *gorm.DB, ts *db.TradingSystem, data []byte) error {
 			if err == nil {
 				err = addTrades(tx, ts.Id, its.Trades)
 				if err == nil {
-					err = addDailyReturns(tx, ts.Id, its.DailyReturns)
-					if err == nil {
-						err = addLivePeriods(tx, ts.Id, its.LivePeriods)
-					}
+					err = addLivePeriods(tx, ts.Id, its.LivePeriods)
 				}
 			}
 		}
@@ -189,36 +179,12 @@ func convertTrade(id uint, t *Trade) *db.Trade {
 		ExitDate          : t.ExitDate,
 		ExitPrice         : t.ExitPrice,
 		ExitLabel         : t.ExitLabel,
-		GrossProfit       : t.GrossProfit,
-		Contracts         : t.Contracts,
+		GrossReturn       : t.GrossReturn,
+		MaxContracts      : t.MaxContracts,
 		EntryDateAtBroker : t.EntryDateAtBroker,
 		EntryPriceAtBroker: t.EntryPriceAtBroker,
 		ExitDateAtBroker  : t.ExitDateAtBroker,
 		ExitPriceAtBroker : t.ExitPriceAtBroker,
-	}
-}
-
-//=============================================================================
-
-func addDailyReturns(tx *gorm.DB, id uint, list []*DailyReturn) error {
-	for _, dr := range list {
-		err := db.AddDailyReturn(tx, convertDailyReturn(id,dr))
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-//=============================================================================
-
-func convertDailyReturn(id uint, d *DailyReturn) *db.DailyReturn {
-	return &db.DailyReturn{
-		TradingSystemId: id,
-		Day            : d.Day,
-		GrossProfit    : d.GrossProfit,
-		Trades         : d.Trades,
 	}
 }
 

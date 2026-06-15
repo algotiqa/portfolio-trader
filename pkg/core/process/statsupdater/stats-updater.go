@@ -169,9 +169,9 @@ func getTradingSystemTrades(id uint, lastDays int) (*[]db.Trade, error) {
 //=============================================================================
 
 func updateLastStats(ts *db.TradingSystem, trades *[]db.Trade) {
-	grossProfit := 0.0
-	netProfit := 0.0
-	numTrades := 0
+	grossReturn := 0.0
+	netReturn   := 0.0
+	numTrades   := 0
 
 	var grossEquity []float64
 	//var grossDrawdown []float64
@@ -179,12 +179,12 @@ func updateLastStats(ts *db.TradingSystem, trades *[]db.Trade) {
 	//var netDrawdown   []float64
 
 	for _, trade := range *trades {
-		grossProfit += trade.GrossProfit
-		netProfit += trade.GrossProfit - 2*ts.CostPerOperation
+		grossReturn += trade.GrossReturn
+		netReturn   += trade.GrossReturn - 2*ts.CostPerOperation
 		numTrades++
 
-		grossEquity = append(grossEquity, grossProfit)
-		netEquity = append(netEquity, netProfit)
+		grossEquity = append(grossEquity, grossReturn)
+		netEquity   = append(netEquity,   netReturn)
 		//grossDrawdown = append(grossDrawdown, 0)
 		//netDrawdown   = append(netDrawdown,   0)
 	}
@@ -192,12 +192,12 @@ func updateLastStats(ts *db.TradingSystem, trades *[]db.Trade) {
 	//maxGrossDD := core.CalcDrawDown(&grossEquity, &grossDrawdown)
 	//maxNetDD   := core.CalcDrawDown(&netEquity,   &netDrawdown)
 
-	ts.LastNetProfit = core.Trunc2d(netProfit)
+	ts.LastNetProfit = core.Trunc2d(netReturn)
 	ts.LastNumTrades = numTrades
 	ts.LastNetAvgTrade = 0
 
 	if numTrades != 0 {
-		ts.LastNetAvgTrade = core.Trunc2d(netProfit / float64(numTrades))
+		ts.LastNetAvgTrade = core.Trunc2d(netReturn / float64(numTrades))
 	}
 }
 
@@ -299,7 +299,7 @@ func calcEquityTime(trades *[]db.Trade, lastDays int, costPerOper float64) ([]st
 
 	for _, trade := range *trades {
 		day := trade.ExitDate.Sub(startDate) / (time.Hour * 24)
-		values[day] += trade.GrossProfit - 2*costPerOper
+		values[day] += trade.GrossReturn - 2*costPerOper
 	}
 
 	for i := 1; i < len(values); i++ {
@@ -347,7 +347,7 @@ func calcEquityTrades(trades *[]db.Trade, costPerOper float64) ([]string, []floa
 	netProfit := 0.0
 
 	for i, trade := range *trades {
-		netProfit += trade.GrossProfit - 2*costPerOper
+		netProfit += trade.GrossReturn - 2*costPerOper
 
 		xAxis = append(xAxis, strconv.Itoa(i+1))
 		values = append(values, netProfit)

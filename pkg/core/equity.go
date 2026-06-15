@@ -39,7 +39,7 @@ func BuildGrossProfits(trades *[]db.Trade, tradeType string) (*[]time.Time, *[]f
 	for _, tr := range *trades {
 		if tradeType == db.TradeTypeAll || tr.TradeType == tradeType {
 			etime := tr.ExitDate
-			gross := tr.GrossProfit
+			gross := tr.GrossReturn
 
 			timeSlice = append(timeSlice, *etime)
 			equSlice = append(equSlice, gross)

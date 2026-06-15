@@ -91,15 +91,6 @@ type Trade struct {
 	EntryPriceAtBroker float64      `json:"entryPriceAtBroker"`
 	ExitDateAtBroker   *time.Time   `json:"exitDateAtBroker"`
 	ExitPriceAtBroker  float64      `json:"exitPriceAtBroker"`
-	Equity             []*EquityBar `json:"equity"`
-}
-
-//=============================================================================
-
-type EquityBar struct {
-	Date        time.Time `json:"date"`
-	GrossReturn float64    `json:"grossReturn"`
-	Contracts   int        `json:"contracts"`
 }
 
 //=============================================================================
@@ -176,29 +167,19 @@ func NewTradingFilter(f *db.TradingFilter) *TradingFilter {
 
 func NewTrade(f *db.Trade) *Trade {
 	return &Trade{
-		TradeType:          f.TradeType,
-		EntryDate:          f.EntryDate,
-		EntryPrice:         f.EntryPrice,
-		EntryLabel:         f.EntryLabel,
-		ExitDate:           f.ExitDate,
-		ExitPrice:          f.ExitPrice,
-		ExitLabel:          f.ExitLabel,
-		GrossProfit:        f.GrossProfit,
-		Contracts:          f.Contracts,
-		EntryDateAtBroker:  f.EntryDateAtBroker,
+		TradeType         : f.TradeType,
+		EntryDate         : f.EntryDate,
+		EntryPrice        : f.EntryPrice,
+		EntryLabel        : f.EntryLabel,
+		ExitDate          : f.ExitDate,
+		ExitPrice         : f.ExitPrice,
+		ExitLabel         : f.ExitLabel,
+		GrossReturn       : f.GrossReturn,
+		MaxContracts      : f.MaxContracts,
+		EntryDateAtBroker : f.EntryDateAtBroker,
 		EntryPriceAtBroker: f.EntryPriceAtBroker,
-		ExitDateAtBroker:   f.ExitDateAtBroker,
-		ExitPriceAtBroker:  f.ExitPriceAtBroker,
-	}
-}
-
-//=============================================================================
-
-func NewDailyReturn(f *db.DailyReturn) *DailyReturn {
-	return &DailyReturn{
-		Day        : f.Day,
-		GrossProfit: f.GrossProfit,
-		Trades     : f.Trades,
+		ExitDateAtBroker  : f.ExitDateAtBroker,
+		ExitPriceAtBroker : f.ExitPriceAtBroker,
 	}
 }
 

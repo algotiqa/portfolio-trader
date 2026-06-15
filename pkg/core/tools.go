@@ -51,20 +51,6 @@ func GetLocation(timezone string, ts *db.TradingSystem) (*time.Location, error) 
 
 //=============================================================================
 
-func ToNonZeroDailyReturnSlice(list *[]db.DailyReturn) []float64 {
-	var res []float64
-
-	for _, dr := range *list {
-		if dr.GrossProfit != 0 {
-			res = append(res, dr.GrossProfit)
-		}
-	}
-
-	return res
-}
-
-//=============================================================================
-
 func CalcRisk(returns []float64, costPerOper float64) (float64, error) {
 	if returns == nil || len(returns) == 0 {
 		return 0, req.NewUnprocessableEntityError("no losses found")
@@ -137,7 +123,7 @@ func GetReturns(trades *[]db.Trade, tradeType string, costPerOper float64) []flo
 
 	for _, t := range *trades {
 		if tradeType == db.TradeTypeAll || tradeType == t.TradeType {
-			returns := t.GrossProfit - 2*costPerOper
+			returns := t.GrossReturn - 2*costPerOper
 			list = append(list, returns)
 		}
 	}

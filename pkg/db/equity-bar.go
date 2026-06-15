@@ -25,35 +25,18 @@ THE SOFTWARE.
 package db
 
 import (
-	"time"
-
 	"github.com/algotiqa/core/req"
-	"github.com/algotiqa/types"
 	"gorm.io/gorm"
 )
 
 //=============================================================================
+//=== Note: Bars are NOT ordered by date (possibly too many records and useless to do)
 
-func FindDailyReturnsByTradingSystemId(tx *gorm.DB, tsId uint) (*[]DailyReturn, error) {
-	var list []DailyReturn
+func FindEquityBarsByTradingSystemId(tx *gorm.DB, tsId uint) (*[]EquityBar, error) {
+	var list []EquityBar
 
-	filter := map[string]any{}
-	filter["trading_system_id"] = tsId
-
-	res := tx.Where(filter).Order("day").Find(&list)
-
-	if res.Error != nil {
-		return nil, req.NewServerErrorByError(res.Error)
-	}
-
-	return &list, nil
-}
-
-//=============================================================================
-
-func FindDailyReturnsByTradingSystemsId(tx *gorm.DB, ids []uint) (*[]DailyReturn, error) {
-	var list []DailyReturn
-	res := tx.Find(&list, "trading_system_id in ?", ids)
+	query := "trade_id in ( SELECT id FROM trade WHERE trading_system_id = ? )"
+	res := tx.Find(&list, query, tsId)
 
 	if res.Error != nil {
 		return nil, req.NewServerErrorByError(res.Error)
@@ -64,43 +47,17 @@ func FindDailyReturnsByTradingSystemsId(tx *gorm.DB, ids []uint) (*[]DailyReturn
 
 //=============================================================================
 
-func FindDailyReturnsByTsIdFromTime(tx *gorm.DB, tsId uint, fromTime *time.Time, toTime *time.Time) (*[]DailyReturn, error) {
-	to := types.Today(time.UTC)
-	from := to.AddDays(-50 * 365)
-
-	if fromTime != nil {
-		from = types.ToDate(fromTime)
-	}
-
-	if toTime != nil {
-		to = types.ToDate(toTime)
-	}
-
-	var list []DailyReturn
-
-	//--- WHERE condition must be exit_date otherwise we loose trades started in the past and ended after fromTime
-	query := "trading_system_id = ? and day >= ? and day <= ?"
-	res := tx.Order("day").Find(&list, query, tsId, from, to)
-
-	if res.Error != nil {
-		return nil, req.NewServerErrorByError(res.Error)
-	}
-
-	return &list, nil
-}
-
-//=============================================================================
-
-func AddDailyReturn(tx *gorm.DB, dr *DailyReturn) error {
-	err := tx.Create(dr).Error
+func AddEquityBar(tx *gorm.DB, eb *EquityBar) error {
+	err := tx.Create(eb).Error
 	return req.NewServerErrorByError(err)
 }
 
 //=============================================================================
 
-func DeleteAllDailyReturnsByTradingSystemId(tx *gorm.DB, id uint) error {
-	err := tx.Delete(&DailyReturn{}, "trading_system_id", id).Error
-	return req.NewServerErrorByError(err)
+func DeleteAllEquityBarsByTradingSystemId(tx *gorm.DB, id uint) error {
+	query := "DELETE from equity_bar WHERE trade_id in ( SELECT id FROM trade WHERE trading_system_id = ? )"
+	res   := tx.Exec(query, id)
+	return req.NewServerErrorByError(res.Error)
 }
 
 //=============================================================================

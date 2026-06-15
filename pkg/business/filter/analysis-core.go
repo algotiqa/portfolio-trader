@@ -106,16 +106,16 @@ func RunAnalysis(ts *db.TradingSystem, filter *db.TradingFilter, list *[]db.Trad
 //=============================================================================
 
 func calcUnfilteredEquityAndProfit(e *Equities, ts *db.TradingSystem, tradeList *[]db.Trade) {
-	netEquity := 0.0
+	netEquity     := 0.0
 	costPerOperat := float64(ts.CostPerOperation)
-	size := len(*tradeList)
+	size          := len(*tradeList)
 
-	e.Time = make([]time.Time, size)
-	e.NetProfit = make([]float64, size)
+	e.Time             = make([]time.Time, size)
+	e.NetProfit        = make([]float64, size)
 	e.UnfilteredEquity = make([]float64, size)
 
 	for i, t := range *tradeList {
-		netProfit := t.GrossProfit - costPerOperat*2
+		netProfit := t.GrossReturn - costPerOperat*2
 		netEquity += netProfit
 
 		e.Time[i] = *t.ExitDate
@@ -160,12 +160,12 @@ func calcAverageEquity(times []time.Time, equity []float64, maLen int) *core.Ser
 
 func calcActivations(e *Equities, f *db.TradingFilter) *Activations {
 	a := &Activations{}
-	a.EquityVsAverage = calcEquAvgActivation(e, f)
-	a.PositiveProfit = calcPosProfitActivation(e, f)
+	a.EquityVsAverage   = calcEquAvgActivation(e, f)
+	a.PositiveProfit    = calcPosProfitActivation(e, f)
 	a.WinningPercentage = calcWinPercActivation(e, f)
-	a.OldVsNew = calcOldVsNewActivation(e, f)
-	a.Trendline = calcTrendlineActivation(e, f)
-	a.Drawdown = calcDrawdownActivation(e, f)
+	a.OldVsNew          = calcOldVsNewActivation(e, f)
+	a.Trendline         = calcTrendlineActivation(e, f)
+	a.Drawdown          = calcDrawdownActivation(e, f)
 	return a
 }
 

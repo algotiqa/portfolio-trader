@@ -35,7 +35,6 @@ import (
 	"github.com/algotiqa/portfolio-trader/pkg/consts"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"github.com/algotiqa/portfolio-trader/pkg/platform"
-	"github.com/algotiqa/types"
 	"gorm.io/gorm"
 )
 
@@ -87,24 +86,17 @@ func handleNewTrades(tm *TradeListMessage) bool {
 		}
 
 		var trades = &[]db.Trade{}
-		var dailyProfits = &[]db.DailyReturn{}
 
 		if tm.Reload {
 			err = deleteTrades(tx, ts)
 		} else {
 			trades, err = db.FindTradesByTradingSystemId(tx, tsId)
-			if err == nil {
-				dailyProfits, err = db.FindDailyReturnsByTradingSystemId(tx, tsId)
-			}
 		}
 
 		if err == nil {
 			trades, err = addNewTrades(tx, ts, trades, tm.Trades)
 			if err == nil {
-				err = addNewDailyProfits(tx, ts, dailyProfits, tm.DailyProfits)
-				if err == nil {
-					err = updateTradingSystem(tx, ts)
-				}
+				err = updateTradingSystem(tx, ts)
 			}
 		}
 
@@ -129,7 +121,9 @@ func deleteTrades(tx *gorm.DB, ts *db.TradingSystem) error {
 		return err
 	}
 
-	err = db.DeleteAllDailyReturnsByTradingSystemId(tx, ts.Id)
+	//--- When this will get heavy, we can move this task into a queue
+
+	err = db.DeleteAllEquityBarsByTradingSystemId(tx, ts.Id)
 	if err != nil {
 		return err
 	}
@@ -139,11 +133,11 @@ func deleteTrades(tx *gorm.DB, ts *db.TradingSystem) error {
 		return err
 	}
 
-	ts.FirstTrade = nil
-	ts.LastTrade = nil
-	ts.LastNetProfit = 0
+	ts.FirstTrade      = nil
+	ts.LastTrade       = nil
+	ts.LastNetProfit   = 0
 	ts.LastNetAvgTrade = 0
-	ts.LastNumTrades = 0
+	ts.LastNumTrades   = 0
 
 	err = platform.DeleteEquityChart(ts.Username, ts.Id)
 	if err != nil {
@@ -182,8 +176,7 @@ func addNewTrades(tx *gorm.DB, ts *db.TradingSystem, trades *[]db.Trade, newTrad
 
 		if isTheTradeOutOfRange(ts, dbTr) {
 			tradeSet[dbTr.String()] = true
-			err := db.AddTrade(tx, dbTr)
-
+			err := addTrade(tx, dbTr, tr)
 			if err != nil {
 				return nil, err
 			}
@@ -229,36 +222,31 @@ func isTheTradeOutOfRange(ts *db.TradingSystem, t *db.Trade) bool {
 func toDbTrade(tsId uint, t *TradeItem) *db.Trade {
 	return &db.Trade{
 		TradingSystemId: tsId,
-		TradeType:       t.TradeType,
-		EntryDate:       t.EntryDate,
-		EntryPrice:      t.EntryPrice,
-		EntryLabel:      t.EntryLabel,
-		ExitDate:        t.ExitDate,
-		ExitPrice:       t.ExitPrice,
-		ExitLabel:       t.ExitLabel,
-		GrossProfit:     t.GrossProfit,
-		Contracts:       t.Contracts,
+		TradeType      : t.TradeType,
+		EntryDate      : t.EntryDate,
+		EntryPrice     : t.EntryPrice,
+		EntryLabel     : t.EntryLabel,
+		ExitDate       : t.ExitDate,
+		ExitPrice      : t.ExitPrice,
+		ExitLabel      : t.ExitLabel,
+		GrossReturn    : t.GrossReturn,
+		MaxContracts   : t.MaxContracts,
 	}
 }
 
 //=============================================================================
 
-func addNewDailyProfits(tx *gorm.DB, ts *db.TradingSystem, profits *[]db.DailyReturn, newProfits []*DailyProfitItem) error {
-	profitSet := map[types.Date]bool{}
-	for _, dp := range *profits {
-		profitSet[dp.Day] = true
+func addTrade(tx *gorm.DB, tr *db.Trade, mtr *TradeItem) error {
+	err := db.AddTrade(tx, tr)
+	if err != nil {
+		return err
 	}
 
-	for _, dp := range newProfits {
-		dbDp := toDbDailyProfit(ts.Id, dp)
-		_, exists := profitSet[dbDp.Day]
-		if !exists {
-			profitSet[dbDp.Day] = true
-			err := db.AddDailyReturn(tx, dbDp)
-
-			if err != nil {
-				return err
-			}
+	for _, eb := range mtr.Equity {
+		dbEb := toDbEquityBar(tr.Id, eb)
+		err = db.AddEquityBar(tx, dbEb)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -267,12 +255,12 @@ func addNewDailyProfits(tx *gorm.DB, ts *db.TradingSystem, profits *[]db.DailyRe
 
 //=============================================================================
 
-func toDbDailyProfit(tsId uint, p *DailyProfitItem) *db.DailyReturn {
-	return &db.DailyReturn{
-		TradingSystemId: tsId,
-		Day:             p.Day,
-		GrossProfit:     p.GrossProfit,
-		Trades:          p.Trades,
+func toDbEquityBar(trId int64, e *EquityBarItem) *db.EquityBar {
+	return &db.EquityBar{
+		TradeId    : trId,
+		Date       : e.Date,
+		GrossReturn: e.GrossReturn,
+		Contracts  : e.Contracts,
 	}
 }
 

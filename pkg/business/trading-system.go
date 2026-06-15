@@ -71,7 +71,7 @@ func DeleteTradingSystem(tx *gorm.DB, id uint) error {
 		return err
 	}
 
-	err = db.DeleteAllDailyReturnsByTradingSystemId(tx, id)
+	err = db.DeleteAllEquityBarsByTradingSystemId(tx, id)
 	if err != nil {
 		return err
 	}
@@ -120,17 +120,12 @@ func ExportTradingSystems(tx *gorm.DB, c *auth.Context, ids []uint) (*importexpo
 		return nil, err3
 	}
 
-	dailys,  err4 := db.FindDailyReturnsByTradingSystemsId(tx, ids)
-	if err4 != nil {
-		return nil, err4
-	}
-
 	periods, err5 := db.FindLivePeriodsByTradingSystemsId(tx, ids)
 	if err5 != nil {
 		return nil, err5
 	}
 
-	tss := importexport.BuildTradingSystems(systems, filters, trades, dailys, periods)
+	tss := importexport.BuildTradingSystems(systems, filters, trades, periods)
 
 	return importexport.EncodeTradingSystems(tss)
 }

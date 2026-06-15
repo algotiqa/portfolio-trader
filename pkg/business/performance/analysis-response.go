@@ -44,7 +44,7 @@ type Value struct {
 //=============================================================================
 
 type Performance struct {
-	Profit        Value `json:"profit"`
+	Return        Value `json:"return"`
 	MaxDrawdown   Value `json:"maxDrawdown"`
 	AverageTrade  Value `json:"averageTrade"`
 	PercentProfit Value `json:"percentProfit"`
@@ -54,8 +54,8 @@ type Performance struct {
 
 type Equities struct {
 	Time          *[]time.Time `json:"time"`
-	GrossEquity   *[]float64   `json:"grossProfit"`
-	NetEquity     *[]float64   `json:"netProfit"`
+	GrossEquity   *[]float64   `json:"grossEquity"`
+	NetEquity     *[]float64   `json:"netEquity"`
 	GrossDrawdown *[]float64   `json:"grossDrawdown"`
 	NetDrawdown   *[]float64   `json:"netDrawdown"`
 	Trades        int          `json:"trades"`
@@ -78,10 +78,10 @@ type Aggregates struct {
 
 type AnnualAggregate struct {
 	Year          int     `json:"year"`
-	GrossProfit   float64 `json:"grossProfit"`
+	GrossReturn   float64 `json:"grossReturn"`
 	GrossAvgTrade float64 `json:"grossAvgTrade"`
 	GrossWinPerc  float64 `json:"grossWinPerc"`
-	NetProfit     float64 `json:"netProfit"`
+	NetReturn     float64 `json:"netReturn"`
 	NetAvgTrade   float64 `json:"netAvgTrade"`
 	NetWinPerc    float64 `json:"netWinPerc"`
 	Trades        int     `json:"trades"`
@@ -91,21 +91,21 @@ type AnnualAggregate struct {
 
 func NewAggregate(tr *db.Trade, cost float64) *AnnualAggregate {
 	a := &AnnualAggregate{
-		Year:          tr.ExitDate.Year(),
-		GrossProfit:   tr.GrossProfit,
+		Year         : tr.ExitDate.Year(),
+		GrossReturn  : tr.GrossReturn,
 		GrossAvgTrade: 0,
-		GrossWinPerc:  0,
-		NetProfit:     tr.GrossProfit - 2*cost,
-		NetAvgTrade:   0,
-		NetWinPerc:    0,
-		Trades:        1,
+		GrossWinPerc : 0,
+		NetReturn    : tr.GrossReturn - 2*cost,
+		NetAvgTrade  : 0,
+		NetWinPerc   : 0,
+		Trades       : 1,
 	}
 
-	if a.GrossProfit > 0 {
+	if a.GrossReturn > 0 {
 		a.GrossWinPerc = 1
 	}
 
-	if a.NetProfit > 0 {
+	if a.NetReturn > 0 {
 		a.NetWinPerc = 1
 	}
 
@@ -115,17 +115,17 @@ func NewAggregate(tr *db.Trade, cost float64) *AnnualAggregate {
 //-----------------------------------------------------------------------------
 
 func (a *AnnualAggregate) addTrade(tr *db.Trade, cost float64) {
-	netProfit := tr.GrossProfit - 2*cost
+	netReturn := tr.GrossReturn - 2*cost
 
-	a.GrossProfit += tr.GrossProfit
-	a.NetProfit += netProfit
+	a.GrossReturn += tr.GrossReturn
+	a.NetReturn   += netReturn
 	a.Trades++
 
-	if tr.GrossProfit > 0 {
+	if tr.GrossReturn > 0 {
 		a.GrossWinPerc++
 	}
 
-	if netProfit > 0 {
+	if netReturn > 0 {
 		a.NetWinPerc++
 	}
 }
@@ -133,10 +133,10 @@ func (a *AnnualAggregate) addTrade(tr *db.Trade, cost float64) {
 //-----------------------------------------------------------------------------
 
 func (a *AnnualAggregate) consolidate() {
-	a.GrossAvgTrade = core.Trunc2d(a.GrossProfit / float64(a.Trades))
-	a.GrossWinPerc = core.Trunc2d(a.GrossWinPerc / float64(a.Trades) * 100)
-	a.NetAvgTrade = core.Trunc2d(a.NetProfit / float64(a.Trades))
-	a.NetWinPerc = core.Trunc2d(a.NetWinPerc / float64(a.Trades) * 100)
+	a.GrossAvgTrade = core.Trunc2d(a.GrossReturn / float64(a.Trades))
+	a.GrossWinPerc  = core.Trunc2d(a.GrossWinPerc / float64(a.Trades) * 100)
+	a.NetAvgTrade   = core.Trunc2d(a.NetReturn / float64(a.Trades))
+	a.NetWinPerc    = core.Trunc2d(a.NetWinPerc / float64(a.Trades) * 100)
 }
 
 //=============================================================================
@@ -164,15 +164,12 @@ type Distribution struct {
 //=============================================================================
 
 type Distributions struct {
-	Daily             *Distribution `json:"daily"`
 	TradesAllGross    *Distribution `json:"tradesAllGross"`
 	TradesAllNet      *Distribution `json:"tradesAllNet"`
 	TradesLongGross   *Distribution `json:"tradesLongGross"`
 	TradesLongNet     *Distribution `json:"tradesLongNet"`
 	TradesShortGross  *Distribution `json:"tradesShortGross"`
 	TradesShortNet    *Distribution `json:"tradesShortNet"`
-	AnnualSharpeRatio float64       `json:"annualSharpeRatio"`
-	AnnualStandardDev float64       `json:"annualStandardDev"`
 }
 
 //=============================================================================

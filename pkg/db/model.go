@@ -152,7 +152,7 @@ const (
 //-----------------------------------------------------------------------------
 
 type Trade struct {
-	Id                 uint       `json:"id" gorm:"primaryKey"`
+	Id                 int64      `json:"id" gorm:"primaryKey"`
 	TradingSystemId    uint       `json:"tradingSystemId"`
 	TradeType          string     `json:"tradeType"`
 	EntryDate          *time.Time `json:"entryDate"`
@@ -161,8 +161,8 @@ type Trade struct {
 	ExitDate           *time.Time `json:"exitDate"`
 	ExitPrice          float64    `json:"exitPrice"`
 	ExitLabel          string     `json:"exitLabel"`
-	GrossProfit        float64    `json:"grossProfit"`
-	Contracts          int        `json:"contracts"`
+	GrossReturn        float64    `json:"grossReturn"`
+	MaxContracts       int        `json:"maxContracts"`
 	EntryDateAtBroker  *time.Time `json:"entryDateAtBroker"`
 	EntryPriceAtBroker float64    `json:"entryPriceAtBroker"`
 	ExitDateAtBroker   *time.Time `json:"exitDateAtBroker"`
@@ -176,17 +176,16 @@ func (t Trade) String() string {
 		t.TradeType,
 		t.EntryDate.UTC(), t.EntryPrice, t.EntryLabel,
 		t.ExitDate.UTC(), t.ExitPrice, t.ExitLabel,
-		t.GrossProfit, t.Contracts)
+		t.GrossReturn, t.MaxContracts)
 }
 
 //=============================================================================
 
-type DailyReturn struct {
-	Id              uint       `json:"id" gorm:"primaryKey"`
-	TradingSystemId uint       `json:"tradingSystemId"`
-	Day             types.Date `json:"day"`
-	GrossProfit     float64    `json:"grossProfit"`
-	Trades          int        `json:"trades"`
+type EquityBar struct {
+	TradeId     int64      `json:"tradeId"`
+	Date        time.Time  `json:"date"`
+	GrossReturn float64    `json:"grossReturn"`
+	Contracts   int        `json:"contracts"`
 }
 
 //=============================================================================
@@ -206,10 +205,10 @@ type LivePeriod struct {
 
 func (TradingSystem) TableName() string { return "trading_system" }
 func (TradingFilter) TableName() string { return "trading_filter" }
-func (Trade) TableName() string         { return "trade" }
-func (Portfolio) TableName() string     { return "portfolio" }
-func (DailyReturn) TableName() string   { return "daily_return" }
-func (LivePeriod) TableName() string    { return "live_period" }
+func (Trade)         TableName() string { return "trade"          }
+func (Portfolio)     TableName() string { return "portfolio"      }
+func (EquityBar)     TableName() string { return "equity_bar"     }
+func (LivePeriod)    TableName() string { return "live_period"    }
 
 //=============================================================================
 //===
