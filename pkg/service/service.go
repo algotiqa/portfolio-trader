@@ -50,6 +50,7 @@ func Init(router *gin.Engine, cfg *app.Config, logger *slog.Logger) {
 	router.POST  ("/api/portfolio/v1/trading-systems/:id/active",                ctrl.Secure(setTradingSystemActive,     roles.Admin_User_Service))
 	router.POST  ("/api/portfolio/v1/trading-systems/:id/performance-analysis",  ctrl.Secure(runPerformanceAnalysis,     roles.Admin_User_Service))
 	router.POST  ("/api/portfolio/v1/trading-systems/:id/quality-analysis",      ctrl.Secure(runQualityAnalysis,         roles.Admin_User_Service))
+	router.POST  ("/api/portfolio/v1/trading-systems/:id/trade-analysis",        ctrl.Secure(runTradeAnalysis,           roles.Admin_User_Service))
 
 	router.POST  ("/api/portfolio/v1/trading-systems/:id/filter-analysis",       ctrl.Secure(runFilterAnalysis,          roles.Admin_User_Service))
 	router.GET   ("/api/portfolio/v1/trading-systems/:id/filter-optimization",   ctrl.Secure(getFilterOptimizationInfo,  roles.Admin_User_Service))

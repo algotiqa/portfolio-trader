@@ -34,13 +34,14 @@ import (
 	"github.com/algotiqa/portfolio-trader/pkg/business/position"
 	"github.com/algotiqa/portfolio-trader/pkg/business/quality"
 	"github.com/algotiqa/portfolio-trader/pkg/business/simulation"
+	"github.com/algotiqa/portfolio-trader/pkg/business/trade"
 	"gorm.io/gorm"
 )
 
 //=============================================================================
 
 func getTradingSystems(c *auth.Context) {
-	filter := map[string]any{}
+	filt := map[string]any{}
 	offset, limit, err := c.GetPagingParams()
 
 	if err == nil {
@@ -48,7 +49,7 @@ func getTradingSystems(c *auth.Context) {
 
 		if err == nil {
 			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
-				list, err := business.GetTradingSystems(tx, c, filter, offset, limit, details)
+				list, err := business.GetTradingSystems(tx, c, filt, offset, limit, details)
 
 				if err != nil {
 					return err
@@ -153,15 +154,15 @@ func runFilterAnalysis(c *auth.Context) {
 	tsId, err := c.GetIdFromUrl()
 
 	if err == nil {
-		req := filter.AnalysisRequest{}
-		err = c.BindParamsFromBody(&req)
+		rq := filter.AnalysisRequest{}
+		err = c.BindParamsFromBody(&rq)
 
 		if err == nil {
 			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
-				rep, err := business.RunFilterAnalysis(tx, c, tsId, &req)
+				rep, errx := business.RunFilterAnalysis(tx, c, tsId, &rq)
 
-				if err != nil {
-					return err
+				if errx != nil {
+					return errx
 				}
 
 				return c.ReturnObject(rep)
@@ -178,15 +179,15 @@ func runPerformanceAnalysis(c *auth.Context) {
 	tsId, err := c.GetIdFromUrl()
 
 	if err == nil {
-		req := performance.AnalysisRequest{}
-		err = c.BindParamsFromBody(&req)
+		rq := performance.AnalysisRequest{}
+		err = c.BindParamsFromBody(&rq)
 
 		if err == nil {
 			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
-				res, err := business.RunPerformanceAnalysis(tx, c, tsId, &req)
+				res, errx := business.RunPerformanceAnalysis(tx, c, tsId, &rq)
 
-				if err != nil {
-					return err
+				if errx != nil {
+					return errx
 				}
 
 				return c.ReturnObject(res)
@@ -203,15 +204,40 @@ func runQualityAnalysis(c *auth.Context) {
 	tsId, err := c.GetIdFromUrl()
 
 	if err == nil {
-		req := quality.AnalysisRequest{}
-		err = c.BindParamsFromBody(&req)
+		rq := quality.AnalysisRequest{}
+		err = c.BindParamsFromBody(&rq)
 
 		if err == nil {
 			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
-				res, err := business.RunQualityAnalysis(tx, c, tsId, &req)
+				res, errx := business.RunQualityAnalysis(tx, c, tsId, &rq)
 
-				if err != nil {
-					return err
+				if errx != nil {
+					return errx
+				}
+
+				return c.ReturnObject(res)
+			})
+		}
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================
+
+func runTradeAnalysis(c *auth.Context) {
+	tsId, err := c.GetIdFromUrl()
+
+	if err == nil {
+		rq := trade.AnalysisRequest{}
+		err = c.BindParamsFromBody(&rq)
+
+		if err == nil {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+				res, errx := business.RunTradeAnalysis(tx, c, tsId, &rq)
+
+				if errx != nil {
+					return errx
 				}
 
 				return c.ReturnObject(res)
@@ -253,12 +279,12 @@ func startFilterOptimization(c *auth.Context) {
 	tsId, err := c.GetIdFromUrl()
 
 	if err == nil {
-		req := filter.OptimizationRequest{}
-		err = c.BindParamsFromBody(&req)
+		rq := filter.OptimizationRequest{}
+		err = c.BindParamsFromBody(&rq)
 
 		if err == nil {
 			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
-				err := business.StartFilterOptimization(tx, c, tsId, &req)
+				err := business.StartFilterOptimization(tx, c, tsId, &rq)
 
 				if err != nil {
 					return err
@@ -322,12 +348,12 @@ func startSimulation(c *auth.Context) {
 	tsId, err := c.GetIdFromUrl()
 
 	if err == nil {
-		req := simulation.Request{}
-		err = c.BindParamsFromBody(&req)
+		rq := simulation.Request{}
+		err = c.BindParamsFromBody(&rq)
 
 		if err == nil {
 			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
-				err2 := business.StartSimulation(tx, c, tsId, &req)
+				err2 := business.StartSimulation(tx, c, tsId, &rq)
 
 				if err2 != nil {
 					return err2

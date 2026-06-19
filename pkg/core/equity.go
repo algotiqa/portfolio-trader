@@ -159,3 +159,22 @@ func CalcMin(data []float64) float64 {
 }
 
 //=============================================================================
+
+func CalcRunUpAndDrawdown(data []float64) (float64,float64) {
+	ru := 0.0
+	dd := 0.0
+
+	for _, value := range data {
+		if value > ru {
+			ru = value
+		}
+
+		if value < dd {
+			dd = value
+		}
+	}
+
+	return ru, dd
+}
+
+//=============================================================================

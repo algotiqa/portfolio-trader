@@ -1,6 +1,6 @@
 //=============================================================================
 /*
-Copyright © 2025 Andrea Carboni andrea.carboni71@gmail.com
+Copyright © 2026 Andrea Carboni andrea.carboni71@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,41 +22,51 @@ THE SOFTWARE.
 */
 //=============================================================================
 
-package db
+package trade
 
 import (
-	"github.com/algotiqa/core/req"
-	"gorm.io/gorm"
+	"time"
+
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
 
 //=============================================================================
-//=== Note: Bars are NOT ordered by date (possibly too many records and useless to do)
 
-func FindEquityBarsByTradesId(tx *gorm.DB, tradeIds []int64) (*[]EquityBar, error) {
-	var list []EquityBar
+type AnalysisResponse struct {
+	TradingSystem *db.TradingSystem `json:"tradingSystem"`
+	Trades        []*Entry          `json:"trades"`
+}
 
-	res := tx.Find(&list, "trade_id in ?", tradeIds)
+//=============================================================================
 
-	if res.Error != nil {
-		return nil, req.NewServerErrorByError(res.Error)
+func NewAnalysisResponse() *AnalysisResponse {
+	return &AnalysisResponse{
 	}
-
-	return &list, nil
 }
 
 //=============================================================================
 
-func AddEquityBar(tx *gorm.DB, eb *EquityBar) error {
-	err := tx.Create(eb).Error
-	return req.NewServerErrorByError(err)
+type Entry struct {
+	TradeType    string     `json:"tradeType"`
+	EntryDate    *time.Time `json:"entryDate"`
+	EntryLabel   string     `json:"entryLabel"`
+	ExitDate     *time.Time `json:"exitDate"`
+	ExitLabel    string     `json:"exitLabel"`
+	GrossReturn  float64    `json:"grossReturn"`
+	MaxContracts int        `json:"maxContracts"`
+
+	GrossEquity *EquityInfo  `json:"grossEquity"`
+	NetEquity   *EquityInfo  `json:"netEquity"`
+	Contracts   []int        `json:"contracts"`
 }
 
 //=============================================================================
 
-func DeleteAllEquityBarsByTradingSystemId(tx *gorm.DB, id uint) error {
-	query := "DELETE from equity_bar WHERE trade_id in ( SELECT id FROM trade WHERE trading_system_id = ? )"
-	res   := tx.Exec(query, id)
-	return req.NewServerErrorByError(res.Error)
+type EquityInfo struct {
+	Equity   []float64  `json:"equity"`
+	Return   float64    `json:"return"`
+	RunUp    float64    `json:"runUp"`
+	Drawdown float64    `json:"drawdown"`
 }
 
 //=============================================================================
