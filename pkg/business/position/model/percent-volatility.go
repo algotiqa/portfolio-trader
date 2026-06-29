@@ -9,41 +9,57 @@
 
 package model
 
-import "encoding/json"
+import (
+	"github.com/algotiqa/portfolio-trader/pkg/db"
+)
 
 //=============================================================================
-
-const PercentVolatility = "PV"
-
-//=============================================================================
-
-type PercentVolatilityConfig struct {
-	AverageLength int     `json:"averageLength"`
-	MaxVolatility float64 `json:"maxVolatility"`
-}
-
+//===
+//=== Model
+//===
 //=============================================================================
 
 type PercentVolatilityModel struct {
-	config *PercentVolatilityConfig
+	averageLength int
+	maxVolatility float64
 }
 
 //=============================================================================
 
-func newPercentVolatilityModel(config string) (*PercentVolatilityModel,error) {
-	c := &PercentVolatilityConfig{}
-	err := json.Unmarshal([]byte(config), c)
-	if err != nil {
-		return nil, err
-	}
-
+func NewPercentVolatilityModel() *PercentVolatilityModel {
 	return &PercentVolatilityModel{
-		config: c,
-	}, nil
+		averageLength: 20,
+		maxVolatility: 1.5,
+	}
 }
 
 //=============================================================================
 
-func (fm *PercentVolatilityModel) Calc() {}
+func (m *PercentVolatilityModel) Name() db.ModelName {
+	return db.ModelPercentVolatility
+}
+
+//=============================================================================
+
+func (m *PercentVolatilityModel) Init(config map[string]any) error {
+	return nil
+}
+
+//=============================================================================
+
+func (m *PercentVolatilityModel) Config() map[string]any {
+	cfg := make(map[string]any)
+	return cfg
+}
+
+//=============================================================================
+
+func (m *PercentVolatilityModel) PositionInit(ts *TradingSnapshot) {}
+
+//=============================================================================
+
+func (m *PercentVolatilityModel) PositionFor(ts *TradingSnapshot) int {
+	return 1
+}
 
 //=============================================================================

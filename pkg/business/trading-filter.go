@@ -21,24 +21,13 @@ import (
 
 //=============================================================================
 
-func GetTradingFilters(tx *gorm.DB, c *auth.Context, tsId uint) (*db.TradingFilter, error) {
-	_, err := getTradingSystemAndCheckAccess(tx, c, tsId)
-	if err != nil {
-		return nil, err
-	}
-
-	return db.GetTradingFilterByTsId(tx, tsId)
-}
-
-//=============================================================================
-
 func SetTradingFilters(tx *gorm.DB, c *auth.Context, tsId uint, f *filter.TradingFilter) error {
 	_, err := getTradingSystemAndCheckAccess(tx, c, tsId)
 	if err != nil {
 		return err
 	}
 
-	tf := convert(f)
+	tf := convertFilter(f)
 	tf.TradingSystemId = tsId
 
 	return db.SetTradingFilter(tx, tf)
@@ -62,10 +51,10 @@ func RunFilterAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, far *filter.Anal
 		}
 
 	} else {
-		filters = convert(far.Filter)
+		filters = convertFilter(far.Filter)
 	}
 
-	fromTime, toTime, err := core.CalcSelectedPeriod(&far.SelectedPeriod, time.UTC)
+	fromTime, toTime, err := core.CalcSelectedPeriod(&far.Period, time.UTC)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +115,7 @@ func GetFilterOptimizationInfo(c *auth.Context, tsId uint) (*filter.Optimization
 //===
 //=============================================================================
 
-func convert(f *filter.TradingFilter) *db.TradingFilter {
+func convertFilter(f *filter.TradingFilter) *db.TradingFilter {
 	return &db.TradingFilter{
 		EquAvgEnabled:    f.EquAvgEnabled,
 		EquAvgLen:        f.EquAvgLen,

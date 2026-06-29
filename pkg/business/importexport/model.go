@@ -22,42 +22,21 @@ import (
 //=============================================================================
 
 type TradingSystem struct {
-	Id               uint           `json:"id"`
-	Trading          bool           `json:"trading"`
-	Running          bool           `json:"running"`
-	AutoActivation   bool           `json:"autoActivation"`
-	Active           bool           `json:"active"`
-	Status           db.TsStatus    `json:"status"`
-	FirstTrade       *time.Time     `json:"firstTrade"`
-	LastTrade        *time.Time     `json:"lastTrade"`
-	LastNetProfit    float64        `json:"lastNetProfit"`
-	LastNetAvgTrade  float64        `json:"lastNetAvgTrade"`
-	LastNumTrades    int            `json:"lastNumTrades"`
-	TradingFilter    *TradingFilter `json:"tradingFilter"`
-	Trades           []*Trade       `json:"trades"`
-	LivePeriods      []*LivePeriod  `json:"livePeriods"`
-}
-
-//=============================================================================
-
-type TradingFilter struct {
-	EquAvgEnabled    bool `json:"equAvgEnabled"`
-	EquAvgLen        int  `json:"equAvgLen"`
-	PosProEnabled    bool `json:"posProEnabled"`
-	PosProLen        int  `json:"posProLen"`
-	WinPerEnabled    bool `json:"winPerEnabled"`
-	WinPerLen        int  `json:"winPerLen"`
-	WinPerValue      int  `json:"winPerValue"`
-	OldNewEnabled    bool `json:"oldNewEnabled"`
-	OldNewOldLen     int  `json:"oldNewOldLen"`
-	OldNewOldPerc    int  `json:"oldNewOldPerc"`
-	OldNewNewLen     int  `json:"oldNewNewLen"`
-	TrendlineEnabled bool `json:"trendlineEnabled"`
-	TrendlineLen     int  `json:"trendlineLen"`
-	TrendlineValue   int  `json:"trendlineValue"`
-	DrawdownEnabled  bool `json:"drawdownEnabled"`
-	DrawdownMin      int  `json:"drawdownMin"`
-	DrawdownMax      int  `json:"drawdownMax"`
+	Id               uint                `json:"id"`
+	Trading          bool                `json:"trading"`
+	Running          bool                `json:"running"`
+	AutoActivation   bool                `json:"autoActivation"`
+	Active           bool                `json:"active"`
+	Status           db.TsStatus         `json:"status"`
+	FirstTrade       *time.Time          `json:"firstTrade"`
+	LastTrade        *time.Time          `json:"lastTrade"`
+	LastNetProfit    float64             `json:"lastNetProfit"`
+	LastNetAvgTrade  float64             `json:"lastNetAvgTrade"`
+	LastNumTrades    int                 `json:"lastNumTrades"`
+	TradingFilter    *db.TradingFilter   `json:"tradingFilter"`
+	TradingPosition  *db.TradingPosition `json:"tradingPosition"`
+	Trades           []*Trade            `json:"trades"`
+	LivePeriods      []*LivePeriod       `json:"livePeriods"`
 }
 
 //=============================================================================
@@ -121,30 +100,6 @@ func NewTradingSystem(ts *db.TradingSystem) *TradingSystem {
 		LastNetProfit  : ts.LastNetProfit,
 		LastNetAvgTrade: ts.LastNetAvgTrade,
 		LastNumTrades  : ts.LastNumTrades,
-	}
-}
-
-//=============================================================================
-
-func NewTradingFilter(f *db.TradingFilter) *TradingFilter {
-	return &TradingFilter{
-		EquAvgEnabled   : f.EquAvgEnabled,
-		EquAvgLen       : f.EquAvgLen,
-		PosProEnabled   : f.PosProEnabled,
-		PosProLen       : f.PosProLen,
-		WinPerEnabled   : f.WinPerEnabled,
-		WinPerLen       : f.WinPerLen,
-		WinPerValue     : f.WinPerValue,
-		OldNewEnabled   : f.OldNewEnabled,
-		OldNewOldLen    : f.OldNewOldLen,
-		OldNewOldPerc   : f.OldNewOldPerc,
-		OldNewNewLen    : f.OldNewNewLen,
-		TrendlineEnabled: f.TrendlineEnabled,
-		TrendlineLen    : f.TrendlineLen,
-		TrendlineValue  : f.TrendlineValue,
-		DrawdownEnabled : f.DrawdownEnabled,
-		DrawdownMin     : f.DrawdownMin,
-		DrawdownMax     : f.DrawdownMax,
 	}
 }
 

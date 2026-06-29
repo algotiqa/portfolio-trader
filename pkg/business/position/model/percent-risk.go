@@ -9,55 +9,58 @@
 
 package model
 
-import "encoding/json"
-
-//=============================================================================
-
-const PercentRisk = "PR"
-
-//=============================================================================
-
-type RpuType string
-
-//-----------------------------------------------------------------------------
-
-const (
-	RpuStopLoss   RpuType = "stopLoss"
-	RpuMaxLoss    RpuType = "maxLoss"
-	RpuAvgLoss    RpuType = "avgLoss"
-	RpuFixedValue RpuType = "fixedValue"
+import (
+	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
 
-//-----------------------------------------------------------------------------
-
-type PercentRiskConfig struct {
-	RiskPerTrade float64 `json:"riskPerTrade"`
-	RiskPerUnit  RpuType `json:"riskPerUnit"`
-	RiskValue    float64 `json:"riskValue"`
-}
-
+//=============================================================================
+//===
+//=== Model
+//===
 //=============================================================================
 
 type PercentRiskModel struct {
-	config *PercentRiskConfig
+	riskPerTrade float64
 }
 
 //=============================================================================
 
-func newPercentRiskModel(config string) (*PercentRiskModel,error) {
-	c := &PercentRiskConfig{}
-	err := json.Unmarshal([]byte(config), c)
-	if err != nil {
-		return nil, err
-	}
-
+func NewPercentRiskModel() *PercentRiskModel {
 	return &PercentRiskModel{
-		config : c,
-	},nil
+		riskPerTrade : 1.75,
+	}
 }
 
 //=============================================================================
 
-func (fm *PercentRiskModel) Calc() {}
+func (m *PercentRiskModel) Name() db.ModelName {
+	return db.ModelPercentRisk
+}
+
+//=============================================================================
+
+func (m *PercentRiskModel) Init(config map[string]any) error {
+	return nil
+}
+
+//=============================================================================
+
+func (m *PercentRiskModel) Config() map[string]any {
+	cfg := make(map[string]any)
+	return cfg
+}
+
+//=============================================================================
+
+func (m *PercentRiskModel) PositionInit(ts *TradingSnapshot) {}
+
+//=============================================================================
+
+func (m *PercentRiskModel) PositionFor(ts *TradingSnapshot) int {
+	capAtRisk := ts.CurrentCapital * m.riskPerTrade / 100
+	units     := int(capAtRisk / ts.RiskValue)
+
+	return units
+}
 
 //=============================================================================

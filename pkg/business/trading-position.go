@@ -10,14 +10,40 @@
 package business
 
 import (
+	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/portfolio-trader/pkg/business/position"
+	"github.com/algotiqa/portfolio-trader/pkg/business/position/model"
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
 )
+
+//=============================================================================
+
+func SetTradingPosition(tx *gorm.DB, c *auth.Context, tsId uint, p *position.TradingPosition) error {
+	_, err := getTradingSystemAndCheckAccess(tx, c, tsId)
+	if err != nil {
+		return err
+	}
+
+	err = p.Params.Validate()
+	if err != nil {
+		return err
+	}
+
+	_,tp,err := convertPosition(&p.Model, &p.Params)
+	if err != nil {
+		return err
+	}
+
+	tp.TradingSystemId = tsId
+
+	return db.SetTradingPosition(tx, tp)
+}
 
 //=============================================================================
 
@@ -27,7 +53,41 @@ func RunPositionAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, par *position.
 		return nil, err
 	}
 
-	fromTime, toTime, err := core.CalcSelectedPeriod(&par.SelectedPeriod, time.UTC)
+	pos, err := db.GetTradingPositionByTsId(tx, tsId)
+	if err != nil {
+		return nil, err
+	}
+
+	curConfig := make(map[string]any)
+	err = json.Unmarshal([]byte(pos.Config), &curConfig)
+	if err != nil {
+		return nil, errors.New("cannot parse position config: " + err.Error())
+	}
+
+	curModel,err := model.New(pos.Model, curConfig)
+	if err != nil {
+		return nil, errors.New("cannot build position model: " + err.Error())
+	}
+
+	//--- Get selected position model (if provided)
+
+	var selModel model.PositionModel
+
+	if par.Model != nil && par.Model.Name != "" && par.Params != nil {
+		err = par.Params.Validate()
+		if err != nil {
+			return nil, err
+		}
+
+		selModel,pos, err = convertPosition(par.Model, par.Params)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	//--- Other needed data
+
+	fromTime, toTime, err := core.CalcSelectedPeriod(&par.Period, time.UTC)
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +97,7 @@ func RunPositionAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, par *position.
 		return nil, err
 	}
 
-	res := position.RunAnalysis(ts, nil, trades)
+	res := position.RunAnalysis(ts, curModel, selModel, trades, pos)
 
 	return res, err
 }
@@ -88,6 +148,29 @@ func RunPositionAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, par *position.
 //===
 //=============================================================================
 
+func convertPosition(m *position.Model, p *position.Parameters) (model.PositionModel,*db.TradingPosition,error) {
+	mod,err := model.New(m.Name, m.Config)
+	if err != nil {
+		return nil, nil, err
+	}
 
+	data,err := json.Marshal(mod.Config())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	tp := &db.TradingPosition{
+		InitialCapital: *p.InitialCapital,
+		RuinPercentage: *p.RuinPercentage,
+		MarginOverride: p.MarginOverride,
+		MaxUnits      : *p.MaxUnits,
+		RiskPerUnit   : p.RiskPerUnit,
+		RiskValue     : p.RiskValue,
+		Model         : mod.Name(),
+		Config        : string(data),
+	}
+
+	return mod,tp,nil
+}
 
 //=============================================================================

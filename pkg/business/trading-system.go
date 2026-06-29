@@ -71,6 +71,11 @@ func DeleteTradingSystem(tx *gorm.DB, id uint) error {
 		return err
 	}
 
+	err = db.DeleteTradingPosition(tx, id)
+	if err != nil {
+		return err
+	}
+
 	return db.DeleteTradingSystem(tx, id)
 }
 
@@ -95,7 +100,7 @@ func ExportTradingSystems(tx *gorm.DB, c *auth.Context, ids []uint) (*importexpo
 		return nil, err1
 	}
 
-	filters, err2 := db.GetTradingFiltersByTsId(tx, ids)
+	filters, err2 := db.GetTradingFiltersByTsIds(tx, ids)
 	if err2 != nil {
 		return nil, err2
 	}
@@ -110,7 +115,12 @@ func ExportTradingSystems(tx *gorm.DB, c *auth.Context, ids []uint) (*importexpo
 		return nil, err5
 	}
 
-	tss := importexport.BuildTradingSystems(systems, filters, trades, periods)
+	positions, err6 := db.GetTradingPositionsByTsIds(tx, ids)
+	if err6 != nil {
+		return nil, err6
+	}
+
+	tss := importexport.BuildTradingSystems(systems, filters, trades, periods, positions)
 
 	return importexport.EncodeTradingSystems(tss)
 }

@@ -90,26 +90,6 @@ func getTrades(c *auth.Context) {
 
 //=============================================================================
 
-func getTradingFilters(c *auth.Context) {
-	tsId, err := c.GetIdFromUrl()
-
-	if err == nil {
-		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
-			filters, err := business.GetTradingFilters(tx, c, tsId)
-
-			if err != nil {
-				return err
-			}
-
-			return c.ReturnObject(filters)
-		})
-	}
-
-	c.ReturnError(err)
-}
-
-//=============================================================================
-
 func setTradingFilters(c *auth.Context) {
 	tsId, err := c.GetIdFromUrl()
 
@@ -383,6 +363,31 @@ func getSimulationResult(c *auth.Context) {
 //===
 //=== Position sizing
 //===
+//=============================================================================
+
+func setTradingPosition(c *auth.Context) {
+	tsId, err := c.GetIdFromUrl()
+
+	if err == nil {
+		pos := position.TradingPosition{}
+		err = c.BindParamsFromBody(&pos)
+
+		if err == nil {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+				err = business.SetTradingPosition(tx, c, tsId, &pos)
+
+				if err != nil {
+					return err
+				}
+
+				return c.ReturnObject("")
+			})
+		}
+	}
+
+	c.ReturnError(err)
+}
+
 //=============================================================================
 
 func runPositionAnalysis(c *auth.Context) {

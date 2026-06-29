@@ -1,6 +1,6 @@
 //=============================================================================
 //===
-//=== Copyright (C) 2023-present Andrea Carboni
+//=== Copyright (C) 2026-present Andrea Carboni
 //===
 //=== This source code is licensed under the Elastic License 2.0 (ELv2) available at:
 //=== https://github.com/algotiqa/docs/blob/main/LICENSE.md
@@ -16,8 +16,8 @@ import (
 
 //=============================================================================
 
-func GetTradingFilterByTsId(tx *gorm.DB, tsId uint) (*TradingFilter, error) {
-	var list []TradingFilter
+func GetTradingPositionByTsId(tx *gorm.DB, tsId uint) (*TradingPosition, error) {
+	var list []TradingPosition
 
 	filter := map[string]any{}
 	filter["trading_system_id"] = tsId
@@ -29,7 +29,7 @@ func GetTradingFilterByTsId(tx *gorm.DB, tsId uint) (*TradingFilter, error) {
 	}
 
 	if len(list) == 0 {
-		return nil, req.NewServerError("Filter not found for tsId=%v", tsId)
+		return nil, req.NewServerError("trading position not found for tsId=%v", tsId)
 	}
 
 	return &list[0], nil
@@ -37,8 +37,8 @@ func GetTradingFilterByTsId(tx *gorm.DB, tsId uint) (*TradingFilter, error) {
 
 //=============================================================================
 
-func GetTradingFiltersByTsIds(tx *gorm.DB, ids []uint) (*[]TradingFilter, error) {
-	var list []TradingFilter
+func GetTradingPositionsByTsIds(tx *gorm.DB, ids []uint) (*[]TradingPosition, error) {
+	var list []TradingPosition
 	res := tx.Find(&list, "trading_system_id in ?", ids)
 
 	if res.Error != nil {
@@ -50,14 +50,14 @@ func GetTradingFiltersByTsIds(tx *gorm.DB, ids []uint) (*[]TradingFilter, error)
 
 //=============================================================================
 
-func SetTradingFilter(tx *gorm.DB, tf *TradingFilter) error {
-	return tx.Save(tf).Error
+func SetTradingPosition(tx *gorm.DB, tp *TradingPosition) error {
+	return tx.Save(tp).Error
 }
 
 //=============================================================================
 
-func DeleteTradingFilter(tx *gorm.DB, id uint) error {
-	return tx.Delete(&TradingFilter{}, id).Error
+func DeleteTradingPosition(tx *gorm.DB, id uint) error {
+	return tx.Delete(&TradingPosition{}, id).Error
 }
 
 //=============================================================================

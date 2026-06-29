@@ -16,7 +16,36 @@ package position
 //=============================================================================
 
 type AnalysisResponse struct {
+	TradingSystem  *TradingSystem  `json:"tradingSystem"`
+	Params         *Parameters     `json:"params"`
+	Baseline       *AnalysisResult `json:"baseline"`
+	Current        *AnalysisResult `json:"current"`
+	Selected       *AnalysisResult `json:"selected"`
+	ParamSpecs     map[string]any  `json:"paramSpecs"`
+}
 
+//=============================================================================
+
+type TradingSystem struct {
+	Id   uint   `json:"id"`
+	Name string `json:"name"`
+}
+
+//=============================================================================
+
+type AnalysisResult struct {
+	Model  *Model            `json:"model"`
+	Gross  *ModelPerformance `json:"gross"`
+	Net    *ModelPerformance `json:"net"`
+}
+
+//=============================================================================
+
+type ModelPerformance struct {
+	Equity            []float64 `json:"equity"`
+	Return            float64   `json:"return"`
+	MaxDrawdown       float64   `json:"maxDrawdown"`
+	ReturnDrawdRatio  float64   `json:"returnDrawdRatio"`
 }
 
 //=============================================================================

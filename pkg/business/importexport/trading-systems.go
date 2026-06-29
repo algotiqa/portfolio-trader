@@ -20,7 +20,7 @@ import (
 //=============================================================================
 
 func BuildTradingSystems(systems *[]db.TradingSystem, filters *[]db.TradingFilter, trades *[]db.Trade,
-						 periods *[]db.LivePeriod) []*TradingSystem {
+						 periods *[]db.LivePeriod, positions *[]db.TradingPosition) []*TradingSystem {
 
 	tsMap := map[uint]*TradingSystem{}
 
@@ -31,7 +31,14 @@ func BuildTradingSystems(systems *[]db.TradingSystem, filters *[]db.TradingFilte
 	for _, f := range *filters {
 		ts,ok := tsMap[f.TradingSystemId]
 		if ok {
-			ts.TradingFilter = NewTradingFilter(&f)
+			ts.TradingFilter = &f
+		}
+	}
+
+	for _, p := range *positions {
+		ts,ok := tsMap[p.TradingSystemId]
+		if ok {
+			ts.TradingPosition = &p
 		}
 	}
 
@@ -84,9 +91,12 @@ func ImportTradingSystem(tx *gorm.DB, ts *db.TradingSystem, data []byte) error {
 		if err == nil {
 			err = setTradingFilter(tx, ts.Id, its.TradingFilter)
 			if err == nil {
-				err = addTrades(tx, ts.Id, its.Trades)
+				err = setTradingPosition(tx, ts.Id, its.TradingPosition)
 				if err == nil {
-					err = addLivePeriods(tx, ts.Id, its.LivePeriods)
+					err = addTrades(tx, ts.Id, its.Trades)
+					if err == nil {
+						err = addLivePeriods(tx, ts.Id, its.LivePeriods)
+					}
 				}
 			}
 		}
@@ -116,27 +126,16 @@ func updateTradingSystem(tx *gorm.DB, ts *db.TradingSystem, its *TradingSystem) 
 
 //=============================================================================
 
-func setTradingFilter(tx *gorm.DB, id uint, f *TradingFilter) error {
-	return db.SetTradingFilter(tx, &db.TradingFilter{
-		TradingSystemId : id,
-		EquAvgEnabled   : f.EquAvgEnabled,
-		EquAvgLen       : f.EquAvgLen,
-		PosProEnabled   : f.PosProEnabled,
-		PosProLen       : f.PosProLen,
-		WinPerEnabled   : f.WinPerEnabled,
-		WinPerLen       : f.WinPerLen,
-		WinPerValue     : f.WinPerValue,
-		OldNewEnabled   : f.OldNewEnabled,
-		OldNewOldLen    : f.OldNewOldLen,
-		OldNewOldPerc   : f.OldNewOldPerc,
-		OldNewNewLen    : f.OldNewNewLen,
-		TrendlineEnabled: f.TrendlineEnabled,
-		TrendlineLen    : f.TrendlineLen,
-		TrendlineValue  : f.TrendlineValue,
-		DrawdownEnabled : f.DrawdownEnabled,
-		DrawdownMin     : f.DrawdownMin,
-		DrawdownMax     : f.DrawdownMax,
-	})
+func setTradingFilter(tx *gorm.DB, id uint, f *db.TradingFilter) error {
+	f.TradingSystemId = id
+	return db.SetTradingFilter(tx, f)
+}
+
+//=============================================================================
+
+func setTradingPosition(tx *gorm.DB, id uint, p *db.TradingPosition) error {
+	p.TradingSystemId = id
+	return db.SetTradingPosition(tx, p)
 }
 
 //=============================================================================

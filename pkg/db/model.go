@@ -99,14 +99,12 @@ type TradingSystem struct {
 	InSampleFrom     types.Date   `json:"inSampleFrom"`
 	InSampleTo       types.Date   `json:"inSampleTo"`
 	EngineCode       string       `json:"engineCode"`
-	PositionModel    string       `json:"positionModel"`
-	PositionConfig   string       `json:"positionConfig"`
 }
 
 //=============================================================================
 
 type TradingFilter struct {
-	TradingSystemId  uint `json:"tradingSystemId" gorm:"primaryKey"`
+	TradingSystemId  uint `json:"omit" gorm:"primaryKey"`
 	EquAvgEnabled    bool `json:"equAvgEnabled"`
 	EquAvgLen        int  `json:"equAvgLen"`
 	PosProEnabled    bool `json:"posProEnabled"`
@@ -124,6 +122,52 @@ type TradingFilter struct {
 	DrawdownEnabled  bool `json:"drawdownEnabled"`
 	DrawdownMin      int  `json:"drawdownMin"`
 	DrawdownMax      int  `json:"drawdownMax"`
+}
+
+//=============================================================================
+
+type RpuType string
+
+//-----------------------------------------------------------------------------
+
+const (
+	RpuStopLoss   RpuType = "stopLoss"
+	RpuMaxLoss    RpuType = "maxLoss"
+	RpuAvgLoss    RpuType = "avgLoss"
+	RpuFixedValue RpuType = "fixedValue"
+)
+
+//-----------------------------------------------------------------------------
+
+var RpuDomain = []RpuType{
+	RpuStopLoss, RpuMaxLoss, RpuAvgLoss, RpuFixedValue,
+}
+
+//-----------------------------------------------------------------------------
+
+type ModelName string
+
+//-----------------------------------------------------------------------------
+
+const (
+	ModelFixedUnit         ModelName = "FU"
+	ModelPercentRisk       ModelName = "PR"
+	ModelPercentVolatility ModelName = "PV"
+	ModelMarketMoney       ModelName = "MM"
+)
+
+//-----------------------------------------------------------------------------
+
+type TradingPosition struct {
+	TradingSystemId   uint        `json:"omit" gorm:"primaryKey"`
+	InitialCapital    float64     `json:"initialCapital"`
+	RuinPercentage    float64     `json:"ruinPercentage"`
+	MarginOverride    *float64    `json:"marginOverride"`
+	MaxUnits          int         `json:"maxUnits"`
+	RiskPerUnit       RpuType     `json:"riskPerUnit"`
+	RiskValue         *float64    `json:"riskValue"`
+	Model             ModelName   `json:"model"`
+	Config            string      `json:"config"`
 }
 
 //=============================================================================
@@ -188,12 +232,13 @@ type LivePeriod struct {
 //===
 //=============================================================================
 
-func (TradingSystem) TableName() string { return "trading_system" }
-func (TradingFilter) TableName() string { return "trading_filter" }
-func (Trade)         TableName() string { return "trade"          }
-func (Portfolio)     TableName() string { return "portfolio"      }
-func (EquityBar)     TableName() string { return "equity_bar"     }
-func (LivePeriod)    TableName() string { return "live_period"    }
+func (TradingSystem)   TableName() string { return "trading_system"   }
+func (TradingFilter)   TableName() string { return "trading_filter"   }
+func (TradingPosition) TableName() string { return "trading_position" }
+func (Trade)           TableName() string { return "trade"            }
+func (Portfolio)       TableName() string { return "portfolio"        }
+func (EquityBar)       TableName() string { return "equity_bar"       }
+func (LivePeriod)      TableName() string { return "live_period"      }
 
 //=============================================================================
 //===

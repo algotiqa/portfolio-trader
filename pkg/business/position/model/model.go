@@ -11,37 +11,53 @@ package model
 
 //=============================================================================
 
+import "github.com/algotiqa/portfolio-trader/pkg/db"
+
+//=============================================================================
+//===
+//=== PositionModel
+//===
+//=============================================================================
+
 type PositionModel interface {
-	Calc()
+	Name() db.ModelName
+	Init(config map[string]any) error
+	Config() map[string]any
+	PositionInit(ts *TradingSnapshot)
+	PositionFor(ts *TradingSnapshot) int
 }
 
 //=============================================================================
 
-func New(model, config string) (PositionModel, error) {
+type TradingSnapshot struct {
+	InitialCapital float64
+	CurrentCapital float64
+	RiskValue      float64
+	AtrValue       float64
+}
+
+//=============================================================================
+
+func New(model db.ModelName, config map[string]any) (PositionModel, error) {
+	var m PositionModel
 	switch model {
-		case FixedUnit:
-			return newFixedUnitModel(config)
+		case db.ModelFixedUnit:
+			m = NewFixedUnitModel()
 
-		case PercentRisk:
-			return newPercentRiskModel(config)
+		case db.ModelPercentRisk:
+			m = NewPercentRiskModel()
 
-		case PercentVolatility:
-			return newPercentVolatilityModel(config)
+		case db.ModelPercentVolatility:
+			m = NewPercentVolatilityModel()
 
-		case MarketMoney:
-			return newMarketMoneyModel(config)
+		case db.ModelMarketMoney:
+			m = NewMarketMoneyModel()
 
 		default:
-		panic("Unknown position sizing model: " + model)
+			panic("Unknown position sizing model: " + model)
 	}
-}
 
-//=============================================================================
-
-func NewFixedUnitDefaultConfig() *FixedUnitConfig {
-	return &FixedUnitConfig{
-		Units: 1,
-	}
+	return m, m.Init(config)
 }
 
 //=============================================================================

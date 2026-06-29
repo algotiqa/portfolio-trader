@@ -17,6 +17,7 @@ import (
 	"github.com/algotiqa/core/msg"
 	"github.com/algotiqa/portfolio-trader/pkg/business"
 	"github.com/algotiqa/portfolio-trader/pkg/business/importexport"
+	"github.com/algotiqa/portfolio-trader/pkg/business/position"
 	"github.com/algotiqa/portfolio-trader/pkg/business/position/model"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
@@ -104,15 +105,15 @@ func setTradingSystem(tsm *TradingSystemMessage, create bool) bool {
 			ts.Status          = db.TsStatusOff
 			ts.Active          = false
 			ts.SuggestedAction = db.TsActionNone
-			ts.PositionModel   = model.FixedUnit
-
-			def := model.NewFixedUnitDefaultConfig()
-			defStr,errC := json.Marshal(def)
-			if errC != nil {
-				return errC
-			}
-
-			ts.PositionConfig = string(defStr)
+			//ts.PositionModel   = model.FixedUnit
+			//
+			//def := model.NewFixedUnitDefaultConfig()
+			//defStr,errC := json.Marshal(def)
+			//if errC != nil {
+			//	return errC
+			//}
+			//
+			//ts.PositionConfig = string(defStr)
 		} else {
 			isNew = false
 
@@ -160,6 +161,14 @@ func setTradingSystem(tsm *TradingSystemMessage, create bool) bool {
 				err = db.SetTradingFilter(tx, &db.TradingFilter{
 					TradingSystemId: ts.Id,
 				})
+				if err == nil {
+					var p *db.TradingPosition
+					p,err = getDefaultTradingPosition()
+					if err == nil {
+						p.TradingSystemId = ts.Id
+						err = db.SetTradingPosition(tx, p)
+					}
+				}
 			} else {
 				err = importexport.ImportTradingSystem(tx, ts, tsm.PortfolioPack)
 			}
@@ -243,6 +252,30 @@ func updateBrokerProduct(bpm *BrokerProductMessage) bool {
 	}
 
 	return err == nil
+}
+
+//=============================================================================
+
+func getDefaultTradingPosition() (*db.TradingPosition,error) {
+	mod := model.NewFixedUnitModel()
+
+	data,err := json.Marshal(mod.Config())
+	if err != nil {
+		return nil,err
+	}
+
+	ps := &db.TradingPosition{
+		InitialCapital: position.DefInitialCapital,
+		RuinPercentage: position.DefRuinPercentage,
+		MarginOverride: nil,
+		MaxUnits      : position.DefMaxUnits,
+		RiskPerUnit   : position.DefRiskPerUnit,
+		RiskValue     : &position.DefRiskValue,
+		Model         : mod.Name(),
+		Config        : string(data),
+	}
+
+	return ps,nil
 }
 
 //=============================================================================

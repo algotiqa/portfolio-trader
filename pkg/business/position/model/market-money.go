@@ -9,12 +9,14 @@
 
 package model
 
-import "encoding/json"
+import (
+	"github.com/algotiqa/portfolio-trader/pkg/db"
+)
 
 //=============================================================================
-
-const MarketMoney = "MM"
-
+//===
+//=== Model
+//===
 //=============================================================================
 
 type MoneyConversionType string
@@ -27,35 +29,57 @@ const (
 
 //-----------------------------------------------------------------------------
 
-type MarketMoneyConfig struct {
-	RiskPerTradeOnCap   float64             `json:"riskPerTradeOnCap"`
-	RiskPerTradeOnEarn  float64             `json:"riskPerTradeOnEarn"`
-	MoneyConversion     MoneyConversionType `json:"moneyConversion"`
-	PercentageOnCapital float64             `json:"percentageOnCapital"`
+var MoneyConversionDomain = []MoneyConversionType{
+	McTypePercOnCapital,
 }
 
-//=============================================================================
+//-----------------------------------------------------------------------------
 
 type MarketMoneyModel struct {
-	config *MarketMoneyConfig
+	riskPerTradeOnCap   float64
+	riskPerTradeOnEarn  float64
+	moneyConversion     MoneyConversionType
+	percentageOnCapital int
 }
 
 //=============================================================================
 
-func newMarketMoneyModel(config string) (*MarketMoneyModel,error) {
-	c := &MarketMoneyConfig{}
-	err := json.Unmarshal([]byte(config), c)
-	if err != nil {
-		return nil, err
-	}
-
+func NewMarketMoneyModel() *MarketMoneyModel {
 	return &MarketMoneyModel{
-		config : c,
-	},nil
+		riskPerTradeOnCap  : 1.5,
+		riskPerTradeOnEarn : 4.0,
+		moneyConversion    : McTypePercOnCapital,
+		percentageOnCapital: 50.0,
+	}
 }
 
 //=============================================================================
 
-func (fm *MarketMoneyModel) Calc() {}
+func (m *MarketMoneyModel) Name() db.ModelName {
+	return db.ModelMarketMoney
+}
+
+//=============================================================================
+
+func (m *MarketMoneyModel) Init(config map[string]any) error {
+	return nil
+}
+
+//=============================================================================
+
+func (m *MarketMoneyModel) Config() map[string]any {
+	cfg := make(map[string]any)
+	return cfg
+}
+
+//=============================================================================
+
+func (m *MarketMoneyModel) PositionInit(ts *TradingSnapshot) {}
+
+//=============================================================================
+
+func (m *MarketMoneyModel) PositionFor(ts *TradingSnapshot) int {
+	return 1
+}
 
 //=============================================================================

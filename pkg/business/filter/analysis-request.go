@@ -18,8 +18,8 @@ import "github.com/algotiqa/portfolio-trader/pkg/core"
 //=============================================================================
 
 type AnalysisRequest struct {
-	core.SelectedPeriod
-	Filter    *TradingFilter  `json:"filter,omitempty"`
+	Period  core.SelectedPeriod `json:"period"`
+	Filter  *TradingFilter      `json:"filter,omitempty"`
 }
 
 //=============================================================================
