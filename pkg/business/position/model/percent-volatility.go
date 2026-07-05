@@ -10,8 +10,32 @@
 package model
 
 import (
+	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
+
+//=============================================================================
+//===
+//=== Specs
+//===
+//=============================================================================
+
+var DefAverageLength = 20
+var DefMaxVolatility = 1.5
+
+var SpecAverageLength = core.NewNumberParamSpec[int    ]( "averageLength", true, 1, 1000, &DefAverageLength)
+var SpecMaxVolatility = core.NewNumberParamSpec[float64]( "maxVolatility", true, 0.1, 50, &DefMaxVolatility)
+
+//=============================================================================
+//===
+//=== Config
+//===
+//=============================================================================
+
+type PercentVolatilityConfig struct {
+	averageLength int
+	maxVolatility float64
+}
 
 //=============================================================================
 //===
@@ -20,16 +44,17 @@ import (
 //=============================================================================
 
 type PercentVolatilityModel struct {
-	averageLength int
-	maxVolatility float64
+	config *PercentVolatilityConfig
 }
 
 //=============================================================================
 
 func NewPercentVolatilityModel() *PercentVolatilityModel {
 	return &PercentVolatilityModel{
-		averageLength: 20,
-		maxVolatility: 1.5,
+		config: &PercentVolatilityConfig{
+			averageLength: DefAverageLength,
+			maxVolatility: DefMaxVolatility,
+		},
 	}
 }
 
@@ -42,6 +67,17 @@ func (m *PercentVolatilityModel) Name() db.ModelName {
 //=============================================================================
 
 func (m *PercentVolatilityModel) Init(config map[string]any) error {
+	avgLen,err1 := core.MapNumber[int    ](config, SpecAverageLength)
+	maxVol,err2 := core.MapNumber[float64](config, SpecMaxVolatility)
+	if err1 != nil {
+		return err1
+	}
+	if err2 != nil {
+		return err2
+	}
+
+	m.config.averageLength = *avgLen
+	m.config.maxVolatility = *maxVol
 	return nil
 }
 
@@ -49,6 +85,9 @@ func (m *PercentVolatilityModel) Init(config map[string]any) error {
 
 func (m *PercentVolatilityModel) Config() map[string]any {
 	cfg := make(map[string]any)
+	cfg[SpecAverageLength.Name] = m.config.averageLength
+	cfg[SpecMaxVolatility.Name] = m.config.maxVolatility
+
 	return cfg
 }
 
@@ -59,7 +98,10 @@ func (m *PercentVolatilityModel) PositionInit(ts *TradingSnapshot) {}
 //=============================================================================
 
 func (m *PercentVolatilityModel) PositionFor(ts *TradingSnapshot) int {
-	return 1
+	capAtRisk := ts.CurrentCapital * m.config.maxVolatility / 100
+	units     := int(capAtRisk / ts.AtrValue)
+
+	return units
 }
 
 //=============================================================================

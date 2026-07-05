@@ -9,92 +9,89 @@
 
 package core
 
-import "errors"
+import (
+	"errors"
+	"reflect"
+)
 
 //=============================================================================
 
-func MapReal(data map[string]any, key string, target *float64, min, max float64, required bool, defValue float64) error {
+func MapNumber[T int|float64](data map[string]any, spec *NumberParamSpec[T]) (*T,error) {
+	key := spec.Name
+
 	v, ok := data[key]
 	if !ok {
-		if required {
-			return errors.New("missing required parameter: " + key)
+		if spec.Required {
+			return nil,errors.New("missing required parameter: " + key)
 		}
-		*target = defValue
-		return nil
+
+		return spec.DefValue,nil
 	}
 
-	val, ok := v.(float64)
+	v = fixForInt[T](v)
+
+	val, ok := v.(T)
 	if !ok {
-		return errors.New("invalid type for parameter: " + key)
+		return nil,errors.New("invalid type for parameter: " + key)
 	}
 
-	if val < min || val > max {
-		return errors.New("value out of range for parameter: " + key)
+	if val < spec.MinValue || val > spec.MaxValue {
+		return nil,errors.New("value out of range for parameter: " + key)
 	}
 
-	*target = val
-	return nil
+	return &val,nil
 }
 
 //=============================================================================
 
-func MapInt(data map[string]any, key string, target *int, min, max int, required bool, defValue int) error {
-	v, ok := data[key]
-	if !ok {
-		if required {
-			return errors.New("missing required parameter: " + key)
-		}
-		*target = defValue
-		return nil
+func fixForInt[T int|float64](v any) any {
+	switch v.(type) {
+		case float64:
+			tType := reflect.TypeOf((*T)(nil)).Elem()
+			if tType.Kind() == reflect.Int {
+				val,_ := v.(float64)
+				return int(val)
+			}
 	}
 
-	val, ok := v.(int)
-	if !ok {
-		return errors.New("invalid type for parameter: " + key)
-	}
-
-	if val < min || val > max {
-		return errors.New("value out of range for parameter: " + key)
-	}
-
-	*target = val
-	return nil
+	return v
 }
 
 //=============================================================================
 
-func MapString[T ~string](data map[string]any, key string, target *T, domain []T, required bool, defValue T) error {
+func MapList[T ~string](data map[string]any, spec *ListParamSpec[T]) (T,error) {
+	key := spec.Name
+
 	v, ok := data[key]
 	if !ok {
-		if required {
-			return errors.New("missing required parameter: " + key)
+		if spec.Required {
+			return "",errors.New("missing required parameter: " + key)
 		}
-		*target = defValue
-		return nil
+
+		return spec.DefValue,nil
 	}
 
 	val, ok := v.(string)
 	if !ok {
-		return errors.New("invalid type for parameter: " + key)
+		return "",errors.New("invalid type for parameter: " + key)
 	}
 
 	tval := T(val)
 
-	if domain != nil {
+	if spec.Domain != nil {
 		found := false
-		for _, d := range domain {
+		for _, d := range spec.Domain {
 			if tval == d {
 				found = true
 				break
 			}
 		}
 		if !found {
-			return errors.New("value not in domain for parameter: " + key)
+			return "",errors.New("value not in domain for parameter: " + key)
 		}
 	}
 
-	*target = tval
-	return nil
+	return tval,nil
 }
 
 //=============================================================================

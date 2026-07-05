@@ -12,6 +12,7 @@ package core
 import (
 	"errors"
 	"fmt"
+	"reflect"
 )
 
 //=============================================================================
@@ -55,10 +56,17 @@ type NumberParamSpec[T int|float64] struct {
 //=============================================================================
 
 func NewNumberParamSpec[T int|float64](name string, required bool, minValue, maxValue T, defValue *T) *NumberParamSpec[T] {
+	specType := PSTInt
+
+	tType := reflect.TypeOf((*T)(nil)).Elem()
+	if tType.Kind() == reflect.Float64 {
+		specType = PSTReal
+	}
+
 	return &NumberParamSpec[T]{
 		ParamSpec: ParamSpec{
 			Name     : name,
-			Type     : PSTInt,
+			Type     : specType,
 			Required : required,
 		},
 		MinValue: minValue,

@@ -22,7 +22,7 @@ import (
 
 var DefUnits = 1
 
-var specUnits = core.NewNumberParamSpec( "units", true, 1, 10000, &DefUnits)
+var SpecUnits = core.NewNumberParamSpec[int]( "units", true, 1, 10000, &DefUnits)
 
 //=============================================================================
 //===
@@ -49,7 +49,7 @@ type FixedUnitModel struct {
 func NewFixedUnitModel() *FixedUnitModel {
 	return &FixedUnitModel{
 		config: &FixedUnitConfig{
-			units: 1,
+			units: DefUnits,
 		},
 	}
 }
@@ -63,16 +63,12 @@ func (m *FixedUnitModel) Name() db.ModelName {
 //=============================================================================
 
 func (m *FixedUnitModel) Init(config map[string]any) error {
-	//m.units = config.FuUnits
-	//
-	//if m.units < 1 {
-	//	return errors.New("units must be positive: " + strconv.Itoa(m.units))
-	//}
-	//
-	//if m.units > 10000 {
-	//	return errors.New("units too big: " + strconv.Itoa(m.units))
-	//}
+	units,err := core.MapNumber[int](config, SpecUnits)
+	if err != nil {
+		return err
+	}
 
+	m.config.units = *units
 	return nil
 }
 
@@ -80,7 +76,7 @@ func (m *FixedUnitModel) Init(config map[string]any) error {
 
 func (m *FixedUnitModel) Config() map[string]any {
 	cfg := make(map[string]any)
-	cfg[specUnits.Name] = m.config.units
+	cfg[SpecUnits.Name] = m.config.units
 
 	return cfg
 }

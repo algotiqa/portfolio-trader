@@ -10,8 +10,29 @@
 package model
 
 import (
+	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
+
+//=============================================================================
+//===
+//=== Specs
+//===
+//=============================================================================
+
+var DefRiskPerTrade = 1.5
+
+var SpecRiskPerTrade = core.NewNumberParamSpec[float64]( "riskPerTrade", true, 0.1, 50, &DefRiskPerTrade)
+
+//=============================================================================
+//===
+//=== Config
+//===
+//=============================================================================
+
+type PercentRiskConfig struct {
+	riskPerTrade float64
+}
 
 //=============================================================================
 //===
@@ -20,14 +41,16 @@ import (
 //=============================================================================
 
 type PercentRiskModel struct {
-	riskPerTrade float64
+	config *PercentRiskConfig
 }
 
 //=============================================================================
 
 func NewPercentRiskModel() *PercentRiskModel {
 	return &PercentRiskModel{
-		riskPerTrade : 1.75,
+		config: &PercentRiskConfig{
+			riskPerTrade : DefRiskPerTrade,
+		},
 	}
 }
 
@@ -40,6 +63,12 @@ func (m *PercentRiskModel) Name() db.ModelName {
 //=============================================================================
 
 func (m *PercentRiskModel) Init(config map[string]any) error {
+	risk,err := core.MapNumber[float64](config, SpecRiskPerTrade)
+	if err != nil {
+		return err
+	}
+
+	m.config.riskPerTrade = *risk
 	return nil
 }
 
@@ -47,6 +76,8 @@ func (m *PercentRiskModel) Init(config map[string]any) error {
 
 func (m *PercentRiskModel) Config() map[string]any {
 	cfg := make(map[string]any)
+	cfg[SpecRiskPerTrade.Name] = m.config.riskPerTrade
+
 	return cfg
 }
 
@@ -57,7 +88,7 @@ func (m *PercentRiskModel) PositionInit(ts *TradingSnapshot) {}
 //=============================================================================
 
 func (m *PercentRiskModel) PositionFor(ts *TradingSnapshot) int {
-	capAtRisk := ts.CurrentCapital * m.riskPerTrade / 100
+	capAtRisk := ts.CurrentCapital * m.config.riskPerTrade / 100
 	units     := int(capAtRisk / ts.RiskValue)
 
 	return units

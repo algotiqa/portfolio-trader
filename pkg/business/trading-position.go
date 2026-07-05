@@ -79,7 +79,7 @@ func RunPositionAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, par *position.
 			return nil, err
 		}
 
-		selModel,pos, err = convertPosition(par.Model, par.Params)
+		selModel,pos,err = convertPosition(par.Model, par.Params)
 		if err != nil {
 			return nil, err
 		}
@@ -97,9 +97,7 @@ func RunPositionAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, par *position.
 		return nil, err
 	}
 
-	res := position.RunAnalysis(ts, curModel, selModel, trades, pos)
-
-	return res, err
+	return position.RunAnalysis(ts, curModel, selModel, trades, pos)
 }
 
 //=============================================================================
