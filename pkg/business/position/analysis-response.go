@@ -22,6 +22,7 @@ type AnalysisResponse struct {
 	Current          *AnalysisResult `json:"current"`
 	Selected         *AnalysisResult `json:"selected"`
 	ParamSpecs       map[string]any  `json:"paramSpecs"`
+	ModelSpecs       map[string]any  `json:"modelSpecs"`
 	UsedMargin       float64         `json:"usedMargin"`
 	GrossRisk        float64         `json:"grossRisk"`
 	NetRisk          float64         `json:"netRisk"`

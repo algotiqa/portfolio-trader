@@ -93,6 +93,17 @@ func (m *PercentVolatilityModel) Config() map[string]any {
 
 //=============================================================================
 
+func (m *PercentVolatilityModel) Spec() map[string]any {
+	specs := make(map[string]any)
+
+	specs[SpecAverageLength.Name] = SpecAverageLength
+	specs[SpecMaxVolatility.Name] = SpecMaxVolatility
+
+	return specs
+}
+
+//=============================================================================
+
 func (m *PercentVolatilityModel) PositionInit(ts *TradingSnapshot) {}
 
 //=============================================================================

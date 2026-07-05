@@ -32,6 +32,7 @@ func RunAnalysis(ts *db.TradingSystem, curModel, selModel model.PositionModel, t
 	res.TradingSystem = buildTradingSystem(ts)
 	res.Params        = extractParameters(pos)
 	res.ParamSpecs    = buildParamSpecs()
+	res.ModelSpecs    = buildModelSpecs()
 	res.UsedMargin    = ts.MarginValue
 
 	if pos.MarginOverride != nil {
@@ -171,6 +172,29 @@ func buildParamSpecs() map[string]any {
 	specs[SpecMaxUnits.Name]       = SpecMaxUnits
 	specs[SpecRiskPerUnit.Name]    = SpecRiskPerUnit
 	specs[SpecRiskValue.Name]      = SpecRiskValue
+
+	return specs
+}
+
+//=============================================================================
+
+func buildModelSpecs() map[string]any {
+	specs := make(map[string]any)
+
+	for k,v := range model.NewFixedUnitModel().Spec() {
+		specs[k] = v
+	}
+
+	for k,v := range model.NewPercentRiskModel().Spec() {
+		specs[k] = v
+	}
+
+	for k,v := range model.NewPercentVolatilityModel().Spec() {
+		specs[k] = v
+	}
+	for k,v := range model.NewMarketMoneyModel().Spec() {
+		specs[k] = v
+	}
 
 	return specs
 }

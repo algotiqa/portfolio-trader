@@ -23,6 +23,7 @@ type PositionModel interface {
 	Name() db.ModelName
 	Init(config map[string]any) error
 	Config() map[string]any
+	Spec() map[string]any
 	PositionInit(ts *TradingSnapshot)
 	PositionFor(ts *TradingSnapshot) int
 }

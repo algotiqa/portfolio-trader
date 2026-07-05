@@ -83,6 +83,16 @@ func (m *FixedUnitModel) Config() map[string]any {
 
 //=============================================================================
 
+func (m *FixedUnitModel) Spec() map[string]any {
+	specs := make(map[string]any)
+
+	specs[SpecUnits.Name] = SpecUnits
+
+	return specs
+}
+
+//=============================================================================
+
 func (m *FixedUnitModel) PositionInit(ts *TradingSnapshot) {}
 
 //=============================================================================

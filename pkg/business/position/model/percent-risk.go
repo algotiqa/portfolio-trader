@@ -83,6 +83,16 @@ func (m *PercentRiskModel) Config() map[string]any {
 
 //=============================================================================
 
+func (m *PercentRiskModel) Spec() map[string]any {
+	specs := make(map[string]any)
+
+	specs[SpecRiskPerTrade.Name] = SpecRiskPerTrade
+
+	return specs
+}
+
+//=============================================================================
+
 func (m *PercentRiskModel) PositionInit(ts *TradingSnapshot) {}
 
 //=============================================================================

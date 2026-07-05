@@ -137,6 +137,19 @@ func (m *MarketMoneyModel) Config() map[string]any {
 
 //=============================================================================
 
+func (m *MarketMoneyModel) Spec() map[string]any {
+	specs := make(map[string]any)
+
+	specs[SpecRiskPerTradeOnCap  .Name] = SpecRiskPerTradeOnCap
+	specs[SpecRiskPerTradeOnEarn .Name] = SpecRiskPerTradeOnEarn
+	specs[SpecMoneyConversion    .Name] = SpecMoneyConversion
+	specs[SpecPercentageOnCapital.Name] = SpecPercentageOnCapital
+
+	return specs
+}
+
+//=============================================================================
+
 func (m *MarketMoneyModel) PositionInit(ts *TradingSnapshot) {
 	m.baseCapital = ts.InitialCapital
 }
