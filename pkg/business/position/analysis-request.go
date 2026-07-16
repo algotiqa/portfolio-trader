@@ -66,13 +66,13 @@ type AnalysisRequest struct {
 //=============================================================================
 
 var DefInitialCapital = 15000.0
-var DefRuinPercentage = 25.0
+var DefMaxTolDrawdPerc= 25.0
 var DefMaxUnits       = 1
 var DefRiskValue      = 150.0
 var DefRiskPerUnit    = db.RpuStopLoss
 
 var SpecInitialCapital = core.NewNumberParamSpec[float64]   ("initialCapital",  true, 1, 1000000000, &DefInitialCapital)
-var SpecRuinParcentage = core.NewNumberParamSpec[float64]   ("ruinPercentage",  true, 0,        100, &DefRuinPercentage)
+var SpecMaxTolDrawdPerc= core.NewNumberParamSpec[float64]   ("maxTolDrawdPerc", true, 0,        100, &DefMaxTolDrawdPerc)
 var SpecMarginOverride = core.NewNumberParamSpec[float64]   ("marginOverride", false, 0,    1000000, nil)
 var SpecMaxUnits       = core.NewNumberParamSpec[int]       ("maxUnits",        true, 1,     100000, &DefMaxUnits)
 var SpecRiskPerUnit    = core.NewListParamSpec  [db.RpuType]("riskPerUnit",     true, db.RpuDomain, DefRiskPerUnit)
@@ -82,7 +82,7 @@ var SpecRiskValue      = core.NewNumberParamSpec[float64]   ("riskValue",      f
 
 type Parameters struct {
 	InitialCapital  *float64       `json:"initialCapital"`
-	RuinPercentage  *float64       `json:"ruinPercentage"`
+	MaxTolDrawdPerc *float64       `json:"maxTolDrawdPerc"`
 	MarginOverride  *float64       `json:"marginOverride"`
 	MaxUnits        *int           `json:"maxUnits"`
 	RiskPerUnit     db.RpuType     `json:"riskPerUnit"`
@@ -99,7 +99,7 @@ func (p *Parameters) Validate() error {
 		return err
 	}
 
-	p.RuinPercentage,err = SpecRuinParcentage.Validate(p.RuinPercentage)
+	p.MaxTolDrawdPerc,err = SpecMaxTolDrawdPerc.Validate(p.MaxTolDrawdPerc)
 	if err != nil {
 		return err
 	}

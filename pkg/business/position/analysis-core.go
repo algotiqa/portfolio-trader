@@ -11,6 +11,7 @@ package position
 
 import (
 	"math"
+	"time"
 
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/portfolio-trader/pkg/business/position/model"
@@ -25,9 +26,6 @@ import (
 //=============================================================================
 
 func RunAnalysis(ts *db.TradingSystem, curModel, selModel model.PositionModel, trades *[]db.Trade, pos *db.TradingPosition) (*AnalysisResponse,error) {
-	baseline    := model.NewFixedUnitModel()
-	ruinCapital := core.Trunc2d(pos.InitialCapital * (100 - pos.RuinPercentage) / 100)
-
 	res := &AnalysisResponse{}
 	res.TradingSystem = buildTradingSystem(ts)
 	res.Params        = extractParameters(pos)
@@ -42,15 +40,17 @@ func RunAnalysis(ts *db.TradingSystem, curModel, selModel model.PositionModel, t
 	grossRisk,errG := calcRiskValue(pos.RiskPerUnit, pos.RiskValue, trades, 0)
 	netRisk,errN   := calcRiskValue(pos.RiskPerUnit, pos.RiskValue, trades, ts.CostPerOperation)
 
+	baseline := model.NewFixedUnitModel()
+
 	res.NoLosses         = (errG != nil) || (errN != nil)
 	res.GrossRisk        = grossRisk
 	res.NetRisk          = netRisk
-	res.RuinCapital      = ruinCapital
 	res.CostPerOperation = ts.CostPerOperation
 
 	res.Baseline      = calcAnalysisResult(baseline, trades, res)
 	res.Current       = calcAnalysisResult(curModel, trades, res)
 	res.Selected      = calcAnalysisResult(selModel, trades, res)
+	res.Time          = calcTime(trades)
 
 	return res,nil
 }
@@ -68,12 +68,12 @@ func buildTradingSystem(ts *db.TradingSystem) *TradingSystem {
 
 func extractParameters(p *db.TradingPosition) *Parameters {
 	return &Parameters{
-		InitialCapital: &p.InitialCapital,
-		RuinPercentage: &p.RuinPercentage,
-		MarginOverride: p.MarginOverride,
-		MaxUnits      : &p.MaxUnits,
-		RiskPerUnit   : p.RiskPerUnit,
-		RiskValue     : p.RiskValue,
+		InitialCapital : &p.InitialCapital,
+		MaxTolDrawdPerc: &p.MaxTolDrawdPerc,
+		MarginOverride : p.MarginOverride,
+		MaxUnits       : &p.MaxUnits,
+		RiskPerUnit    : p.RiskPerUnit,
+		RiskValue      : p.RiskValue,
 	}
 }
 
@@ -137,25 +137,30 @@ func calcModelPerformance(mod model.PositionModel, trades *[]db.Trade, res *Anal
 		equity    = append(equity,    snapshot.CurrentCapital)
 		positions = append(positions, position)
 
-		if snapshot.CurrentCapital < res.RuinCapital  {
+		if snapshot.CurrentCapital < margin {
 			ruined = true
 			break
 		}
 	}
 
-	drawdown, maxDrawdown := core.BuildDrawDown(&equity)
+	drawdownPerc, maxDrawdownPerc, maxDrawdown := core.BuildDrawDownPercentage(&equity)
 
-	ratio := 0.0
-	if maxDrawdown != 0 {
-		ratio = -((snapshot.CurrentCapital - snapshot.InitialCapital) / maxDrawdown)
+	finalReturn := snapshot.CurrentCapital - snapshot.InitialCapital
+	retOnAcc    := finalReturn * 100 / snapshot.InitialCapital
+	ratio       := 0.0
+
+	if maxDrawdownPerc != 0 {
+		ratio = -(retOnAcc / maxDrawdownPerc)
 	}
 
 	return &ModelPerformance{
 		Equity          : equity,
-		Drawdown        : *drawdown,
+		DrawdownPerc    : *drawdownPerc,
 		Positions       : positions,
-		Return          : core.Trunc2d(snapshot.CurrentCapital),
-		MaxDrawdown     : core.Trunc2d(maxDrawdown),
+		Return          : finalReturn,
+		MaxDrawdown     : maxDrawdown,
+		MaxDrawdownPerc : maxDrawdownPerc,
+		ReturnOnAccount : core.Trunc2d(retOnAcc),
 		ReturnDrawdRatio: core.Trunc2d(ratio),
 		Ruined          : ruined,
 	}
@@ -166,12 +171,12 @@ func calcModelPerformance(mod model.PositionModel, trades *[]db.Trade, res *Anal
 func buildParamSpecs() map[string]any {
 	specs := make(map[string]any)
 
-	specs[SpecInitialCapital.Name] = SpecInitialCapital
-	specs[SpecRuinParcentage.Name] = SpecRuinParcentage
-	specs[SpecMarginOverride.Name] = SpecMarginOverride
-	specs[SpecMaxUnits.Name]       = SpecMaxUnits
-	specs[SpecRiskPerUnit.Name]    = SpecRiskPerUnit
-	specs[SpecRiskValue.Name]      = SpecRiskValue
+	specs[SpecInitialCapital.Name]  = SpecInitialCapital
+	specs[SpecMaxTolDrawdPerc.Name] = SpecMaxTolDrawdPerc
+	specs[SpecMarginOverride.Name]  = SpecMarginOverride
+	specs[SpecMaxUnits.Name]        = SpecMaxUnits
+	specs[SpecRiskPerUnit.Name]     = SpecRiskPerUnit
+	specs[SpecRiskValue.Name]       = SpecRiskValue
 
 	return specs
 }
@@ -244,6 +249,18 @@ func calcRiskValue(riskPerUnit db.RpuType, riskValue *float64, trades *[]db.Trad
 
 func calcAtr(t *db.Trade, atrMap map[int]float64) float64 {
 	return 0 //TODO
+}
+
+//=============================================================================
+
+func calcTime(trades *[]db.Trade) []time.Time {
+	var res []time.Time
+
+	for _, t := range *trades {
+		res = append(res, *t.ExitDate)
+	}
+
+	return res
 }
 
 //=============================================================================

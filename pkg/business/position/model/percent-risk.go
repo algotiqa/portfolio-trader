@@ -56,6 +56,16 @@ func NewPercentRiskModel() *PercentRiskModel {
 
 //=============================================================================
 
+func NewPercentRiskModelWithParams(riskPerTrade float64) *PercentRiskModel {
+	return &PercentRiskModel{
+		config: &PercentRiskConfig{
+			riskPerTrade : riskPerTrade,
+		},
+	}
+}
+
+//=============================================================================
+
 func (m *PercentRiskModel) Name() db.ModelName {
 	return db.ModelPercentRisk
 }

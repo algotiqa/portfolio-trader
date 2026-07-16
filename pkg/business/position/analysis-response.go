@@ -9,6 +9,8 @@
 
 package position
 
+import "time"
+
 //=============================================================================
 //===
 //=== AnalysisResponse
@@ -21,13 +23,13 @@ type AnalysisResponse struct {
 	Baseline         *AnalysisResult `json:"baseline"`
 	Current          *AnalysisResult `json:"current"`
 	Selected         *AnalysisResult `json:"selected"`
+	Time             []time.Time     `json:"time"`
 	ParamSpecs       map[string]any  `json:"paramSpecs"`
 	ModelSpecs       map[string]any  `json:"modelSpecs"`
 	UsedMargin       float64         `json:"usedMargin"`
 	GrossRisk        float64         `json:"grossRisk"`
 	NetRisk          float64         `json:"netRisk"`
 	NoLosses         bool            `json:"noLosses"`
-	RuinCapital      float64         `json:"ruinCapital"`
 	CostPerOperation float64         `json:"costPerOperation"`
 }
 
@@ -50,11 +52,13 @@ type AnalysisResult struct {
 
 type ModelPerformance struct {
 	Equity            []float64 `json:"equity"`
-	Drawdown          []float64 `json:"drawdown"`
+	DrawdownPerc      []float64 `json:"drawdownPerc"`
 	Positions         []int     `json:"positions"`
 	Return            float64   `json:"return"`
 	MaxDrawdown       float64   `json:"maxDrawdown"`
+	MaxDrawdownPerc   float64   `json:"maxDrawdownPerc"`
 	ReturnDrawdRatio  float64   `json:"returnDrawdRatio"`
+	ReturnOnAccount   float64   `json:"returnOnAccount"`
 	Ruined            bool      `json:"ruined"`
 }
 

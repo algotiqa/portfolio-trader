@@ -11,6 +11,7 @@ package genetic
 
 import (
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
 
@@ -31,7 +32,7 @@ type PosProfitPart struct {
 	lenEnabled bool
 	len        int
 
-	lenFo *optimization.FieldOptimization
+	lenFo *core.FieldOptimization[int]
 }
 
 //=============================================================================
@@ -72,7 +73,7 @@ type EquityVsAvgPart struct {
 	lenEnabled bool
 	len        int
 
-	lenFo *optimization.FieldOptimization
+	lenFo *core.FieldOptimization[int]
 }
 
 //=============================================================================
@@ -115,8 +116,8 @@ type WinningPercPart struct {
 	percEnabled bool
 	perc        int
 
-	lenFo  *optimization.FieldOptimization
-	percFo *optimization.FieldOptimization
+	lenFo  *core.FieldOptimization[int]
+	percFo *core.FieldOptimization[int]
 }
 
 //=============================================================================
@@ -171,9 +172,9 @@ type OldVsNewPart struct {
 	oldPercEnabled bool
 	oldPerc        int
 
-	oldLenFo  *optimization.FieldOptimization
-	newLenFo  *optimization.FieldOptimization
-	oldPercFo *optimization.FieldOptimization
+	oldLenFo  *core.FieldOptimization[int]
+	newLenFo  *core.FieldOptimization[int]
+	oldPercFo *core.FieldOptimization[int]
 }
 
 //=============================================================================
@@ -232,8 +233,8 @@ type TrendlinePart struct {
 	valueEnabled bool
 	value        int
 
-	lenFo   *optimization.FieldOptimization
-	valueFo *optimization.FieldOptimization
+	lenFo   *core.FieldOptimization[int]
+	valueFo *core.FieldOptimization[int]
 }
 
 //=============================================================================

@@ -10,9 +10,7 @@
 package optimization
 
 import (
-	"errors"
-	"math/rand"
-	"strconv"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
 )
 
 //=============================================================================
@@ -37,17 +35,17 @@ type FilterConfig struct {
 	EnableTrendline bool   `json:"enableTrendline"`
 	EnableDrawdown  bool   `json:"enableDrawdown"`
 
-	PosProLen      FieldOptimization  `json:"posProLen"`
-	OldNewOldLen   FieldOptimization  `json:"oldNewOldLen"`
-	OldNewNewLen   FieldOptimization  `json:"oldNewNewLen"`
-	OldNewOldPerc  FieldOptimization  `json:"oldNewOldPerc"`
-	WinPercLen     FieldOptimization  `json:"winPercLen"`
-	WinPercPerc    FieldOptimization  `json:"winPercPerc"`
-	EquAvgLen      FieldOptimization  `json:"equAvgLen"`
-	TrendlineLen   FieldOptimization  `json:"trendlineLen"`
-	TrendlineValue FieldOptimization  `json:"trendlineValue"`
-	DrawdownMin    FieldOptimization  `json:"drawdownMin"`
-	DrawdownMax    FieldOptimization  `json:"drawdownMax"`
+	PosProLen      core.FieldOptimization[int]  `json:"posProLen"`
+	OldNewOldLen   core.FieldOptimization[int]  `json:"oldNewOldLen"`
+	OldNewNewLen   core.FieldOptimization[int]  `json:"oldNewNewLen"`
+	OldNewOldPerc  core.FieldOptimization[int]  `json:"oldNewOldPerc"`
+	WinPercLen     core.FieldOptimization[int]  `json:"winPercLen"`
+	WinPercPerc    core.FieldOptimization[int]  `json:"winPercPerc"`
+	EquAvgLen      core.FieldOptimization[int]  `json:"equAvgLen"`
+	TrendlineLen   core.FieldOptimization[int]  `json:"trendlineLen"`
+	TrendlineValue core.FieldOptimization[int]  `json:"trendlineValue"`
+	DrawdownMin    core.FieldOptimization[int]  `json:"drawdownMin"`
+	DrawdownMax    core.FieldOptimization[int]  `json:"drawdownMax"`
 }
 
 //=============================================================================
@@ -98,92 +96,6 @@ func (fc *FilterConfig) Validate() error {
 	}
 
 	return nil
-}
-
-//=============================================================================
-//===
-//=== FieldOptimization
-//===
-//=============================================================================
-
-type FieldOptimization struct {
-	Enabled  bool  `json:"enabled"`
-	CurValue int   `json:"curValue"`
-	MinValue int   `json:"minValue"`
-	MaxValue int   `json:"maxValue"`
-	Step     int   `json:"step"`
-
-	//--- Caching
-	steps    *[]int
-}
-
-//=============================================================================
-
-func (f *FieldOptimization) StepsCount() uint {
-	if !f.Enabled {
-		return 1
-	}
-
-	return uint((f.MaxValue - f.MinValue) / f.Step) +1
-}
-
-//=============================================================================
-
-func (f *FieldOptimization) Steps() *[]int {
-	if f.steps != nil {
-		return f.steps
-	}
-
-	list := []int{}
-
-	if !f.Enabled {
-		list = append(list, f.CurValue)
-	} else {
-		for i := f.MinValue; i<= f.MaxValue; i += f.Step {
-			list = append(list, i)
-		}
-	}
-
-	f.steps = &list
-
-	return &list
-}
-
-//=============================================================================
-
-func (f *FieldOptimization) Validate(min, max int) error {
-	if f.Enabled {
-		if f.MinValue < min || f.MinValue > max {
-			return errors.New("min value out of range ["+ strconv.Itoa(min) +".."+ strconv.Itoa(max) +"]")
-		}
-
-		if f.MaxValue < min || f.MaxValue > max {
-			return errors.New("max value out of range ["+ strconv.Itoa(min) +".."+ strconv.Itoa(max) +"]")
-		}
-
-		if f.MinValue > f.MaxValue {
-			return errors.New("min value greater than max value")
-		}
-
-		if f.Step < 1 || f.Step > max {
-			return errors.New("step value out of range [1.."+ strconv.Itoa(max) +"]")
-		}
-	} else {
-		if f.CurValue < min || f.CurValue > max {
-			return errors.New("current value out of range ["+ strconv.Itoa(min) +".."+ strconv.Itoa(max) +"]")
-		}
-	}
-
-	return nil
-}
-
-//=============================================================================
-
-func (f *FieldOptimization) RandomValue() int {
-	list := f.Steps()
-	idx  := rand.Intn(len(*list))
-
-	return (*list)[idx]
 }
 
 //=============================================================================

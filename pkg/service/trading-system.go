@@ -361,7 +361,7 @@ func getSimulationResult(c *auth.Context) {
 
 //=============================================================================
 //===
-//=== Position sizing
+//=== Position analysis
 //===
 //=============================================================================
 
@@ -408,6 +408,76 @@ func runPositionAnalysis(c *auth.Context) {
 				return c.ReturnObject(rep)
 			})
 		}
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================
+//===
+//=== Position optimization
+//===
+//=============================================================================
+
+func startPositionOptimization(c *auth.Context) {
+	tsId, err := c.GetIdFromUrl()
+
+	if err == nil {
+		rq := position.OptimizationRequest{}
+		err = c.BindParamsFromBody(&rq)
+
+		if err == nil {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+				errx := business.StartPositionOptimization(tx, c, tsId, &rq)
+
+				if errx != nil {
+					return errx
+				}
+
+				return c.ReturnObject(NewStatusOkResponse())
+			})
+		}
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================
+
+func stopPositionOptimization(c *auth.Context) {
+	tsId, err := c.GetIdFromUrl()
+
+	if err == nil {
+		err = business.StopPositionOptimization(c, tsId)
+
+		if err != nil {
+			c.ReturnError(err)
+		} else {
+			_ = c.ReturnObject(NewStatusOkResponse())
+		}
+
+		return
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================
+
+func getPositionOptimizationInfo(c *auth.Context) {
+	tsId, err := c.GetIdFromUrl()
+
+	if err == nil {
+		var res *position.OptimizationResponse
+		res, err = business.GetPositionOptimizationInfo(c, tsId)
+
+		if err != nil {
+			c.ReturnError(err)
+		} else {
+			_ = c.ReturnObject(res)
+		}
+
+		return
 	}
 
 	c.ReturnError(err)

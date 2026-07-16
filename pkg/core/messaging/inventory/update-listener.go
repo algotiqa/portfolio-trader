@@ -265,14 +265,14 @@ func getDefaultTradingPosition() (*db.TradingPosition,error) {
 	}
 
 	ps := &db.TradingPosition{
-		InitialCapital: position.DefInitialCapital,
-		RuinPercentage: position.DefRuinPercentage,
-		MarginOverride: nil,
-		MaxUnits      : position.DefMaxUnits,
-		RiskPerUnit   : position.DefRiskPerUnit,
-		RiskValue     : &position.DefRiskValue,
-		Model         : mod.Name(),
-		Config        : string(data),
+		InitialCapital : position.DefInitialCapital,
+		MaxTolDrawdPerc: position.DefMaxTolDrawdPerc,
+		MarginOverride : nil,
+		MaxUnits       : position.DefMaxUnits,
+		RiskPerUnit    : position.DefRiskPerUnit,
+		RiskValue      : &position.DefRiskValue,
+		Model          : mod.Name(),
+		Config         : string(data),
 	}
 
 	return ps,nil

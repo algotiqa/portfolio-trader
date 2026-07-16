@@ -56,6 +56,16 @@ func NewFixedUnitModel() *FixedUnitModel {
 
 //=============================================================================
 
+func NewFixedUnitModelWithParams(units int) *FixedUnitModel {
+	return &FixedUnitModel{
+		config: &FixedUnitConfig{
+			units: units,
+		},
+	}
+}
+
+//=============================================================================
+
 func (m *FixedUnitModel) Name() db.ModelName {
 	return db.ModelFixedUnit
 }

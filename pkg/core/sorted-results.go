@@ -16,7 +16,7 @@ import (
 
 //=============================================================================
 
-type SortedResults struct {
+type SortedResults[T any] struct {
 	Size    int
 	MaxSize int
 	Tree    *avl.Tree
@@ -24,8 +24,8 @@ type SortedResults struct {
 
 //=============================================================================
 
-func NewSortedResults(maxSize int, comparator utils.Comparator) *SortedResults {
-	return &SortedResults{
+func NewSortedResults[T any](maxSize int, comparator utils.Comparator) *SortedResults[T] {
+	return &SortedResults[T]{
 		Size   : 0,
 		MaxSize: maxSize,
 		Tree   : avl.NewWith(comparator),
@@ -34,24 +34,33 @@ func NewSortedResults(maxSize int, comparator utils.Comparator) *SortedResults {
 
 //=============================================================================
 
-func (sr *SortedResults) Add(item any) {
+func (sr *SortedResults[T]) Add(item T) {
 	sr.Tree.Put(item, nil)
 	sr.Size++
 
 	if sr.Size > sr.MaxSize {
-		sr.Tree.Remove(sr.Tree.Right().Key)
-		sr.Size--
+		node := sr.Tree.Right()
+		if node != nil {
+			sr.Tree.Remove(node.Key)
+			sr.Size--
+		}
 	}
 }
 
 //=============================================================================
 
-func (sr *SortedResults) ToList() []any {
+func (sr *SortedResults[T]) ToList() []T {
 	if sr.Tree == nil {
-		return []any{}
+		return []T{}
 	}
 
-	return sr.Tree.Keys()
+	keys := sr.Tree.Keys()
+	list := make([]T, len(keys))
+
+	for i, k := range keys {
+		list[i] = k.(T)
+	}
+	return list
 }
 
 //=============================================================================

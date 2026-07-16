@@ -1,6 +1,6 @@
 //=============================================================================
 //===
-//=== Copyright (C) 2024-present Andrea Carboni
+//=== Copyright (C) 2026-present Andrea Carboni
 //===
 //=== This source code is licensed under the Elastic License 2.0 (ELv2) available at:
 //=== https://github.com/algotiqa/docs/blob/main/LICENSE.md
@@ -102,43 +102,52 @@ func RunPositionAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, par *position.
 
 //=============================================================================
 
-//func StartFilterOptimization(tx *gorm.DB, c *auth.Context, tsId uint, oreq *filter.OptimizationRequest) error {
-//	ts, err := getTradingSystemAndCheckAccess(tx, c, tsId)
-//	if err != nil {
-//		return err
-//	}
-//
-//	trades, err := db.FindTradesByTsIdFromTime(tx, ts.Id, oreq.StartDate, nil)
-//	if err != nil {
-//		return err
-//	}
-//
-//	err = oreq.Validate()
-//	if err != nil {
-//		return err
-//	}
-//
-//	c.Log.Info("StartFilterOptimization: Starting optimization", "tsId", ts.Id, "tsName", ts.Name)
-//	filter.StartOptimization(ts, trades, oreq)
-//
-//	return nil
-//}
+func StartPositionOptimization(tx *gorm.DB, c *auth.Context, tsId uint, oreq *position.OptimizationRequest) error {
+	ts, err := getTradingSystemAndCheckAccess(tx, c, tsId)
+	if err != nil {
+		return err
+	}
+
+	err = oreq.Validate()
+	if err != nil {
+		return err
+	}
+
+	//--- Other needed data
+
+	fromTime, toTime, err := core.CalcSelectedPeriod(&oreq.RunConfig.Period, time.UTC)
+	if err != nil {
+		return err
+	}
+
+	trades, err := db.FindTradesByTsIdFromTime(tx, ts.Id, fromTime, toTime)
+	if err != nil {
+		return err
+	}
+
+	err = position.StartOptimization(ts, trades, oreq)
+	if err == nil {
+		c.Log.Info("StartPositionOptimization: Starting optimization", "tsId", ts.Id, "tsName", ts.Name)
+	}
+
+	return err
+}
 
 //=============================================================================
 
-//func StopFilterOptimization(c *auth.Context, tsId uint) error {
-//	c.Log.Info("StopFilterOptimization: Stopping optimization", "tsId", tsId)
-//	err := filter.StopOptimization(tsId)
-//
-//	return err
-//}
+func StopPositionOptimization(c *auth.Context, tsId uint) error {
+	c.Log.Info("StopPositionOptimization: Stopping optimization", "tsId", tsId)
+	err := position.StopOptimization(tsId)
+
+	return err
+}
 
 //=============================================================================
 
-//func GetFilterOptimizationInfo(c *auth.Context, tsId uint) (*filter.OptimizationResponse, error) {
-//	info := filter.GetOptimizationInfo(tsId)
-//	return filter.NewOptimizationResponse(info), nil
-//}
+func GetPositionOptimizationInfo(c *auth.Context, tsId uint) (*position.OptimizationResponse, error) {
+	info := position.GetOptimizationInfo(tsId)
+	return position.NewOptimizationResponse(info), nil
+}
 
 //=============================================================================
 //===
@@ -158,14 +167,14 @@ func convertPosition(m *position.Model, p *position.Parameters) (model.PositionM
 	}
 
 	tp := &db.TradingPosition{
-		InitialCapital: *p.InitialCapital,
-		RuinPercentage: *p.RuinPercentage,
-		MarginOverride: p.MarginOverride,
-		MaxUnits      : *p.MaxUnits,
-		RiskPerUnit   : p.RiskPerUnit,
-		RiskValue     : p.RiskValue,
-		Model         : mod.Name(),
-		Config        : string(data),
+		InitialCapital : *p.InitialCapital,
+		MaxTolDrawdPerc: *p.MaxTolDrawdPerc,
+		MarginOverride : p.MarginOverride,
+		MaxUnits       : *p.MaxUnits,
+		RiskPerUnit    : p.RiskPerUnit,
+		RiskValue      : p.RiskValue,
+		Model          : mod.Name(),
+		Config         : string(data),
 	}
 
 	return mod,tp,nil

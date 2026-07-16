@@ -26,7 +26,7 @@ type OptimizationResponse struct {
 	StartTime       time.Time     `json:"startTime"`
 	EndTime         time.Time     `json:"endTime"`
 	Status          string        `json:"status"`
-	Runs            []any         `json:"runs"`
+	Runs            []*Run        `json:"runs"`
 	BaseValue       float64       `json:"baseValue"`
 	BestValue       float64       `json:"bestValue"`
 	FieldToOptimize string        `json:"fieldToOptimize"`

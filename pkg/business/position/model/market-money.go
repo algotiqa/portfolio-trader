@@ -86,6 +86,21 @@ func NewMarketMoneyModel() *MarketMoneyModel {
 
 //=============================================================================
 
+func NewMarketMoneyModelWithParams(riskPerTradeOnCap, riskPerTradeOnEarn float64,
+								   moneyConversion MoneyConversionType,
+								   percentageOnCapital float64) *MarketMoneyModel {
+	return &MarketMoneyModel{
+		config: &MarketMoneyConfig{
+			riskPerTradeOnCap  : riskPerTradeOnCap,
+			riskPerTradeOnEarn : riskPerTradeOnEarn,
+			moneyConversion    : moneyConversion,
+			percentageOnCapital: percentageOnCapital,
+		},
+	}
+}
+
+//=============================================================================
+
 func (m *MarketMoneyModel) Name() db.ModelName {
 	return db.ModelMarketMoney
 }

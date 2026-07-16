@@ -51,7 +51,7 @@ type OptimizationInfo struct {
 	StartTime time.Time
 	EndTime   time.Time
 	Status    string
-	results   *core.SortedResults
+	results   *core.SortedResults[*Run]
 
 	StartDate       *time.Time
 	BaseValue       float64
@@ -76,7 +76,7 @@ func NewOptimizationInfo(maxResultSize int, field string, fc *optimization.Filte
 	oi.CurrStep = 0
 	oi.StartTime = time.Now()
 	oi.Status = OptimStatusRunning
-	oi.results = core.NewSortedResults(maxResultSize, runComparator)
+	oi.results = core.NewSortedResults[*Run](maxResultSize, runComparator)
 	oi.BaseValue = baseValue
 	oi.BestValue = baseValue
 	oi.MaxSteps = steps
@@ -99,7 +99,7 @@ func NewOptimizationInfo(maxResultSize int, field string, fc *optimization.Filte
 //===
 //=============================================================================
 
-func (oi *OptimizationInfo) GetRuns() []any {
+func (oi *OptimizationInfo) GetRuns() []*Run {
 	oi.Lock()
 	defer oi.Unlock()
 

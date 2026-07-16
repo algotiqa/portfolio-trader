@@ -159,15 +159,15 @@ const (
 //-----------------------------------------------------------------------------
 
 type TradingPosition struct {
-	TradingSystemId   uint        `json:"omit" gorm:"primaryKey"`
-	InitialCapital    float64     `json:"initialCapital"`
-	RuinPercentage    float64     `json:"ruinPercentage"`
-	MarginOverride    *float64    `json:"marginOverride"`
-	MaxUnits          int         `json:"maxUnits"`
-	RiskPerUnit       RpuType     `json:"riskPerUnit"`
-	RiskValue         *float64    `json:"riskValue"`
-	Model             ModelName   `json:"model"`
-	Config            string      `json:"config"`
+	TradingSystemId   uint       `json:"omit" gorm:"primaryKey"`
+	InitialCapital    float64    `json:"initialCapital"`
+	MaxTolDrawdPerc   float64    `json:"maxTolDrawdPerc"`
+	MarginOverride   *float64    `json:"marginOverride"`
+	MaxUnits          int        `json:"maxUnits"`
+	RiskPerUnit       RpuType    `json:"riskPerUnit"`
+	RiskValue        *float64    `json:"riskValue"`
+	Model             ModelName  `json:"model"`
+	Config            string     `json:"config"`
 }
 
 //=============================================================================

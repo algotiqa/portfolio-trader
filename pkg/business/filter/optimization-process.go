@@ -59,7 +59,7 @@ func (op *OptimizationProcess) Start() {
 //=============================================================================
 
 func (op *OptimizationProcess) Stop() {
-	slog.Info("Stop: Stopping optimization process", "tsId", op.ts.Id)
+	slog.Info("Stop: Stopping filter optimization process", "tsId", op.ts.Id)
 	op.stopping = true
 }
 

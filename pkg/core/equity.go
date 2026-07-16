@@ -65,17 +65,17 @@ func BuildEquity(profits *[]float64) *[]float64 {
 //=============================================================================
 
 func BuildDrawDown(equity *[]float64) (*[]float64, float64) {
-	maxProfit    := 0.0
+	maxEquity    := 0.0
 	currDrawDown := 0.0
 	maxDrawDown  := 0.0
 	drawDown     := []float64{}
 
-	for _, currProfit := range *equity {
-		if currProfit >= maxProfit {
-			maxProfit = currProfit
+	for _, currEquity := range *equity {
+		if currEquity >= maxEquity {
+			maxEquity    = currEquity
 			currDrawDown = 0
 		} else {
-			currDrawDown = currProfit - maxProfit
+			currDrawDown = currEquity - maxEquity
 		}
 
 		drawDown = append(drawDown, currDrawDown)
@@ -86,6 +86,43 @@ func BuildDrawDown(equity *[]float64) (*[]float64, float64) {
 	}
 
 	return &drawDown, maxDrawDown
+}
+
+//=============================================================================
+
+func BuildDrawDownPercentage(equity *[]float64) (*[]float64, float64, float64) {
+	maxEquity       := 0.0
+	curDrawDown     := 0.0
+	maxDrawDown     := 0.0
+	curDrawDownPerc := 0.0
+	maxDrawDownPerc := 0.0
+	drawDownPerc    := []float64{}
+
+	for _, currEquity := range *equity {
+		if currEquity >= maxEquity {
+			maxEquity   = currEquity
+			curDrawDown = 0
+		} else {
+			curDrawDown = currEquity - maxEquity
+		}
+
+		curDrawDownPerc = 0
+		if maxEquity != 0 {
+			curDrawDownPerc = Trunc2d(curDrawDown * 100 / maxEquity)
+		}
+
+		drawDownPerc = append(drawDownPerc, curDrawDownPerc)
+
+		if curDrawDown < maxDrawDown {
+			maxDrawDown = curDrawDown
+		}
+
+		if curDrawDownPerc < maxDrawDownPerc {
+			maxDrawDownPerc = curDrawDownPerc
+		}
+	}
+
+	return &drawDownPerc, maxDrawDownPerc, maxDrawDown
 }
 
 //=============================================================================

@@ -60,6 +60,17 @@ func NewPercentVolatilityModel() *PercentVolatilityModel {
 
 //=============================================================================
 
+func NewPercentVolatilityModelWithParams(averageLength int, maxVolatility float64) *PercentVolatilityModel {
+	return &PercentVolatilityModel{
+		config: &PercentVolatilityConfig{
+			averageLength: averageLength,
+			maxVolatility: maxVolatility,
+		},
+	}
+}
+
+//=============================================================================
+
 func (m *PercentVolatilityModel) Name() db.ModelName {
 	return db.ModelPercentVolatility
 }
