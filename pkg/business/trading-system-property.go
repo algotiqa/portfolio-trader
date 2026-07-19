@@ -237,7 +237,7 @@ func updateStatus(ts *db.TradingSystem) {
 	if !ts.Running {
 		ts.Status = db.TsStatusOff
 	} else if ts.Active {
-		ts.Status = db.TsStatusRunning
+		ts.Status = db.TsStatusActive
 	} else {
 		ts.Status = db.TsStatusPaused
 	}

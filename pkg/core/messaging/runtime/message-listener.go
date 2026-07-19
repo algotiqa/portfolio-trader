@@ -259,7 +259,7 @@ func updateTradingSystem(tx *gorm.DB, ts *db.TradingSystem) error {
 		idleStart := time.Now().Add(-time.Hour * 24 * time.Duration(consts.IdleDays))
 
 		if ts.LastTrade.After(idleStart) {
-			ts.Status = db.TsStatusRunning
+			ts.Status = db.TsStatusActive
 		}
 	}
 

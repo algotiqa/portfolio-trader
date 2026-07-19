@@ -37,11 +37,11 @@ type Portfolio struct {
 type TsStatus int8
 
 const (
-	TsStatusOff     TsStatus = 0
-	TsStatusPaused  TsStatus = 1
-	TsStatusRunning TsStatus = 2
-	TsStatusIdle    TsStatus = 3
-	TsStatusBroken  TsStatus = 4
+	TsStatusOff    TsStatus = 0
+	TsStatusPaused TsStatus = 1
+	TsStatusActive TsStatus = 2
+	TsStatusIdle   TsStatus = 3
+	TsStatusBroken TsStatus = 4
 )
 
 //-----------------------------------------------------------------------------

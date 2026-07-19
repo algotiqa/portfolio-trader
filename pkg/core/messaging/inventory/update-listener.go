@@ -105,15 +105,6 @@ func setTradingSystem(tsm *TradingSystemMessage, create bool) bool {
 			ts.Status          = db.TsStatusOff
 			ts.Active          = false
 			ts.SuggestedAction = db.TsActionNone
-			//ts.PositionModel   = model.FixedUnit
-			//
-			//def := model.NewFixedUnitDefaultConfig()
-			//defStr,errC := json.Marshal(def)
-			//if errC != nil {
-			//	return errC
-			//}
-			//
-			//ts.PositionConfig = string(defStr)
 		} else {
 			isNew = false
 

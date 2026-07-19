@@ -79,7 +79,7 @@ func GetTradingSystemsInIdle() (*[]db.TradingSystem, error) {
 //=============================================================================
 
 func updateTradingSystem(ts *db.TradingSystem) error {
-	if ts.Status == db.TsStatusRunning {
+	if ts.Status == db.TsStatusActive {
 		ts.Status = db.TsStatusIdle
 	} else if ts.Status == db.TsStatusIdle {
 		brokenDate := time.Now().Add(-time.Hour * 24 * time.Duration(consts.BrokenDays))
