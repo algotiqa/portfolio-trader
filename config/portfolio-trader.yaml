@@ -3,19 +3,19 @@ application:
   production : false
   debug      : false
 database:
-  address : algotiqa-server:3401
+  address : portfolio-db:3306
   name    : portfolio
   username: admin
   password: admin
 authentication:
-  authority   : https://algotiqa-server:8443/auth/realms/algotiqa
+  authority   : https://algotiqa:8443/auth/realms/algotiqa
   clientId    : algotiqa-backend
   clientSecret: PUT_YOUR_KEY_HERE
 platform:
-  storage: https://algotiqa-server:8452/api/storage
-  data   : https://algotiqa-server:8446/api/collector
+  storage: https://storage-manager:8452/api/storage
+  data   : https://data-collector:8446/api/collector
 messaging:
-  address : algotiqa-server:8450
+  address : rabbitmq:5672
   username: admin
   password: admin
   journal:
