@@ -3,7 +3,7 @@ module github.com/algotiqa/portfolio-trader
 go 1.25.8
 
 require (
-	github.com/algotiqa/core v1.21.1
+	github.com/algotiqa/core v1.22.1
 	github.com/algotiqa/types v0.0.8
 	github.com/emirpasic/gods v1.18.1
 	github.com/gin-gonic/gin v1.12.0
