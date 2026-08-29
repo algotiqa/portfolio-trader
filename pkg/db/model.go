@@ -103,6 +103,12 @@ type TradingSystem struct {
 
 //=============================================================================
 
+func (ts TradingSystem) IsTrading() bool {
+	return ts.Finalized && ts.Trading
+}
+
+//=============================================================================
+
 type TradingFilter struct {
 	TradingSystemId  uint `json:"omit" gorm:"primaryKey"`
 	EquAvgEnabled    bool `json:"equAvgEnabled"`

@@ -95,7 +95,9 @@ func updateSystemsForUser(user string) {
 		slog.Info("updateSystemsForUser: Updating trading systems", "user", user, "count", len(*list))
 
 		for _, ts := range *list {
-			updateTradingSystem(&ts)
+			if ts.IsTrading() {
+				updateTradingSystem(&ts)
+			}
 		}
 	}
 }
