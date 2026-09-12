@@ -18,6 +18,51 @@ import (
 
 //=============================================================================
 
+func getAssignableSystems(c *auth.Context) {
+	id, err := c.GetIdFromUrl()
+
+	if err == nil {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+			list, errt := business.GetAssignableSystems(tx, c, id)
+
+			if errt != nil {
+				return errt
+			}
+
+			return c.ReturnList(list, 0, 5000, len(*list))
+		})
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================
+
+func assignSystemsToPortfolio(c *auth.Context) {
+	var list []int
+	err := c.BindParamsFromBody(&list)
+
+	if err == nil {
+		id, err := c.GetIdFromUrl()
+
+		if err == nil {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+				errt := business.AssignSystemsToPortfolio(tx, c, id, list)
+
+				if errt != nil {
+					return errt
+				}
+
+				return c.ReturnObject("")
+			})
+		}
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================
+
 func getPortfolios(c *auth.Context) {
 	filter := map[string]any{}
 	offset, limit, err := c.GetPagingParams()

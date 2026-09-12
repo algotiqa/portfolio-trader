@@ -58,6 +58,23 @@ func DeletePortfolio(tx *gorm.DB, id uint) error {
 }
 
 //=============================================================================
+
+func GetAssignableSystems(tx *gorm.DB, c *auth.Context, id uint) (*[]db.TradingSystemAssignable,error) {
+	p,err := getPortfolio(tx, c, id, "GetAssignableSystems")
+	if err != nil {
+		return nil, err
+	}
+
+	return db.GetAssignableTradingSystems(tx, id, p.Management == db.ManagementTypeAuto)
+}
+
+//=============================================================================
+
+func AssignSystemsToPortfolio(tx *gorm.DB, c *auth.Context, id uint, list []int) error {
+	return nil
+}
+
+//=============================================================================
 //===
 //=== Private methods
 //===
@@ -111,6 +128,31 @@ func buildPortfolioTree(log *slog.Logger, poList *[]db.Portfolio, tsList *[]db.T
 	}
 
 	return &result
+}
+
+//=============================================================================
+
+func getPortfolio(tx *gorm.DB, c *auth.Context, id uint, function string) (*db.Portfolio, error) {
+	p, err := db.GetPortfolioById(tx, id)
+
+	if err != nil {
+		c.Log.Error(function+": Could not retrieve portfolio", "error", err.Error())
+		return nil, err
+	}
+
+	if p == nil {
+		c.Log.Error(function+": Portfolio was not found", "id", id)
+		return nil, req.NewNotFoundError("Portfolio was not found: %v", id)
+	}
+
+	if !c.Session.IsAdmin() {
+		if p.Username != c.Session.Username {
+			c.Log.Error(function+": Portfolio not owned by user", "id", id)
+			return nil, req.NewForbiddenError("Portfolio is not owned by user: %v", id)
+		}
+	}
+
+	return p, nil
 }
 
 //=============================================================================

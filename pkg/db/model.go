@@ -76,6 +76,15 @@ const (
 
 //-----------------------------------------------------------------------------
 
+type EngineCode string
+
+const (
+	EngineCodeTiq      EngineCode = "tiq"
+	EngineCodeExternal EngineCode = "external"
+)
+
+//-----------------------------------------------------------------------------
+
 type TradingSystem struct {
 	Id               uint         `json:"id" gorm:"primaryKey"`
 	Username         string       `json:"username"`
@@ -117,7 +126,7 @@ type TradingSystem struct {
 	Timezone         string       `json:"timezone"`
 	InSampleFrom     types.Date   `json:"inSampleFrom"`
 	InSampleTo       types.Date   `json:"inSampleTo"`
-	EngineCode       string       `json:"engineCode"`
+	EngineCode       EngineCode   `json:"engineCode"`
 }
 
 //=============================================================================
@@ -249,6 +258,21 @@ type LivePeriod struct {
 	TradingSystemId uint      `json:"tradingSystemId"`
 	Period          time.Time `json:"period"`
 	Active          bool      `json:"active"`
+}
+
+//=============================================================================
+
+type TradingSystemAssignable struct {
+	Id             uint       `json:"id"`
+	Name           string     `json:"name"`
+	Timeframe      int        `json:"timeframe"`
+	StrategyType   string     `json:"strategyType"`
+	MarketType     string     `json:"marketType"`
+	DataSymbol     string     `json:"dataSymbol"`
+	BrokerSymbol   string     `json:"brokerSymbol"`
+	PortfolioName  string     `json:"portfolioName"`
+	AccountCode    string     `json:"accountCode"`
+	AccountName    string     `json:"accountName"`
 }
 
 //=============================================================================

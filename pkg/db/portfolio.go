@@ -10,6 +10,8 @@
 package db
 
 import (
+	"strconv"
+
 	"github.com/algotiqa/core/req"
 	"gorm.io/gorm"
 )
@@ -29,6 +31,34 @@ func GetPortfolioById(tx *gorm.DB, id uint) (*Portfolio, error) {
 	}
 
 	return nil, nil
+}
+
+//=============================================================================
+
+func GetAssignableTradingSystems(tx *gorm.DB, id uint, internal bool) (*[]TradingSystemAssignable, error) {
+	var list []TradingSystemAssignable
+
+	sId  := strconv.Itoa(int(id))
+	oper := "<>"
+
+	if !internal {
+		oper = "="
+	}
+
+	filter := "(trading_system.portfolio_id <> "+ sId +" OR trading_system.portfolio_id IS NULL) "+
+		"AND trading_system.finalized = 1 AND trading_system.trading = 1 " +
+		"AND trading_system.engine_code "+ oper +" '"+ string(EngineCodeExternal) +"'"
+
+	res := tx.Model(&TradingSystem{}).Select("trading_system.*, " +
+		"portfolio.name as portfolio_name, portfolio.account_name, portfolio.account_code").
+		Joins("LEFT JOIN portfolio ON trading_system.portfolio_id = portfolio.id").
+		Where(filter).Find(&list).Order("trading_system.name")
+
+	if res.Error != nil {
+		return nil, req.NewServerErrorByError(res.Error)
+	}
+
+	return &list, nil
 }
 
 //=============================================================================
