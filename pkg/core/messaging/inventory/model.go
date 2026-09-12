@@ -9,7 +9,10 @@
 
 package inventory
 
-import "github.com/algotiqa/types"
+import (
+	"github.com/algotiqa/portfolio-trader/pkg/db"
+	"github.com/algotiqa/types"
+)
 
 //=============================================================================
 //=== Entities
@@ -53,11 +56,11 @@ type Connection struct {
 	SystemCode           string `json:"systemCode"`
 	SystemName           string `json:"systemName"`
 	SystemConfig         string `json:"systemConfig"`
-	InstanceCode         string `json:"instanceCode"`
 	SupportsData         bool   `json:"supportsData"`
 	SupportsBroker       bool   `json:"supportsBroker"`
 	SupportsMultipleData bool   `json:"supportsMultipleData"`
 	SupportsInventory    bool   `json:"supportsInventory"`
+	SupportsAccount      bool   `json:"supportsAccount"`
 }
 
 //=============================================================================
@@ -74,9 +77,11 @@ type Exchange struct {
 //=============================================================================
 
 type Currency struct {
-	Id     uint   `json:"id"`
-	Code   string `json:"code"`
-	Symbol string `json:"symbol"`
+	Id        uint    `json:"id"`
+	Code      string  `json:"code"`
+	Name      string  `json:"name"`
+	Symbol    string  `json:"symbol"`
+	LastValue float64 `json:"lastValue"`
 }
 
 //=============================================================================
@@ -92,12 +97,13 @@ type TradingSession struct {
 type TradingSystem struct {
 	Id               uint       `json:"id"`
 	Username         string     `json:"username"`
-	Name             string     `json:"name"`
-	Timeframe        int        `json:"timeframe"`
 	DataProductId    uint       `json:"dataProductId"`
 	BrokerProductId  uint       `json:"brokerProductId"`
 	TradingSessionId uint       `json:"tradingSessionId"`
+	PortfolioId      *uint      `json:"portfolioId"`
 	AgentProfileId   *uint      `json:"agentProfileId"`
+	Name             string     `json:"name"`
+	Timeframe        int        `json:"timeframe"`
 	StrategyType     string     `json:"strategyType"`
 	Overnight        bool       `json:"overnight"`
 	Tags             string     `json:"tags"`
@@ -106,6 +112,32 @@ type TradingSystem struct {
 	InSampleFrom     types.Date `json:"inSampleFrom"`
 	InSampleTo       types.Date `json:"inSampleTo"`
 	EngineCode       string     `json:"engineCode"`
+}
+
+//=============================================================================
+
+type Account struct {
+	Id              uint    `json:"id"`
+	Username        string  `json:"username"`
+	ConnectionId    uint    `json:"connectionId"`
+	CurrencyId      uint    `json:"currencyId"`
+	Code            string  `json:"code"`
+	Name            string  `json:"name"`
+	CurrentCapital  float64 `json:"currentCapital"`
+	SupportsAccount bool    `json:"supportsAccount"`
+	StatusMessage   string  `json:"statusMessage"`
+}
+
+//=============================================================================
+
+type Portfolio struct {
+	Id             uint              `json:"id"`
+	Username       string            `json:"username"`
+	AccountId      uint              `json:"accountId"`
+	Name           string            `json:"name"`
+	Management     db.ManagementType `json:"management"`
+	AccountPerc    float64           `json:"accountPerc"`
+	MaxMarginPerc  float64           `json:"maxMarginPerc"`
 }
 
 //=============================================================================
@@ -137,6 +169,22 @@ type TradingSystemMessage struct {
 	Exchange       Exchange       `json:"exchange"`
 	PortfolioPack  []byte         `json:"portfolioPack"`
 	StoragePack    []byte         `json:"storagePack"`
+}
+
+//=============================================================================
+
+type AccountMessage struct {
+	Account    Account    `json:"account"`
+	Connection Connection `json:"connection"`
+	Currency   Currency   `json:"currency"`
+}
+
+//=============================================================================
+
+type PortfolioMessage struct {
+	Portfolio  Portfolio `json:"portfolio"`
+	Account    Account   `json:"account"`
+	Currency   Currency  `json:"currency"`
 }
 
 //=============================================================================

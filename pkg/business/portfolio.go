@@ -25,7 +25,7 @@ func GetPortfolios(tx *gorm.DB, c *auth.Context, filter map[string]any, offset i
 		filter["username"] = c.Session.Username
 	}
 
-	return db.GetPortfolios(tx, filter, offset, limit)
+	return nil,nil //db.GetPortfolios(tx, filter, offset, limit)
 }
 
 //=============================================================================
@@ -49,6 +49,12 @@ func GetPortfolioTree(tx *gorm.DB, c *auth.Context, filter map[string]any, offse
 	}
 
 	return buildPortfolioTree(c.Log, poList, tsList), nil
+}
+
+//=============================================================================
+
+func DeletePortfolio(tx *gorm.DB, id uint) error {
+	return db.DeletePortfolio(tx, id)
 }
 
 //=============================================================================
@@ -76,13 +82,13 @@ func buildPortfolioTree(log *slog.Logger, poList *[]db.Portfolio, tsList *[]db.T
 
 	//--- Step 2: Build the tree
 
-	for key, p := range fullMap {
-		if p.ParentId != 0 {
-			parent := fullMap[p.ParentId]
-			parent.AddChild(p)
-			delete(nodeMap, key)
-		}
-	}
+	//for key, p := range fullMap {
+	//	if p.ParentId != 0 {
+	//		parent := fullMap[p.ParentId]
+	//		parent.AddChild(p)
+	//		delete(nodeMap, key)
+	//	}
+	//}
 
 	//--- Step 2: Add trading system information
 

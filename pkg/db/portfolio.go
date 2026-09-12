@@ -16,15 +16,39 @@ import (
 
 //=============================================================================
 
-func GetPortfolios(tx *gorm.DB, filter map[string]any, offset int, limit int) (*[]Portfolio, error) {
+func GetPortfolioById(tx *gorm.DB, id uint) (*Portfolio, error) {
 	var list []Portfolio
-	res := tx.Where(filter).Offset(offset).Limit(limit).Find(&list)
+	res := tx.Find(&list, id)
 
 	if res.Error != nil {
 		return nil, req.NewServerErrorByError(res.Error)
 	}
 
-	return &list, nil
+	if len(list) == 1 {
+		return &list[0], nil
+	}
+
+	return nil, nil
+}
+
+//=============================================================================
+
+func UpdatePortfolio(tx *gorm.DB, p *Portfolio) error {
+	return tx.Save(p).Error
+}
+
+//=============================================================================
+
+func UpdateAccountInfo(tx *gorm.DB, accountId uint, values map[string]interface{}) error {
+	return tx.Model(&Portfolio{}).
+		Where("account_id", accountId).
+		Updates(values).Error
+}
+
+//=============================================================================
+
+func DeletePortfolio(tx *gorm.DB, id uint) error {
+	return tx.Delete(&Portfolio{}, id).Error
 }
 
 //=============================================================================

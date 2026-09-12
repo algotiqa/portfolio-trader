@@ -25,11 +25,30 @@ import (
 //===
 //=============================================================================
 
+type ManagementType string
+
+const (
+	ManagementTypeManual ManagementType = "M"
+	ManagementTypeAuto   ManagementType = "A"
+)
+
+//-----------------------------------------------------------------------------
+
 type Portfolio struct {
-	Id       uint   `json:"id" gorm:"primaryKey"`
-	ParentId uint   `json:"parentId"`
-	Username string `json:"username"`
-	Name     string `json:"name"`
+	Id                     uint           `json:"id" gorm:"primaryKey"`
+	Username               string         `json:"username"`
+	Name                   string         `json:"name"`
+	Management             ManagementType `json:"management"`
+	AccountPerc            float64        `json:"accountPerc"`
+	MaxMarginPerc          float64        `json:"maxMarginPerc"`
+	AccountId              uint           `json:"accountId"`
+	AccountCode            string         `json:"accountCode"`
+	AccountName            string         `json:"accountName"`
+	AccountCurrentCapital  float64        `json:"accountCurrentCapital"`
+	AccountActive          bool           `json:"accountActive"`
+	AccountCurrencyId      uint           `json:"accountCurrencyId"`
+	AccountCurrencyCode    string         `json:"accountCurrencyCode"`
+	AccountCurrencySymbol  string         `json:"accountCurrencySymbol"`
 }
 
 //=============================================================================
