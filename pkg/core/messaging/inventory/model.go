@@ -60,7 +60,7 @@ type Connection struct {
 	SupportsBroker       bool   `json:"supportsBroker"`
 	SupportsMultipleData bool   `json:"supportsMultipleData"`
 	SupportsInventory    bool   `json:"supportsInventory"`
-	SupportsAccount      bool   `json:"supportsAccount"`
+	SupportsAccounting   bool   `json:"supportsAccounting"`
 }
 
 //=============================================================================
@@ -117,15 +117,15 @@ type TradingSystem struct {
 //=============================================================================
 
 type Account struct {
-	Id              uint    `json:"id"`
-	Username        string  `json:"username"`
-	ConnectionId    uint    `json:"connectionId"`
-	CurrencyId      uint    `json:"currencyId"`
-	Code            string  `json:"code"`
-	Name            string  `json:"name"`
-	CurrentCapital  float64 `json:"currentCapital"`
-	SupportsAccount bool    `json:"supportsAccount"`
-	StatusMessage   string  `json:"statusMessage"`
+	Id                 uint    `json:"id"`
+	Username           string  `json:"username"`
+	ConnectionId       uint    `json:"connectionId"`
+	CurrencyId         uint    `json:"currencyId"`
+	Code               string  `json:"code"`
+	Name               string  `json:"name"`
+	CurrentCapital     float64 `json:"currentCapital"`
+	SupportsAccounting bool    `json:"supportsAccounting"`
+	StatusMessage      string  `json:"statusMessage"`
 }
 
 //=============================================================================
@@ -135,7 +135,6 @@ type Portfolio struct {
 	Username       string            `json:"username"`
 	AccountId      uint              `json:"accountId"`
 	Name           string            `json:"name"`
-	Management     db.ManagementType `json:"management"`
 	AccountPerc    float64           `json:"accountPerc"`
 	MaxMarginPerc  float64           `json:"maxMarginPerc"`
 }

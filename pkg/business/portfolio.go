@@ -10,8 +10,6 @@
 package business
 
 import (
-	"log/slog"
-
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
@@ -30,106 +28,100 @@ func GetPortfolios(tx *gorm.DB, c *auth.Context, filter map[string]any, offset i
 
 //=============================================================================
 
-func GetPortfolioTree(tx *gorm.DB, c *auth.Context, filter map[string]any, offset int, limit int) (*[]*PortfolioTree, error) {
-
-	//--- The only valid filter can be the username
-
-	//--- Get all portfolios
-
-	poList, err := GetPortfolios(tx, c, filter, offset, limit)
-	if err != nil {
-		return nil, req.NewServerErrorByError(err)
-	}
-
-	//--- Get all trading systems
-
-	tsList, err := GetTradingSystems(tx, c, filter, offset, limit, false)
-	if err != nil {
-		return nil, req.NewServerErrorByError(err)
-	}
-
-	return buildPortfolioTree(c.Log, poList, tsList), nil
-}
-
-//=============================================================================
-
 func DeletePortfolio(tx *gorm.DB, id uint) error {
 	return db.DeletePortfolio(tx, id)
 }
 
 //=============================================================================
 
-func GetAssignableSystems(tx *gorm.DB, c *auth.Context, id uint) (*[]db.TradingSystemAssignable,error) {
+func GetAssignableTradingSystems(tx *gorm.DB, c *auth.Context, id uint) (*[]db.TradingSystemAssignable,error) {
 	p,err := getPortfolio(tx, c, id, "GetAssignableSystems")
 	if err != nil {
 		return nil, err
 	}
 
-	return db.GetAssignableTradingSystems(tx, id, p.Management == db.ManagementTypeAuto)
+	return db.GetAssignableTradingSystems(tx, id, p.ConnectionId, !p.SupportsAccounting)
 }
 
 //=============================================================================
 
-func AssignSystemsToPortfolio(tx *gorm.DB, c *auth.Context, id uint, list []int) error {
-	return nil
+func GetAssignedTradingSystems(tx *gorm.DB, c *auth.Context, id uint) (*[]db.TradingSystem,error) {
+	_,err := getPortfolio(tx, c, id, "GetAssignedTradingSystems")
+	if err != nil {
+		return nil, err
+	}
+
+	filter := map[string]any{}
+	filter["portfolio_id"] = id
+
+	return db.GetTradingSystems(tx, filter, 0, 5000)
+}
+
+//=============================================================================
+
+func AssignTradingSystemsToPortfolio(tx *gorm.DB, c *auth.Context, id uint, list []uint) error {
+	p,err := getPortfolio(tx, c, id, "AssignTradingSystemsToPortfolio")
+	if err != nil {
+		return err
+	}
+
+	assignables,errX := db.GetAssignableTradingSystems(tx, id, p.ConnectionId, !p.SupportsAccounting)
+	if errX != nil {
+		return errX
+	}
+
+	assMap := buildAssignableMap(assignables)
+	for _, tsId := range list {
+		if _,ok := assMap[tsId]; !ok {
+			return req.NewBadRequestError("Trading system with id=%v is not assignable to portfolio", tsId)
+		}
+	}
+
+	err = db.UpdatePortfolioForTradingSystems(tx, list, &id)
+
+	if err == nil {
+		c.Log.Info("AssignTradingSystemsToPortfolio: Assigned portfolio to trading systems", "portfolioId", id, "tradingSystems", list)
+	}
+
+	return err
+}
+
+//=============================================================================
+
+func UnassignTradingSystemsFromPortfolio(tx *gorm.DB, c *auth.Context, id uint, list []uint) error {
+	_,err := getPortfolio(tx, c, id, "UnassignTradingSystemsFromPortfolio")
+	if err != nil {
+		return err
+	}
+
+	filter := map[string]any{}
+	filter["portfolio_id"] = id
+
+	assigned,errX := db.GetTradingSystems(tx, filter, 0, 5000)
+	if errX != nil {
+		return errX
+	}
+
+	assMap := buildAssignedMap(assigned)
+	for _, tsId := range list {
+		if _,ok := assMap[tsId]; !ok {
+			return req.NewBadRequestError("Trading system with id=%v is not assignable to portfolio", tsId)
+		}
+	}
+
+	err = db.UpdatePortfolioForTradingSystems(tx, list, nil)
+
+	if err == nil {
+		c.Log.Info("UnassignTradingSystemsFromPortfolio: Unassigned portfolio to trading systems", "portfolioId", id, "tradingSystems", list)
+	}
+
+	return err
 }
 
 //=============================================================================
 //===
 //=== Private methods
 //===
-//=============================================================================
-
-func buildPortfolioTree(log *slog.Logger, poList *[]db.Portfolio, tsList *[]db.TradingSystem) *[]*PortfolioTree {
-
-	//--- Step 1: Collect all nodes into a map
-
-	nodeMap := map[uint]*PortfolioTree{}
-	fullMap := map[uint]*PortfolioTree{}
-
-	for _, p := range *poList {
-		pt := &PortfolioTree{
-			Portfolio:      p,
-			Children:       []*PortfolioTree{},
-			TradingSystems: []*db.TradingSystem{},
-		}
-		nodeMap[p.Id] = pt
-		fullMap[p.Id] = pt
-	}
-
-	//--- Step 2: Build the tree
-
-	//for key, p := range fullMap {
-	//	if p.ParentId != 0 {
-	//		parent := fullMap[p.ParentId]
-	//		parent.AddChild(p)
-	//		delete(nodeMap, key)
-	//	}
-	//}
-
-	//--- Step 2: Add trading system information
-
-	for _, ts := range *tsList {
-		aux := ts
-		portfolio := fullMap[*ts.PortfolioId]
-		portfolio.AddTradingSystem(&aux)
-	}
-
-	//--- Step 3: Return tree
-
-	if len(*poList) > 0 && len(nodeMap) == 0 {
-		log.Error("Portfolios have circular loops (!)")
-	}
-
-	var result []*PortfolioTree
-
-	for _, p := range nodeMap {
-		result = append(result, p)
-	}
-
-	return &result
-}
-
 //=============================================================================
 
 func getPortfolio(tx *gorm.DB, c *auth.Context, id uint, function string) (*db.Portfolio, error) {
@@ -153,6 +145,28 @@ func getPortfolio(tx *gorm.DB, c *auth.Context, id uint, function string) (*db.P
 	}
 
 	return p, nil
+}
+
+//=============================================================================
+
+func buildAssignableMap(list *[]db.TradingSystemAssignable) map[uint]bool {
+	var result map[uint]bool = make(map[uint]bool)
+	for _, ts := range *list {
+		result[ts.Id] = true
+	}
+
+	return result
+}
+
+//=============================================================================
+
+func buildAssignedMap(list *[]db.TradingSystem) map[uint]bool {
+	var result map[uint]bool = make(map[uint]bool)
+	for _, ts := range *list {
+		result[ts.Id] = true
+	}
+
+	return result
 }
 
 //=============================================================================

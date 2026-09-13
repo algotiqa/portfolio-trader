@@ -148,6 +148,12 @@ func UpdateBrokerProductInfo(tx *gorm.DB, brokerProductId uint, values map[strin
 
 //=============================================================================
 
+func UpdatePortfolioForTradingSystems(tx *gorm.DB, tsIds []uint, portId *uint) error {
+	return tx.Model(&TradingSystem{}).Where("id IN ?", tsIds).Update("portfolio_id", portId).Error
+}
+
+//=============================================================================
+
 func DeleteTradingSystem(tx *gorm.DB, id uint) error {
 	return tx.Delete(&TradingSystem{}, id).Error
 }

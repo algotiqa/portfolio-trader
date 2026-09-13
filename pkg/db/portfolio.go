@@ -35,19 +35,20 @@ func GetPortfolioById(tx *gorm.DB, id uint) (*Portfolio, error) {
 
 //=============================================================================
 
-func GetAssignableTradingSystems(tx *gorm.DB, id uint, internal bool) (*[]TradingSystemAssignable, error) {
+func GetAssignableTradingSystems(tx *gorm.DB, portId uint, connId uint, onlyExternal bool) (*[]TradingSystemAssignable, error) {
 	var list []TradingSystemAssignable
 
-	sId  := strconv.Itoa(int(id))
-	oper := "<>"
+	sPortId := strconv.Itoa(int(portId))
+	sConnId := strconv.Itoa(int(connId))
+	extraSql:= ""
 
-	if !internal {
-		oper = "="
+	if onlyExternal {
+		extraSql = " AND trading_system.engine_code = '"+ string(EngineCodeExternal) +"'"
 	}
 
-	filter := "(trading_system.portfolio_id <> "+ sId +" OR trading_system.portfolio_id IS NULL) "+
+	filter := "(trading_system.portfolio_id <> "+ sPortId +" OR trading_system.portfolio_id IS NULL) "+
 		"AND trading_system.finalized = 1 AND trading_system.trading = 1 " +
-		"AND trading_system.engine_code "+ oper +" '"+ string(EngineCodeExternal) +"'"
+		"AND trading_system.broker_connection_id = "+ sConnId + extraSql
 
 	res := tx.Model(&TradingSystem{}).Select("trading_system.*, " +
 		"portfolio.name as portfolio_name, portfolio.account_name, portfolio.account_code").

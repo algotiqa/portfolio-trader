@@ -18,12 +18,12 @@ import (
 
 //=============================================================================
 
-func getAssignableSystems(c *auth.Context) {
+func getAssignableTradingSystems(c *auth.Context) {
 	id, err := c.GetIdFromUrl()
 
 	if err == nil {
 		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
-			list, errt := business.GetAssignableSystems(tx, c, id)
+			list, errt := business.GetAssignableTradingSystems(tx, c, id)
 
 			if errt != nil {
 				return errt
@@ -38,16 +38,61 @@ func getAssignableSystems(c *auth.Context) {
 
 //=============================================================================
 
-func assignSystemsToPortfolio(c *auth.Context) {
-	var list []int
+func getAssignedTradingSystems(c *auth.Context) {
+	id, err := c.GetIdFromUrl()
+
+	if err == nil {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+			list, errt := business.GetAssignedTradingSystems(tx, c, id)
+
+			if errt != nil {
+				return errt
+			}
+
+			return c.ReturnList(list, 0, 5000, len(*list))
+		})
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================
+
+func assignTradingSystemsToPortfolio(c *auth.Context) {
+	var list []uint
 	err := c.BindParamsFromBody(&list)
 
 	if err == nil {
-		id, err := c.GetIdFromUrl()
-
+		var id uint
+		id, err = c.GetIdFromUrl()
 		if err == nil {
 			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
-				errt := business.AssignSystemsToPortfolio(tx, c, id, list)
+				errt := business.AssignTradingSystemsToPortfolio(tx, c, id, list)
+
+				if errt != nil {
+					return errt
+				}
+
+				return c.ReturnObject("")
+			})
+		}
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================
+
+func unassignTradingSystemsFromPortfolio(c *auth.Context) {
+	var list []uint
+	err := c.BindParamsFromBody(&list)
+
+	if err == nil {
+		var id uint
+		id, err = c.GetIdFromUrl()
+		if err == nil {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+				errt := business.UnassignTradingSystemsFromPortfolio(tx, c, id, list)
 
 				if errt != nil {
 					return errt
@@ -76,48 +121,6 @@ func getPortfolios(c *auth.Context) {
 			}
 
 			return c.ReturnList(list, offset, limit, len(*list))
-		})
-	}
-
-	c.ReturnError(err)
-}
-
-//=============================================================================
-
-func getPortfolioTree(c *auth.Context) {
-	filter := map[string]any{}
-	offset, limit, err := c.GetPagingParams()
-
-	if err == nil {
-		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
-			list, err := business.GetPortfolioTree(tx, c, filter, offset, limit)
-
-			if err != nil {
-				return err
-			}
-
-			return c.ReturnObject(list)
-		})
-	}
-
-	c.ReturnError(err)
-}
-
-//=============================================================================
-
-func getPortfolioMonitoring(c *auth.Context) {
-	params := business.PortfolioMonitoringParams{}
-	err := c.BindParamsFromBody(&params)
-
-	if err == nil {
-		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
-			result, err := business.GetPortfolioMonitoring(tx, &params)
-
-			if err != nil {
-				return err
-			}
-
-			return c.ReturnObject(result)
 		})
 	}
 

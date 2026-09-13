@@ -25,30 +25,22 @@ import (
 //===
 //=============================================================================
 
-type ManagementType string
-
-const (
-	ManagementTypeManual ManagementType = "M"
-	ManagementTypeAuto   ManagementType = "A"
-)
-
-//-----------------------------------------------------------------------------
-
 type Portfolio struct {
-	Id                     uint           `json:"id" gorm:"primaryKey"`
-	Username               string         `json:"username"`
-	Name                   string         `json:"name"`
-	Management             ManagementType `json:"management"`
-	AccountPerc            float64        `json:"accountPerc"`
-	MaxMarginPerc          float64        `json:"maxMarginPerc"`
-	AccountId              uint           `json:"accountId"`
-	AccountCode            string         `json:"accountCode"`
-	AccountName            string         `json:"accountName"`
-	AccountCurrentCapital  float64        `json:"accountCurrentCapital"`
-	AccountActive          bool           `json:"accountActive"`
-	AccountCurrencyId      uint           `json:"accountCurrencyId"`
-	AccountCurrencyCode    string         `json:"accountCurrencyCode"`
-	AccountCurrencySymbol  string         `json:"accountCurrencySymbol"`
+	Id                     uint      `json:"id" gorm:"primaryKey"`
+	Username               string    `json:"username"`
+	Name                   string    `json:"name"`
+	AccountPerc            float64   `json:"accountPerc"`
+	MaxMarginPerc          float64   `json:"maxMarginPerc"`
+	AccountId              uint      `json:"accountId"`
+	AccountCode            string    `json:"accountCode"`
+	AccountName            string    `json:"accountName"`
+	AccountCurrentCapital  float64   `json:"accountCurrentCapital"`
+	AccountActive          bool      `json:"accountActive"`
+	AccountCurrencyId      uint      `json:"accountCurrencyId"`
+	AccountCurrencyCode    string    `json:"accountCurrencyCode"`
+	AccountCurrencySymbol  string    `json:"accountCurrencySymbol"`
+	SupportsAccounting     bool      `json:"supportsAccounting"`
+	ConnectionId           uint      `json:"connectionId"`
 }
 
 //=============================================================================
@@ -86,47 +78,48 @@ const (
 //-----------------------------------------------------------------------------
 
 type TradingSystem struct {
-	Id               uint         `json:"id" gorm:"primaryKey"`
-	Username         string       `json:"username"`
-	Name             string       `json:"name"`
-	Timeframe        int          `json:"timeframe"`
-	DataProductId    uint         `json:"dataProductId"`
-	DataSymbol       string       `json:"dataSymbol"`
-	BrokerProductId  uint         `json:"brokerProductId"`
-	BrokerSymbol     string       `json:"brokerSymbol"`
-	PointValue       float64      `json:"pointValue"`
-	CostPerOperation float64      `json:"costPerOperation"`
-	MarginValue      float64      `json:"marginValue"`
-	Increment        float64      `json:"increment"`
-	MarketType       string       `json:"marketType"`
-	CurrencyId       uint         `json:"currencyId"`
-	CurrencyCode     string       `json:"currencyCode"`
-	CurrencySymbol   string       `json:"currencySymbol"`
-	TradingSessionId uint         `json:"tradingSessionId"`
-	SessionName      string       `json:"sessionName"`
-	SessionConfig    string       `json:"sessionConfig"`
-	AgentProfileId   *uint        `json:"agentProfileId"`
-	ExternalRef      string       `json:"externalRef"`
-	StrategyType     string       `json:"strategyType"`
-	Overnight        bool         `json:"overnight"`
-	Tags             string       `json:"tags"`
-	Finalized        bool         `json:"finalized"`
-	Trading          bool         `json:"trading"`
-	Running          bool         `json:"running"`
-	AutoActivation   bool         `json:"autoActivation"`
-	Active           bool         `json:"active"`
-	Status           TsStatus     `json:"status"`
-	SuggestedAction  TsSuggAction `json:"suggestedAction"`
-	FirstTrade       *time.Time   `json:"firstTrade"`
-	LastTrade        *time.Time   `json:"lastTrade"`
-	LastNetProfit    float64      `json:"lastNetProfit"`
-	LastNetAvgTrade  float64      `json:"lastNetAvgTrade"`
-	LastNumTrades    int          `json:"lastNumTrades"`
-	PortfolioId      *uint        `json:"portfolioId"`
-	Timezone         string       `json:"timezone"`
-	InSampleFrom     types.Date   `json:"inSampleFrom"`
-	InSampleTo       types.Date   `json:"inSampleTo"`
-	EngineCode       EngineCode   `json:"engineCode"`
+	Id                 uint         `json:"id" gorm:"primaryKey"`
+	Username           string       `json:"username"`
+	Name               string       `json:"name"`
+	Timeframe          int          `json:"timeframe"`
+	DataProductId      uint         `json:"dataProductId"`
+	DataSymbol         string       `json:"dataSymbol"`
+	BrokerProductId    uint         `json:"brokerProductId"`
+	BrokerSymbol       string       `json:"brokerSymbol"`
+	BrokerConnectionId uint         `json:"brokerConnectionId"`
+	PointValue         float64      `json:"pointValue"`
+	CostPerOperation   float64      `json:"costPerOperation"`
+	MarginValue        float64      `json:"marginValue"`
+	Increment          float64      `json:"increment"`
+	MarketType         string       `json:"marketType"`
+	CurrencyId         uint         `json:"currencyId"`
+	CurrencyCode       string       `json:"currencyCode"`
+	CurrencySymbol     string       `json:"currencySymbol"`
+	TradingSessionId   uint         `json:"tradingSessionId"`
+	SessionName        string       `json:"sessionName"`
+	SessionConfig      string       `json:"sessionConfig"`
+	AgentProfileId     *uint        `json:"agentProfileId"`
+	ExternalRef        string       `json:"externalRef"`
+	StrategyType       string       `json:"strategyType"`
+	Overnight          bool         `json:"overnight"`
+	Tags               string       `json:"tags"`
+	Finalized          bool         `json:"finalized"`
+	Trading            bool         `json:"trading"`
+	Running            bool         `json:"running"`
+	AutoActivation     bool         `json:"autoActivation"`
+	Active             bool         `json:"active"`
+	Status             TsStatus     `json:"status"`
+	SuggestedAction    TsSuggAction `json:"suggestedAction"`
+	FirstTrade         *time.Time   `json:"firstTrade"`
+	LastTrade          *time.Time   `json:"lastTrade"`
+	LastNetProfit      float64      `json:"lastNetProfit"`
+	LastNetAvgTrade    float64      `json:"lastNetAvgTrade"`
+	LastNumTrades      int          `json:"lastNumTrades"`
+	PortfolioId        *uint        `json:"portfolioId"`
+	Timezone           string       `json:"timezone"`
+	InSampleFrom       types.Date   `json:"inSampleFrom"`
+	InSampleTo         types.Date   `json:"inSampleTo"`
+	EngineCode         EngineCode   `json:"engineCode"`
 }
 
 //=============================================================================

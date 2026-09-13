@@ -101,36 +101,37 @@ func setTradingSystem(tsm *TradingSystemMessage, create bool) bool {
 			}
 		}
 
-		ts.Id               = tsm.TradingSystem.Id
-		ts.Username         = tsm.TradingSystem.Username
-		ts.Name             = tsm.TradingSystem.Name
-		ts.Timeframe        = tsm.TradingSystem.Timeframe
-		ts.DataProductId    = tsm.TradingSystem.DataProductId
-		ts.DataSymbol       = tsm.DataProduct.Symbol
-		ts.BrokerProductId  = tsm.TradingSystem.BrokerProductId
-		ts.BrokerSymbol     = tsm.BrokerProduct.Symbol
-		ts.PointValue       = tsm.BrokerProduct.PointValue
-		ts.CostPerOperation = tsm.BrokerProduct.CostPerOperation
-		ts.MarginValue      = tsm.BrokerProduct.MarginValue
-		ts.Increment        = tsm.BrokerProduct.Increment
-		ts.MarketType       = tsm.BrokerProduct.MarketType
-		ts.CurrencyId       = tsm.Currency.Id
-		ts.CurrencyCode     = tsm.Currency.Code
-		ts.CurrencySymbol   = tsm.Currency.Symbol
-		ts.TradingSessionId = tsm.TradingSession.Id
-		ts.SessionName      = tsm.TradingSession.Name
-		ts.SessionConfig    = tsm.TradingSession.Config
-		ts.StrategyType     = tsm.TradingSystem.StrategyType
-		ts.Overnight        = tsm.TradingSystem.Overnight
-		ts.Tags             = tsm.TradingSystem.Tags
-		ts.Finalized        = tsm.TradingSystem.Finalized
-		ts.Timezone         = tsm.Exchange.Timezone
-		ts.AgentProfileId   = tsm.TradingSystem.AgentProfileId
-		ts.ExternalRef      = tsm.TradingSystem.ExternalRef
-		ts.InSampleFrom     = tsm.TradingSystem.InSampleFrom
-		ts.InSampleTo       = tsm.TradingSystem.InSampleTo
-		ts.EngineCode       = tsm.TradingSystem.EngineCode
-		ts.Trading          = isNew && tsm.TradingSystem.Finalized
+		ts.Id                 = tsm.TradingSystem.Id
+		ts.Username           = tsm.TradingSystem.Username
+		ts.Name               = tsm.TradingSystem.Name
+		ts.Timeframe          = tsm.TradingSystem.Timeframe
+		ts.DataProductId      = tsm.TradingSystem.DataProductId
+		ts.DataSymbol         = tsm.DataProduct.Symbol
+		ts.BrokerProductId    = tsm.TradingSystem.BrokerProductId
+		ts.BrokerSymbol       = tsm.BrokerProduct.Symbol
+		ts.BrokerConnectionId = tsm.BrokerProduct.ConnectionId
+		ts.PointValue         = tsm.BrokerProduct.PointValue
+		ts.CostPerOperation   = tsm.BrokerProduct.CostPerOperation
+		ts.MarginValue        = tsm.BrokerProduct.MarginValue
+		ts.Increment          = tsm.BrokerProduct.Increment
+		ts.MarketType         = tsm.BrokerProduct.MarketType
+		ts.CurrencyId         = tsm.Currency.Id
+		ts.CurrencyCode       = tsm.Currency.Code
+		ts.CurrencySymbol     = tsm.Currency.Symbol
+		ts.TradingSessionId   = tsm.TradingSession.Id
+		ts.SessionName        = tsm.TradingSession.Name
+		ts.SessionConfig      = tsm.TradingSession.Config
+		ts.StrategyType       = tsm.TradingSystem.StrategyType
+		ts.Overnight          = tsm.TradingSystem.Overnight
+		ts.Tags               = tsm.TradingSystem.Tags
+		ts.Finalized          = tsm.TradingSystem.Finalized
+		ts.Timezone           = tsm.Exchange.Timezone
+		ts.AgentProfileId     = tsm.TradingSystem.AgentProfileId
+		ts.ExternalRef        = tsm.TradingSystem.ExternalRef
+		ts.InSampleFrom       = tsm.TradingSystem.InSampleFrom
+		ts.InSampleTo         = tsm.TradingSystem.InSampleTo
+		ts.EngineCode         = tsm.TradingSystem.EngineCode
+		ts.Trading            = isNew && tsm.TradingSystem.Finalized
 
 		err = db.UpdateTradingSystem(tx, ts)
 
@@ -407,7 +408,6 @@ func setPortfolio(pm *PortfolioMessage, create bool) bool {
 		p.Id                    = pm.Portfolio.Id
 		p.Username              = pm.Portfolio.Username
 		p.Name                  = pm.Portfolio.Name
-		p.Management            = pm.Portfolio.Management
 		p.AccountPerc           = pm.Portfolio.AccountPerc
 		p.MaxMarginPerc         = pm.Portfolio.MaxMarginPerc
 		p.AccountId             = pm.Portfolio.AccountId
@@ -418,6 +418,8 @@ func setPortfolio(pm *PortfolioMessage, create bool) bool {
 		p.AccountCurrencyId     = pm.Account.CurrencyId
 		p.AccountCurrencyCode   = pm.Currency.Code
 		p.AccountCurrencySymbol = pm.Currency.Symbol
+		p.SupportsAccounting    = pm.Account.SupportsAccounting
+		p.ConnectionId          = pm.Account.ConnectionId
 
 		return db.UpdatePortfolio(tx, p)
 	})
