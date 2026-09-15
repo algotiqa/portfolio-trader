@@ -48,11 +48,11 @@ type Portfolio struct {
 type TsStatus int8
 
 const (
-	TsStatusOff    TsStatus = 0
-	TsStatusPaused TsStatus = 1
-	TsStatusActive TsStatus = 2
-	TsStatusIdle   TsStatus = 3
-	TsStatusBroken TsStatus = 4
+	TsStatusOff     TsStatus = 0
+	TsStatusWaiting TsStatus = 1 //--- Trading system just started. Waiting for the first trade
+	TsStatusActive  TsStatus = 2
+	TsStatusIdle    TsStatus = 3
+	TsStatusBroken  TsStatus = 4
 )
 
 //-----------------------------------------------------------------------------
@@ -107,7 +107,6 @@ type TradingSystem struct {
 	Trading            bool         `json:"trading"`
 	Running            bool         `json:"running"`
 	AutoActivation     bool         `json:"autoActivation"`
-	Active             bool         `json:"active"`
 	Status             TsStatus     `json:"status"`
 	SuggestedAction    TsSuggAction `json:"suggestedAction"`
 	FirstTrade         *time.Time   `json:"firstTrade"`

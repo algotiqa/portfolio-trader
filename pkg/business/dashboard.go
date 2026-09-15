@@ -135,7 +135,7 @@ func toAllSystems(m map[string]int) []*DashboardItem[int] {
 func toStatus(m map[db.TsStatus]int) []*DashboardItem[int] {
 	var res []*DashboardItem[int]
 	res = append(res, &DashboardItem[int]{Name: "0", Value: m[db.TsStatusOff]})
-	res = append(res, &DashboardItem[int]{Name: "1", Value: m[db.TsStatusPaused]})
+	res = append(res, &DashboardItem[int]{Name: "1", Value: m[db.TsStatusWaiting]})
 	res = append(res, &DashboardItem[int]{Name: "2", Value: m[db.TsStatusActive]})
 	res = append(res, &DashboardItem[int]{Name: "3", Value: m[db.TsStatusIdle]})
 	res = append(res, &DashboardItem[int]{Name: "4", Value: m[db.TsStatusBroken]})

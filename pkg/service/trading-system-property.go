@@ -92,28 +92,3 @@ func setTradingSystemActivation(c *auth.Context) {
 }
 
 //=============================================================================
-
-func setTradingSystemActive(c *auth.Context) {
-	tsId, err := c.GetIdFromUrl()
-
-	if err == nil {
-		req := business.TradingSystemActiveRequest{}
-		err = c.BindParamsFromBody(&req)
-
-		if err == nil {
-			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
-				rep, err := business.SetTradingSystemActive(tx, c, tsId, &req)
-
-				if err != nil {
-					return err
-				}
-
-				return c.ReturnObject(rep)
-			})
-		}
-	}
-
-	c.ReturnError(err)
-}
-
-//=============================================================================

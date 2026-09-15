@@ -110,7 +110,6 @@ func ImportTradingSystem(tx *gorm.DB, ts *db.TradingSystem, data []byte) error {
 func updateTradingSystem(tx *gorm.DB, ts *db.TradingSystem, its *TradingSystem) error {
 	ts.Trading         = its.Trading
 	ts.AutoActivation  = its.AutoActivation
-	ts.Active          = its.Active
 	ts.FirstTrade      = its.FirstTrade
 	ts.LastTrade       = its.LastTrade
 	ts.LastNetProfit   = its.LastNetProfit

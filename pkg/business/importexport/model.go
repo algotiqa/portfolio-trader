@@ -26,7 +26,6 @@ type TradingSystem struct {
 	Trading          bool                `json:"trading"`
 	Running          bool                `json:"running"`
 	AutoActivation   bool                `json:"autoActivation"`
-	Active           bool                `json:"active"`
 	Status           db.TsStatus         `json:"status"`
 	FirstTrade       *time.Time          `json:"firstTrade"`
 	LastTrade        *time.Time          `json:"lastTrade"`
@@ -93,7 +92,6 @@ func NewTradingSystem(ts *db.TradingSystem) *TradingSystem {
 		Trading        : ts.Trading,
 		Running        : ts.Running,
 		AutoActivation : ts.AutoActivation,
-		Active         : ts.Active,
 		Status         : ts.Status,
 		FirstTrade     : ts.FirstTrade,
 		LastTrade      : ts.LastTrade,

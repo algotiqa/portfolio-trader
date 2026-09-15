@@ -113,7 +113,6 @@ func GetTradingSystemsInIdle(tx *gorm.DB, days int) (*[]TradingSystem, error) {
 
 	res := tx.
 		Where("running    = ?", true).
-		Where("active     = ?", true).
 		Where("last_trade < ?", date).
 		Find(&list)
 

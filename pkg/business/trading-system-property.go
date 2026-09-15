@@ -105,16 +105,23 @@ func SetTradingSystemTrading(tx *gorm.DB, c *auth.Context, tsId uint, req *Tradi
 
 //=============================================================================
 
-func SetTradingSystemRunning(tx *gorm.DB, c *auth.Context, tsId uint, req *TradingSystemRunningRequest) (*TradingSystemPropertyResponse, error) {
-	c.Log.Info("SetTradingSystemRunning: Running property change request", "id", tsId, "value", req.Value)
+func SetTradingSystemRunning(tx *gorm.DB, c *auth.Context, tsId uint, rq *TradingSystemRunningRequest) (*TradingSystemPropertyResponse, error) {
+	c.Log.Info("SetTradingSystemRunning: Running property change request", "id", tsId, "value", rq.Value)
 
 	ts, err := getTradingSystemAndCheckAccess(tx, c, tsId)
 	if err != nil {
 		return nil, err
 	}
 
+	if ts.AutoActivation {
+		return &TradingSystemPropertyResponse{
+			Status:  ResponseStatusError,
+			Message: "Trading system in AUTO mode. Cannot change its status",
+		}, nil
+	}
+
 	oldValue := ts.Running
-	newValue := req.Value
+	newValue := rq.Value
 
 	if oldValue == newValue {
 		return &TradingSystemPropertyResponse{
@@ -139,7 +146,7 @@ func SetTradingSystemRunning(tx *gorm.DB, c *auth.Context, tsId uint, req *Tradi
 		return nil, err
 	}
 
-	c.Log.Info("SetTradingSystemRunning: Running property changed", "id", tsId, "value", req.Value)
+	c.Log.Info("SetTradingSystemRunning: Running property changed", "id", tsId, "value", rq.Value)
 
 	return &TradingSystemPropertyResponse{
 		Status:        ResponseStatusOk,
@@ -178,54 +185,6 @@ func SetTradingSystemActivation(tx *gorm.DB, c *auth.Context, tsId uint, req *Tr
 }
 
 //=============================================================================
-
-func SetTradingSystemActive(tx *gorm.DB, c *auth.Context, tsId uint, req *TradingSystemActiveRequest) (*TradingSystemPropertyResponse, error) {
-	c.Log.Info("SetTradingSystemActive: Active property change request", "id", tsId, "value", req.Value)
-
-	ts, err := getTradingSystemAndCheckAccess(tx, c, tsId)
-	if err != nil {
-		return nil, err
-	}
-
-	oldValue := ts.Active
-	newValue := req.Value
-
-	if oldValue == newValue {
-		return &TradingSystemPropertyResponse{
-			Status: ResponseStatusSkipped,
-		}, nil
-	}
-
-	if ts.AutoActivation {
-		return &TradingSystemPropertyResponse{
-			Status:  ResponseStatusError,
-			Message: "Trading system is in AUTOMATIC mode. Switch to MANUAL to change",
-		}, nil
-	}
-
-	ts.Active = newValue
-	updateStatus(ts)
-	err = db.UpdateTradingSystem(tx, ts)
-	if err != nil {
-		return nil, err
-	}
-
-	err = updateLivePeriod(tx, ts)
-	if err != nil {
-		return nil, err
-	}
-
-	err = updateRewind(ts)
-
-	c.Log.Info("SetTradingSystemActive: Active property changed", "id", tsId, "value", req.Value)
-
-	return &TradingSystemPropertyResponse{
-		Status:        ResponseStatusOk,
-		TradingSystem: ts,
-	}, err
-}
-
-//=============================================================================
 //===
 //=== Private functions
 //===
@@ -236,10 +195,8 @@ func updateStatus(ts *db.TradingSystem) {
 
 	if !ts.Running {
 		ts.Status = db.TsStatusOff
-	} else if ts.Active {
-		ts.Status = db.TsStatusActive
 	} else {
-		ts.Status = db.TsStatusPaused
+		ts.Status = db.TsStatusWaiting
 	}
 }
 
@@ -249,7 +206,7 @@ func updateLivePeriod(tx *gorm.DB, ts *db.TradingSystem) error {
 	lp := &db.LivePeriod{
 		TradingSystemId: ts.Id,
 		Period:          time.Now(),
-		Active:          ts.Running && ts.Active,
+		Active:          ts.Running,
 	}
 
 	return db.AddLivePeriod(tx, lp)
