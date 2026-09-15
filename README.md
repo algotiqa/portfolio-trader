@@ -1,6 +1,9 @@
 # Portfolio Trader
 
-Portfolio Trader component
+Portfolio Trader component.
+
+**Note:** the main documentation of the platform is located [HERE](https://github.com/algotiqa/docs).
+
 
 ## License
 
