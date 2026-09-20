@@ -71,21 +71,7 @@ func FindTradesByTsIdFromTime(tx *gorm.DB, tsId uint, fromTime *time.Time, toTim
 
 	//--- WHERE condition must be exit_date otherwise we loose trades started in the past and ended after fromTime
 	query := "trading_system_id = ? and exit_date >= ? and exit_date<= ?"
-	res := tx.Order("exit_date,entry_date").Find(&list, query, tsId, from, to)
-
-	if res.Error != nil {
-		return nil, req.NewServerErrorByError(res.Error)
-	}
-
-	return &list, nil
-}
-
-//=============================================================================
-
-func FindTradesFromTime(tx *gorm.DB, tsIds []uint, fromTime time.Time) (*[]Trade, error) {
-	var list []Trade
-
-	res := tx.Find(&list, "trading_system_id in ? and entry_date >= ?", tsIds, fromTime)
+	res := tx.Order("entry_date,exit_date").Find(&list, query, tsId, from, to)
 
 	if res.Error != nil {
 		return nil, req.NewServerErrorByError(res.Error)

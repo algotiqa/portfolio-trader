@@ -31,6 +31,8 @@ type Portfolio struct {
 	Name                   string    `json:"name"`
 	AccountPerc            float64   `json:"accountPerc"`
 	MaxMarginPerc          float64   `json:"maxMarginPerc"`
+	CorrelationPeriod      int       `json:"correlationPeriod"`
+	RunPeriod              int       `json:"runPeriod"`
 	AccountId              uint      `json:"accountId"`
 	AccountCode            string    `json:"accountCode"`
 	AccountName            string    `json:"accountName"`
@@ -268,18 +270,110 @@ type TradingSystemAssignable struct {
 }
 
 //=============================================================================
+//=== Allocation
+//=============================================================================
+
+type RunType string
+
+const (
+	RunTypeManual RunType = "M"
+	RunTypeAuto   RunType = "A"
+)
+
+//-----------------------------------------------------------------------------
+
+type AllocStatus string
+
+const (
+	AllocStatusWaiting   AllocStatus = "W"
+	AllocStatusRunning   AllocStatus = "R"
+	AllocStatusDone      AllocStatus = "D"
+	AllocStatusWarnings  AllocStatus = "A"
+	AllocStatusErrors    AllocStatus = "E"
+)
+
+//-----------------------------------------------------------------------------
+
+type Allocation struct {
+	Id                uint        `json:"id" gorm:"primaryKey"`
+	PortfolioId       uint        `json:"portfolioId"`
+	RunDate           time.Time   `json:"runDate"`
+	RunType           RunType     `json:"runType"`
+	AccountPerc       float64     `json:"accountPerc"`
+	MaxMarginPerc     float64     `json:"maxMarginPerc"`
+	CorrelationPeriod int         `json:"correlationPeriod"`
+	AccountCapital    float64     `json:"accountCapital"`
+	Status            AllocStatus `json:"status"`
+}
+
+//=============================================================================
+
+type AllocationFilter struct {
+	Id              uint      `json:"id" gorm:"primaryKey"`
+	AllocationId    uint      `json:"allocationId"`
+	TradingSystemId uint      `json:"tradingSystemId"`
+	FilterPassed    bool      `json:"filterPassed"`
+	Comment         string    `json:"comment"`
+}
+
+//=============================================================================
+
+type LogLevel string
+
+const (
+	LogLevelInfo    LogLevel = "I"
+	LogLevelWarning LogLevel = "W"
+	LogLevelError   LogLevel = "E"
+)
+
+//-----------------------------------------------------------------------------
+
+type AllocationLog struct {
+	Id             uint     `json:"id" gorm:"primaryKey"`
+	AllocationId   uint     `json:"allocationId"`
+	Level          LogLevel `json:"level"`
+	Message        string   `json:"message"`
+}
+
+//=============================================================================
+
+type AllocationFull struct {
+	Allocation
+	PortfolioName          string    `json:"portfolioName"`
+	AccountId              uint      `json:"accountId"`
+	AccountCode            string    `json:"accountCode"`
+	AccountName            string    `json:"accountName"`
+	AccountCurrencyCode    string    `json:"accountCurrencyCode"`
+}
+
+//=============================================================================
+
+type AllocationFilterFull struct {
+	AllocationFilter
+	TsName           string    `json:"tsName"`
+	TsDataSymbol     string    `json:"tsDataSymbol"`
+	TsBrokerSymbol   string    `json:"tsBrokerSymbol"`
+	TsMarketType     string    `json:"tsMarketType"`
+	TsStrategyType   string    `json:"tsStrategyType"`
+	TsRunning        bool      `json:"tsRunning"`
+}
+
+//=============================================================================
 //===
 //=== Table names
 //===
 //=============================================================================
 
-func (TradingSystem)   TableName() string { return "trading_system"   }
-func (TradingFilter)   TableName() string { return "trading_filter"   }
-func (TradingPosition) TableName() string { return "trading_position" }
-func (Trade)           TableName() string { return "trade"            }
-func (Portfolio)       TableName() string { return "portfolio"        }
-func (EquityBar)       TableName() string { return "equity_bar"       }
-func (LivePeriod)      TableName() string { return "live_period"      }
+func (TradingSystem)    TableName() string { return "trading_system"    }
+func (TradingFilter)    TableName() string { return "trading_filter"    }
+func (TradingPosition)  TableName() string { return "trading_position"  }
+func (Trade)            TableName() string { return "trade"             }
+func (Portfolio)        TableName() string { return "portfolio"         }
+func (EquityBar)        TableName() string { return "equity_bar"        }
+func (LivePeriod)       TableName() string { return "live_period"       }
+func (Allocation)       TableName() string { return "allocation"        }
+func (AllocationFilter) TableName() string { return "allocation_filter" }
+func (AllocationLog)    TableName() string { return "allocation_log"    }
 
 //=============================================================================
 //===
@@ -304,7 +398,7 @@ func (pm *ParamMap) Scan(value interface{}) error {
 
 //=============================================================================
 
-func (pm ParamMap) Value() (driver.Value, error) {
+func (pm *ParamMap) Value() (driver.Value, error) {
 	return json.Marshal(pm)
 }
 

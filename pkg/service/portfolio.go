@@ -107,24 +107,3 @@ func unassignTradingSystemsFromPortfolio(c *auth.Context) {
 }
 
 //=============================================================================
-
-func getPortfolios(c *auth.Context) {
-	filter := map[string]any{}
-	offset, limit, err := c.GetPagingParams()
-
-	if err == nil {
-		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
-			list, err := business.GetPortfolios(tx, c, filter, offset, limit)
-
-			if err != nil {
-				return err
-			}
-
-			return c.ReturnList(list, offset, limit, len(*list))
-		})
-	}
-
-	c.ReturnError(err)
-}
-
-//=============================================================================

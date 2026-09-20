@@ -53,13 +53,15 @@ func Init(router *gin.Engine, cfg *app.Config, logger *slog.Logger) {
 
 	router.GET   ("/api/portfolio/v1/trading-systems/export",                    ctrl.Secure(exportTradingSystems,       roles.Admin_User_Service))
 
-	router.GET   ("/api/portfolio/v1/portfolios",                                ctrl.Secure(getPortfolios,                       roles.Admin_User_Service))
 	router.GET   ("/api/portfolio/v1/portfolios/:id/assignable-systems",         ctrl.Secure(getAssignableTradingSystems,         roles.Admin_User_Service))
 	router.GET   ("/api/portfolio/v1/portfolios/:id/assigned-systems",           ctrl.Secure(getAssignedTradingSystems,           roles.Admin_User_Service))
 	router.PUT   ("/api/portfolio/v1/portfolios/:id/assigned-systems",           ctrl.Secure(assignTradingSystemsToPortfolio,     roles.Admin_User_Service))
 	router.DELETE("/api/portfolio/v1/portfolios/:id/assigned-systems",           ctrl.Secure(unassignTradingSystemsFromPortfolio, roles.Admin_User_Service))
 
-	router.GET   ("/api/portfolio/v1/dashboard/summary",                         ctrl.Secure(getDashboardSummary,        roles.Admin_User_Service))
+	router.GET   ("/api/portfolio/v1/allocations",                               ctrl.Secure(getAllocations,                      roles.Admin_User_Service))
+	router.POST  ("/api/portfolio/v1/allocations",                               ctrl.Secure(addAllocation,                 roles.Admin_User_Service))
+	router.GET   ("/api/portfolio/v1/allocations/:id",                           ctrl.Secure(getAllocationById,                      roles.Admin_User_Service))
+	router.GET   ("/api/portfolio/v1/dashboard/summary",                         ctrl.Secure(getDashboardSummary,                 roles.Admin_User_Service))
 }
 
 //=============================================================================

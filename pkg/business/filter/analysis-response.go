@@ -97,12 +97,12 @@ type Activations struct {
 //-----------------------------------------------------------------------------
 
 func (a *Activations) IsLastActive() bool {
-	equVsAvg := true
-	posProf := true
-	winPerc := true
-	oldNew := true
+	equVsAvg  := true
+	posProf   := true
+	winPerc   := true
+	oldNew    := true
 	trendline := true
-	drawdown := true
+	drawdown  := true
 
 	if a.EquityVsAverage != nil {
 		equVsAvg = a.EquityVsAverage.IsLastActive()

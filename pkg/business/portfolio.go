@@ -18,16 +18,6 @@ import (
 
 //=============================================================================
 
-func GetPortfolios(tx *gorm.DB, c *auth.Context, filter map[string]any, offset int, limit int) (*[]db.Portfolio, error) {
-	if !c.Session.IsAdmin() {
-		filter["username"] = c.Session.Username
-	}
-
-	return nil,nil //db.GetPortfolios(tx, filter, offset, limit)
-}
-
-//=============================================================================
-
 func DeletePortfolio(tx *gorm.DB, id uint) error {
 	return db.DeletePortfolio(tx, id)
 }

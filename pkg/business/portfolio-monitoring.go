@@ -13,44 +13,11 @@ import (
 	"sort"
 	"time"
 
-	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
-	"gorm.io/gorm"
 )
 
 //=============================================================================
-
-func GetPortfolioMonitoring(tx *gorm.DB, params *PortfolioMonitoringParams) (*PortfolioMonitoringResponse, error) {
-
-	//--- Get list of trading systems and check length
-
-	tsMap, err := db.GetTradingSystemsByIdsAsMap(tx, params.TsIds)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(tsMap) != len(params.TsIds) {
-		return nil, req.NewNotFoundError("Missing some trading systems (input:%v. found:%v)", len(params.TsIds), len(tsMap))
-	}
-
-	//--- Get trading systems daily data
-
-	fromTime := calcFromTime(params.Period)
-	idsArray := calcIdsArrayFromSourceIds(tsMap)
-	trades, err := db.FindTradesFromTime(tx, idsArray, fromTime)
-
-	if err != nil {
-		return nil, err
-	}
-
-	trMap := buildSortedMapOfInfo(trades)
-	res := buildMonitoringResult(trMap, tsMap)
-	buildTotalInfo(res)
-
-	return res, nil
-}
 
 //=============================================================================
 //===

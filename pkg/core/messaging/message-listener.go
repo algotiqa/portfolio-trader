@@ -14,6 +14,7 @@ import (
 
 	"github.com/algotiqa/core/msg"
 	"github.com/algotiqa/portfolio-trader/pkg/core/messaging/inventory"
+	"github.com/algotiqa/portfolio-trader/pkg/core/messaging/portfolio"
 	"github.com/algotiqa/portfolio-trader/pkg/core/messaging/runtime"
 	"github.com/algotiqa/portfolio-trader/pkg/core/messaging/system"
 )
@@ -26,6 +27,7 @@ func InitMessageListener() {
 	go msg.ReceiveMessages(msg.QuInventoryToPortfolio, inventory.HandleMessage)
 	go msg.ReceiveMessages(msg.QuRuntimeToPortfolio,   runtime.HandleMessage)
 	go msg.ReceiveMessages(msg.QuSystemToPortfolio,    system.HandleMessage)
+	go msg.ReceiveMessages(msg.QuPortfolioToInternal,  portfolio.HandleMessage)
 }
 
 //=============================================================================
