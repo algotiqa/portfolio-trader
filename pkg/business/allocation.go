@@ -29,9 +29,9 @@ type AllocationSpec struct {
 
 type AllocationExt struct {
 	db.Allocation
-	Portfolio   *db.Portfolio              `json:"portfolio"`
-	Filters     *[]db.AllocationFilterFull `json:"filters"`
-	Logs        *[]db.AllocationLog        `json:"logs"`
+	Portfolio   *db.Portfolio               `json:"portfolio"`
+	Filters     *[]*db.AllocationFilterFull `json:"filters"`
+	Logs        *[]db.AllocationLog         `json:"logs"`
 }
 
 //=============================================================================
@@ -68,7 +68,6 @@ func GetAllocationById(tx *gorm.DB, c *auth.Context, id uint) (*AllocationExt, e
 		c.Log.Error("GetAllocationById: Could not retrieve allocation filters", "error", err.Error())
 		return nil, err
 	}
-	setFilterComments(fils)
 
 	//--- Get logs
 
@@ -83,7 +82,7 @@ func GetAllocationById(tx *gorm.DB, c *auth.Context, id uint) (*AllocationExt, e
 	ae := AllocationExt{
 		Allocation: *a,
 		Portfolio : p,
-		Filters   : fils,
+		Filters   : setFilterComments(fils),
 		Logs      : logs,
 	}
 
@@ -158,14 +157,19 @@ func sendAllocationMessage(tx *gorm.DB, c *auth.Context, job *db.Allocation) err
 
 //=============================================================================
 
-func setFilterComments(list *[]db.AllocationFilterFull) {
+func setFilterComments(list *[]db.AllocationFilterFull) *[]*db.AllocationFilterFull {
+	var res []*db.AllocationFilterFull
+
 	for _, f := range *list {
 		if f.TsRunning && !f.FilterPassed {
-			f.Comment = "Turn off"
+			f.Comment = "Turn OFF"
 		} else if !f.TsRunning && f.FilterPassed {
-			f.Comment = "Turn on"
+			f.Comment = "Turn ON"
 		}
+		res = append(res, &f)
 	}
+
+	return &res
 }
 
 //=============================================================================
