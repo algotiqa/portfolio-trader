@@ -10,30 +10,16 @@
 package portfolio
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/algotiqa/core/dbms"
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
+	"github.com/algotiqa/types"
 	"gorm.io/gorm"
 )
-
-//=============================================================================
-
-type AllocationJob struct {
-	allocation     *db.Allocation
-	tradingSystems []*TradingSystemInfo
-	filters        []*db.AllocationFilter
-	logs           []*db.AllocationLog
-}
-
-//=============================================================================
-
-type TradingSystemInfo struct {
-	system *db.TradingSystem
-	filter *db.TradingFilter
-	trades *[]db.Trade
-}
 
 //=============================================================================
 
@@ -44,9 +30,12 @@ func calcAllocation(a *db.Allocation) error {
 	}
 
 	if job.tradingSystems == nil {
-		addError(job, "No trading systems assigned to portfolio")
+		job.Log(db.LogLevelInfo, "No trading systems assigned to portfolio")
+	} else if len(job.tradingSystems) < 2 {
+		job.Log(db.LogLevelInfo, "Only 1 trading system assigned to portfolio")
 	} else {
 		calcFilterActivation(job)
+		calcSystemCorrelation(job)
 	}
 
 	return saveAllocationResults(job)
@@ -60,20 +49,27 @@ func retrieveInfo(a *db.Allocation) (*AllocationJob,error) {
 	}
 
 	//--- Start taking trades from 5 years ago
-	from := time.Now().AddDate(-5,0,0)
+	fromTrade  := time.Now().AddDate(-5,0,0)
+	fromReturn := time.Now().AddDate(0, 0, -a.CorrelationPeriod)
+	fromRetDate:= types.ToDate(&fromReturn)
 
 	var tsList *[]db.TradingSystem
 	err := dbms.RunInTransaction(func(tx *gorm.DB) error {
-		filter := map[string]any{}
-		filter["portfolio_id"] = a.PortfolioId
+		filt := map[string]any{}
+		filt["portfolio_id"] = a.PortfolioId
 
 		var errx error
-		tsList,errx = db.GetTradingSystems(tx, filter, 0, 5000)
+		tsList,errx = db.GetTradingSystems(tx, filt, 0, 5000)
 		if errx == nil {
 			for _,ts := range *tsList {
-				trades,errt := db.FindTradesByTsIdFromTime(tx, ts.Id, &from, nil)
+				trades,errt := db.FindTradesByTsIdFromTime(tx, ts.Id, &fromTrade, nil)
 				if errt != nil {
 					return errt
+				}
+
+				returns,errr := db.FindDailyReturnsByTsIdFromTime(tx, ts.Id, &fromRetDate, nil)
+				if errr != nil {
+					return errr
 				}
 
 				tsf,errf := db.GetTradingFilterByTsId(tx, ts.Id)
@@ -82,9 +78,10 @@ func retrieveInfo(a *db.Allocation) (*AllocationJob,error) {
 				}
 
 				tsi := &TradingSystemInfo{
-					system: &ts,
-					filter: tsf,
-					trades: trades,
+					system : &ts,
+					filter : tsf,
+					trades : trades,
+					returns: returns,
 				}
 				job.tradingSystems = append(job.tradingSystems, tsi)
 			}
@@ -101,18 +98,6 @@ func retrieveInfo(a *db.Allocation) (*AllocationJob,error) {
 
 //=============================================================================
 
-func addError(job *AllocationJob, message string) {
-	log := &db.AllocationLog{
-		AllocationId: job.allocation.Id,
-		Level       : db.LogLevelError,
-		Message     : message,
-	}
-
-	job.logs = append(job.logs, log)
-}
-
-//=============================================================================
-
 func saveAllocationResults(job *AllocationJob) error {
 	return dbms.RunInTransaction(func(tx *gorm.DB) error {
 		job.allocation.Status = calcAllocationStatus(job.logs)
@@ -122,6 +107,9 @@ func saveAllocationResults(job *AllocationJob) error {
 			err = saveAllocationFilters(tx, job.filters)
 			if err == nil {
 				err = saveAllocationLogs(tx, job.logs)
+				if err == nil {
+					err = saveSystemCorrelations(tx, job.correlations)
+				}
 			}
 		}
 		return err
@@ -174,21 +162,71 @@ func saveAllocationLogs(tx *gorm.DB, logs []*db.AllocationLog) error {
 
 //=============================================================================
 
+func saveSystemCorrelations(tx *gorm.DB, correlations []*db.SystemCorrelation) error {
+	for _, corr := range correlations {
+		err := db.AddSystemCorrelation(tx, corr)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+//=============================================================================
+
 func calcFilterActivation(job *AllocationJob) {
 	for _, tsi := range job.tradingSystems {
-		activation := true
+		tsi.filterPassed = true
 		if tsi.filter != nil {
-			activation = filter.CalcActivation(tsi.system, tsi.filter, *tsi.trades)
+			tsi.filterPassed = filter.CalcActivation(tsi.system, tsi.filter, *tsi.trades)
 		}
 
-		af := &db.AllocationFilter{
-			AllocationId   : job.allocation.Id,
-			TradingSystemId: tsi.system.Id,
-			FilterPassed   : activation,
-			Comment        : "",
-		}
+		job.AddFilter(tsi.system.Id, tsi.filterPassed)
+	}
+}
 
-		job.filters = append(job.filters, af)
+//=============================================================================
+
+func calcSystemCorrelation(job *AllocationJob) {
+	var list []*TradingSystemInfo
+	for _, tsi := range job.tradingSystems {
+		if tsi.filterPassed {
+			list = append(list, tsi)
+		}
+	}
+
+	job.Log(db.LogLevelInfo, "Trading systems that passed the filter: "+ strconv.Itoa(len(list)))
+
+	for i := 0; i < len(list) -1; i++ {
+		for j := i + 1; j < len(list); j++ {
+			ts1 := list[i].system
+			ts2 := list[j].system
+
+			corr,err := core.CalcCorrelation(list[i].returns, list[j].returns)
+			message := ""
+			if err != nil {
+				message = err.Error()
+			}
+
+			sc := &db.SystemCorrelation{
+				AllocationId    : job.allocation.Id,
+				TradingSystem1Id: ts1.Id,
+				TradingSystem2Id: ts2.Id,
+				Correlation     : core.Trunc2d(corr),
+				Message         : message,
+			}
+
+			job.correlations = append(job.correlations, sc)
+		}
+	}
+
+	for _,tsi := range list {
+		if len(*tsi.returns) < 2 {
+			job.Log(db.LogLevelError, "Missing daily returns to calculate correlations for '"+tsi.system.Name+"'")
+		} else if len(*tsi.returns) < MinDailyReturns {
+			job.Log(db.LogLevelWarning, "Insufficient daily returns to calculate good correlations for '"+tsi.system.Name+"'")
+		}
 	}
 }
 

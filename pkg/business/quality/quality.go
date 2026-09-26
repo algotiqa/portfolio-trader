@@ -11,13 +11,11 @@ package quality
 
 import (
 	"log/slog"
-	"math"
 	"time"
 
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"github.com/algotiqa/portfolio-trader/pkg/platform"
-	"golang.org/x/exp/stats"
 )
 
 //=============================================================================
@@ -143,14 +141,7 @@ func calcQualityMetrics(trades *[]db.Trade, tradeType string, direction int, vol
 //=============================================================================
 
 func calcMetrics(list []float64, cell *Metrics) {
-	mean, stdd := stats.MeanAndStdDev(list)
-	listLen := float64(len(list))
-	capLen := math.Min(listLen, 100)
-
-	if stdd > 0.0 {
-		cell.Sqn    = core.Trunc2d(mean / stdd * math.Sqrt(listLen))
-		cell.Sqn100 = core.Trunc2d(mean / stdd * math.Sqrt(capLen))
-	}
+	cell.Sqn, cell.Sqn100 = core.CalcSQN(list)
 
 	equity := core.BuildEquity(&list)
 	_, maxDD := core.BuildDrawDown(equity)

@@ -16,6 +16,7 @@ import (
 
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
+	"golang.org/x/exp/stats"
 )
 
 //=============================================================================
@@ -126,6 +127,24 @@ func CalcRMultiple(returns []float64, risk float64) []float64 {
 	}
 
 	return list
+}
+
+//=============================================================================
+
+func CalcSQN(list []float64) (float64,float64){
+	mean, stdd := stats.MeanAndStdDev(list)
+	listLen := float64(len(list))
+	capLen := math.Min(listLen, 100)
+
+	sqn    := 0.0
+	sqn100 := 0.0
+
+	if stdd > 0.0 {
+		sqn    = Trunc2d(mean / stdd * math.Sqrt(listLen))
+		sqn100 = Trunc2d(mean / stdd * math.Sqrt(capLen))
+	}
+
+	return sqn, sqn100
 }
 
 //=============================================================================

@@ -10,6 +10,7 @@
 package business
 
 import (
+	"log/slog"
 	"time"
 
 	"github.com/algotiqa/core/auth"
@@ -20,6 +21,10 @@ import (
 )
 
 //=============================================================================
+//===
+//=== Model
+//===
+//=============================================================================
 
 type AllocationSpec struct {
 	PortfolioId uint `json:"portfolioId"`
@@ -29,11 +34,24 @@ type AllocationSpec struct {
 
 type AllocationExt struct {
 	db.Allocation
-	Portfolio   *db.Portfolio               `json:"portfolio"`
-	Filters     *[]*db.AllocationFilterFull `json:"filters"`
-	Logs        *[]db.AllocationLog         `json:"logs"`
+	Portfolio    *db.Portfolio               `json:"portfolio"`
+	Filters      *[]*db.AllocationFilterFull `json:"filters"`
+	Logs         *[]db.AllocationLog         `json:"logs"`
+	Correlations *[]db.SystemCorrelationFull `json:"correlations"`
+	CorrMatrix   *CorrelationMatrix          `json:"corrMatrix"`
 }
 
+//=============================================================================
+
+type CorrelationMatrix struct {
+	Names []string		`json:"names"`
+	Cells [][]*float64	`json:"cells"`
+}
+
+//=============================================================================
+//===
+//=== Functions
+//===
 //=============================================================================
 
 func GetAllocations(tx *gorm.DB, c *auth.Context, filter map[string]any, offset int, limit int) (*[]db.AllocationFull, error) {
@@ -77,13 +95,25 @@ func GetAllocationById(tx *gorm.DB, c *auth.Context, id uint) (*AllocationExt, e
 		return nil, err
 	}
 
+	//--- Get logs
+
+	corr, err := db.GetSystemCorrelationsByAllocationId(tx, a.Id)
+	if err != nil {
+		c.Log.Error("GetAllocationById: Could not retrieve system correlations", "error", err.Error())
+		return nil, err
+	}
+
 	//--- Put all together
 
+	fils2 := setFilterComments(fils)
+
 	ae := AllocationExt{
-		Allocation: *a,
-		Portfolio : p,
-		Filters   : setFilterComments(fils),
-		Logs      : logs,
+		Allocation  : *a,
+		Portfolio   : p,
+		Filters     : fils2,
+		Logs        : logs,
+		Correlations: corr,
+		CorrMatrix  : buildCorrelationMatrix(fils2,corr),
 	}
 
 	return &ae, nil
@@ -170,6 +200,60 @@ func setFilterComments(list *[]db.AllocationFilterFull) *[]*db.AllocationFilterF
 	}
 
 	return &res
+}
+
+//=============================================================================
+
+var one = 1.0
+
+func buildCorrelationMatrix(fils *[]*db.AllocationFilterFull, corr *[]db.SystemCorrelationFull) *CorrelationMatrix {
+	matrix := &CorrelationMatrix{}
+
+	//--- Get only active filters
+
+	var idMap = make(map[uint]int)
+	var list []*db.AllocationFilterFull
+
+	for _, f := range *fils {
+		if f.FilterPassed {
+			idMap[f.TradingSystemId] = len(list)
+			list         = append(list,         f)
+			matrix.Names = append(matrix.Names, f.TsName)
+		}
+	}
+
+	//--- Allocate full matrix, setting identity on diagonal
+
+	size := len(list)
+
+	for i,_ := range list {
+		matrix.Cells = append(matrix.Cells, make([]*float64, size))
+		matrix.Cells[i][i] = &one
+	}
+
+	//--- Fill upper diagonal with data
+
+	for _,scf := range *corr {
+		index1, ok1 := idMap[scf.TradingSystem1Id]
+		index2, ok2 := idMap[scf.TradingSystem2Id]
+
+		if !ok1 || !ok2 {
+			slog.Error("buildCorrelationMatrix: Map lookup failure!", "allocationId", scf.AllocationId,
+					   "id1", scf.TradingSystem1Id, "id2", scf.TradingSystem2Id)
+		} else {
+			if scf.Message == "" {
+				if index1 > index2 {
+					aux    := index1
+					index1 = index2
+					index2 = aux
+				}
+
+				matrix.Cells[index1][index2] = &scf.Correlation
+			}
+		}
+	}
+
+	return matrix
 }
 
 //=============================================================================

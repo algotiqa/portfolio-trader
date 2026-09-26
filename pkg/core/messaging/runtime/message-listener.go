@@ -12,7 +12,7 @@ package runtime
 import (
 	"encoding/json"
 	"log/slog"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/algotiqa/core/dbms"
@@ -20,6 +20,7 @@ import (
 	"github.com/algotiqa/portfolio-trader/pkg/consts"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"github.com/algotiqa/portfolio-trader/pkg/platform"
+	"github.com/algotiqa/types"
 	"gorm.io/gorm"
 )
 
@@ -71,17 +72,24 @@ func handleNewTrades(tm *TradeListMessage) bool {
 		}
 
 		var trades = &[]db.Trade{}
+		var returns= &[]db.DailyReturn{}
 
 		if tm.Reload {
 			err = deleteTrades(tx, ts)
 		} else {
 			trades, err = db.FindTradesByTradingSystemId(tx, tsId)
+			if err == nil {
+				returns, err = db.FindDailyReturnsByTradingSystemId(tx, tsId)
+			}
 		}
 
 		if err == nil {
 			trades, err = addNewTrades(tx, ts, trades, tm.Trades)
 			if err == nil {
-				err = updateTradingSystem(tx, ts)
+				err = addNewDailyReturns(tx, ts, returns, tm.DailyReturns)
+				if err == nil {
+					err = updateTradingSystem(tx, ts)
+				}
 			}
 		}
 
@@ -113,7 +121,7 @@ func deleteTrades(tx *gorm.DB, ts *db.TradingSystem) error {
 		return err
 	}
 
-	err = db.DeleteAllLivePeriodsByTradingSystemId(tx, ts.Id)
+	err = db.DeleteAllDailyReturnsByTradingSystemId(tx, ts.Id)
 	if err != nil {
 		return err
 	}
@@ -152,7 +160,7 @@ func addNewTrades(tx *gorm.DB, ts *db.TradingSystem, trades *[]db.Trade, newTrad
 			continue
 		}
 
-		//--- We need to add trades that are outside of [firstTrade .. lastTrade]
+		//--- We need to add trades that are outside [firstTrade .. lastTrade]
 		//--- because we will have duplicates when importing from external strategies
 		//--- Example: we have @NQ and we run the strategy on the full period to get lots of data.
 		//--- Then, when switching to live, the instrument will switch to something like @NQM25 for roughly
@@ -184,8 +192,26 @@ func addNewTrades(tx *gorm.DB, ts *db.TradingSystem, trades *[]db.Trade, newTrad
 
 	//--- Sort final list as new trades could be in the past
 
-	sort.Slice(list, func(i, j int) bool {
-		return list[i].ExitDate.Before(*list[j].ExitDate)
+	slices.SortStableFunc(list, func(a,b db.Trade) int {
+		if a.EntryDate.Before(*b.EntryDate) {
+			return -1
+		}
+
+		if a.EntryDate.After(*b.EntryDate) {
+			return 1
+		}
+
+		//--- a.EntryDate == b.EntryDate
+
+		if a.ExitDate.Before(*b.ExitDate) {
+			return -1
+		}
+
+		if a.ExitDate.After(*b.ExitDate) {
+			return 1
+		}
+
+		return 0
 	})
 
 	return &list, nil
@@ -268,65 +294,43 @@ func updateTradingSystem(tx *gorm.DB, ts *db.TradingSystem) error {
 
 //=============================================================================
 
-//func updateActivationStatus(ts *db.TradingSystem, trades *[]db.Trade, f *db.TradingFilter) {
-//	if !ts.Running {
-//		ts.SuggestedAction = db.TsActionNone
-//		ts.Status = db.TsStatusOff
-//		return
-//	}
-//
-//	//--- The trading system is running (i.e. live)
-//
-//	activValue := false
-//	if f != nil {
-//		activValue = filter.CalcActivation(ts, f, *trades)
-//	}
-//
-//	if ts.AutoActivation {
-//		handleAutomaticActivation(ts, activValue)
-//	} else {
-//		handleManualActivation(ts, activValue)
-//	}
-//}
+func addNewDailyReturns(tx *gorm.DB, ts *db.TradingSystem, returns *[]db.DailyReturn, newReturns []*DailyReturnItem) error {
+	//--- Keep a map of the already saved returns. Some tools (like MultiCharts) may create duplicates
+
+	returnSet := map[types.Date]bool{}
+	for _, dbr := range *returns {
+		returnSet[dbr.Date] = true
+	}
+
+	//--- Add new DailyReturns
+
+	for _, dr := range newReturns {
+		dbDr := toDbReturn(ts.Id, dr)
+		_, exists := returnSet[dbDr.Date]
+		if ! exists {
+			returnSet[dbDr.Date] = true
+			if dbDr.GrossReturn != 0 {
+				err := db.AddDailyReturn(tx, dbDr)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
 
 //=============================================================================
 
-//func handleManualActivation(ts *db.TradingSystem, activValue bool) {
-//	if !ts.Active {
-//		if !activValue {
-//			ts.SuggestedAction = db.TsActionNone
-//		} else {
-//			ts.SuggestedAction = db.TsActionTurnOn
-//		}
-//	} else {
-//		if !activValue {
-//			ts.SuggestedAction = db.TsActionTurnOff
-//		} else {
-//			ts.SuggestedAction = db.TsActionNone
-//		}
-//	}
-//}
+func toDbReturn(tsId uint, dri *DailyReturnItem) *db.DailyReturn {
+	y,m,d := dri.Date.In(time.UTC).Date()
+	date := types.NewDate(y, int(m), d)
 
-//=============================================================================
-
-//func handleAutomaticActivation(ts *db.TradingSystem, activValue bool) {
-//	ts.SuggestedAction = db.TsActionNone
-//
-//	if !ts.Active {
-//		if activValue {
-//			ts.Status = db.TsStatusRunning
-//			ts.Active = true
-//			activate(ts)
-//			notifyRuntime(ts)
-//		}
-//	} else {
-//		if !activValue {
-//			ts.Status = db.TsStatusPaused
-//			ts.Active = false
-//			activate(ts)
-//			notifyRuntime(ts)
-//		}
-//	}
-//}
+	return &db.DailyReturn{
+		TradingSystemId: tsId,
+		Date           : date,
+		GrossReturn    : dri.GrossReturn,
+	}
+}
 
 //=============================================================================

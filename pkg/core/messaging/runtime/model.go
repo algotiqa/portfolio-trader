@@ -16,10 +16,11 @@ import (
 //=============================================================================
 
 type TradeListMessage struct {
-	TradingSystemId uint             `json:"tradingSystemId"`
-	Reload          bool             `json:"reload"`
-	Trades          []*TradeItem     `json:"trades"`
-	OpenTrade       []*EquityBarItem `json:"openTrade"`
+	TradingSystemId uint               `json:"tradingSystemId"`
+	Reload          bool               `json:"reload"`
+	Trades          []*TradeItem       `json:"trades"`
+	OpenTrade       []*EquityBarItem   `json:"openTrade"`
+	DailyReturns    []*DailyReturnItem `json:"dailyReturns"`
 }
 
 //=============================================================================
@@ -43,6 +44,13 @@ type EquityBarItem struct {
 	Date        time.Time  `json:"date"`
 	GrossReturn float64    `json:"grossReturn"`
 	Contracts   int        `json:"contracts"`
+}
+
+//=============================================================================
+
+type DailyReturnItem struct {
+	Date        time.Time  `json:"date"`
+	GrossReturn float64    `json:"grossReturn"`
 }
 
 //=============================================================================

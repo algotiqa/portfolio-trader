@@ -7,7 +7,7 @@
 //=== By using this file, you agree to the terms and conditions of that license.
 //=============================================================================
 
-package core
+package stats
 
 import (
 	"testing"
@@ -33,19 +33,19 @@ var yAxis2= []float64{ 250, -30, 120, -12 }
 //=============================================================================
 
 func TestMean(t *testing.T) {
-	mean := calcMean(xAxis)
+	mean := Mean(xAxis)
 
 	if mean != 3788.25 {
 		t.Errorf("Bad mean: Expected 3788.25 and got %v", mean)
 	}
 
-	mean = calcMean(yAxis1)
+	mean = Mean(yAxis1)
 
 	if mean != 108 {
 		t.Errorf("Bad mean: Expected 108 and got %v", mean)
 	}
 
-	mean = calcMean(yAxis2)
+	mean = Mean(yAxis2)
 
 	if mean != 82 {
 		t.Errorf("Bad mean: Expected 82 and got %v", mean)

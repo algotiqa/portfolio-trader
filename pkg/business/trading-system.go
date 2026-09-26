@@ -66,6 +66,11 @@ func DeleteTradingSystem(tx *gorm.DB, id uint) error {
 		return err
 	}
 
+	err = db.DeleteAllDailyReturnsByTradingSystemId(tx, id)
+	if err != nil {
+		return err
+	}
+
 	err = db.DeleteTradingFilter(tx, id)
 	if err != nil {
 		return err

@@ -247,6 +247,14 @@ type EquityBar struct {
 
 //=============================================================================
 
+type DailyReturn struct {
+	TradingSystemId uint        `json:"tradingSystemId"`
+	Date            types.Date  `json:"date"`
+	GrossReturn     float64     `json:"grossReturn"`
+}
+
+//=============================================================================
+
 type LivePeriod struct {
 	Id              uint      `json:"id" gorm:"primaryKey"`
 	TradingSystemId uint      `json:"tradingSystemId"`
@@ -309,7 +317,6 @@ type Allocation struct {
 //=============================================================================
 
 type AllocationFilter struct {
-	Id              uint      `json:"id" gorm:"primaryKey"`
 	AllocationId    uint      `json:"allocationId"`
 	TradingSystemId uint      `json:"tradingSystemId"`
 	FilterPassed    bool      `json:"filterPassed"`
@@ -337,6 +344,16 @@ type AllocationLog struct {
 
 //=============================================================================
 
+type SystemCorrelation struct {
+	AllocationId     uint    `json:"allocationId"`
+	TradingSystem1Id uint    `json:"tradingSystem1Id"`
+	TradingSystem2Id uint    `json:"tradingSystem2Id"`
+	Correlation      float64 `json:"correlation"`
+	Message          string  `json:"message"`
+}
+
+//=============================================================================
+
 type AllocationFull struct {
 	Allocation
 	PortfolioName          string    `json:"portfolioName"`
@@ -359,21 +376,31 @@ type AllocationFilterFull struct {
 }
 
 //=============================================================================
+
+type SystemCorrelationFull struct {
+	SystemCorrelation
+	TradingSystem1Name string  `json:"tradingSystem1Name"`
+	TradingSystem2Name string  `json:"tradingSystem2Name"`
+}
+
+//=============================================================================
 //===
 //=== Table names
 //===
 //=============================================================================
 
-func (TradingSystem)    TableName() string { return "trading_system"    }
-func (TradingFilter)    TableName() string { return "trading_filter"    }
-func (TradingPosition)  TableName() string { return "trading_position"  }
-func (Trade)            TableName() string { return "trade"             }
-func (Portfolio)        TableName() string { return "portfolio"         }
-func (EquityBar)        TableName() string { return "equity_bar"        }
-func (LivePeriod)       TableName() string { return "live_period"       }
-func (Allocation)       TableName() string { return "allocation"        }
-func (AllocationFilter) TableName() string { return "allocation_filter" }
-func (AllocationLog)    TableName() string { return "allocation_log"    }
+func (TradingSystem)     TableName() string { return "trading_system"     }
+func (TradingFilter)     TableName() string { return "trading_filter"     }
+func (TradingPosition)   TableName() string { return "trading_position"   }
+func (Trade)             TableName() string { return "trade"              }
+func (Portfolio)         TableName() string { return "portfolio"          }
+func (EquityBar)         TableName() string { return "equity_bar"         }
+func (LivePeriod)        TableName() string { return "live_period"        }
+func (Allocation)        TableName() string { return "allocation"         }
+func (AllocationFilter)  TableName() string { return "allocation_filter"  }
+func (AllocationLog)     TableName() string { return "allocation_log"     }
+func (DailyReturn)       TableName() string { return "daily_return"       }
+func (SystemCorrelation) TableName() string { return "system_correlation" }
 
 //=============================================================================
 //===
