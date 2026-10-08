@@ -64,6 +64,7 @@ func RunFilterAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, far *filter.Anal
 		return nil, err
 	}
 
+	core.NormalizeContracts(trades)
 	res := filter.RunAnalysis(ts, filters, trades)
 
 	return res, err
@@ -88,6 +89,7 @@ func StartFilterOptimization(tx *gorm.DB, c *auth.Context, tsId uint, oreq *filt
 	}
 
 	c.Log.Info("StartFilterOptimization: Starting optimization", "tsId", ts.Id, "tsName", ts.Name)
+	core.NormalizeContracts(trades)
 	filter.StartOptimization(ts, trades, oreq)
 
 	return nil

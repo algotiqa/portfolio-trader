@@ -125,6 +125,7 @@ func StartPositionOptimization(tx *gorm.DB, c *auth.Context, tsId uint, oreq *po
 		return err
 	}
 
+	core.NormalizeContracts(trades)
 	err = position.StartOptimization(ts, trades, oreq)
 	if err == nil {
 		c.Log.Info("StartPositionOptimization: Starting optimization", "tsId", ts.Id, "tsName", ts.Name)

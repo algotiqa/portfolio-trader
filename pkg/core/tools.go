@@ -214,3 +214,9 @@ func NormalizeContracts(list *[]db.Trade) {
 }
 
 //=============================================================================
+
+func NetCost(grossReturn float64, costPerOper float64) float64 {
+	return grossReturn - 2*costPerOper
+}
+
+//=============================================================================

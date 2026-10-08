@@ -64,6 +64,7 @@ func RunQualityAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, req *quality.An
 		return nil, err
 	}
 
+	core.NormalizeContracts(trades)
 	return quality.GetQualityAnalysis(ts, trades, man, timeframe)
 }
 

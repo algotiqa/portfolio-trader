@@ -15,6 +15,7 @@ import (
 
 	"github.com/algotiqa/core/dbms"
 	"github.com/algotiqa/portfolio-trader/pkg/business/allocation"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"github.com/algotiqa/types"
 	"gorm.io/gorm"
@@ -81,6 +82,7 @@ func retrieveInfo(a *db.Allocation) (*allocation.Job,error) {
 					return errp
 				}
 
+				core.NormalizeContracts(trades)
 				tsi := allocation.NewTradingSystemInfo(&ts, tsf, tsp, trades, returns)
 				job.AddTradingSystem(tsi)
 			}

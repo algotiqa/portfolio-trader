@@ -49,6 +49,7 @@ func RunPerformanceAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, req *perfor
 		return nil, err
 	}
 	shiftTradesTimezone(trades, loc)
+	core.NormalizeContracts(trades)
 
 	livePeriods, err := db.FindLivePeriodsByTradingSystemId(tx, ts.Id)
 	if err != nil {

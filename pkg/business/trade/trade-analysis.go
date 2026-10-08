@@ -48,8 +48,13 @@ func buildTradeInfo(tr *db.Trade, bars []*db.EquityBar, costPerOper float64) *En
 	var contracts []int
 
 	for _, eb := range bars {
-		grossEq   = append(grossEq,   eb.GrossReturn)
-		netEq     = append(netEq,     eb.GrossReturn - 2*costPerOper)
+		grossReturn := eb.GrossReturn
+		if eb.Contracts > 0 {
+			grossReturn /= float64(eb.Contracts)
+		}
+
+		grossEq   = append(grossEq,   grossReturn)
+		netEq     = append(netEq,     core.NetCost(grossReturn, costPerOper))
 		contracts = append(contracts, eb.Contracts)
 	}
 
@@ -74,9 +79,9 @@ func buildEquity(eq []float64, ret float64, costPerOper float64) *EquityInfo {
 
 	return &EquityInfo{
 		Equity  : eq,
-		Return  : ret - 2*costPerOper,
-		RunUp   : runUp,
-		Drawdown: drawd,
+		Return  : core.NetCost(ret,   costPerOper),
+		RunUp   : core.NetCost(runUp, costPerOper),
+		Drawdown: core.NetCost(drawd, costPerOper),
 	}
 }
 

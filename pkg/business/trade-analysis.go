@@ -48,6 +48,7 @@ func RunTradeAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, req *trade.Analys
 		return nil, err
 	}
 	shiftTradesTimezone(trades, loc)
+	core.NormalizeContracts(trades)
 
 	barMap, err := getEquityBars(tx, trades)
 	if err != nil {
