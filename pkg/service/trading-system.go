@@ -69,6 +69,7 @@ func getTradingSystem(c *auth.Context) {
 }
 
 //=============================================================================
+//--- Unused by the GUI
 
 func getTrades(c *auth.Context) {
 	tsId, err := c.GetIdFromUrl()

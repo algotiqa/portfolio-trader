@@ -16,6 +16,7 @@ import (
 	"github.com/algotiqa/core/dbms"
 	"github.com/algotiqa/core/msg"
 	"github.com/algotiqa/portfolio-trader/pkg/business"
+	"github.com/algotiqa/portfolio-trader/pkg/business/allocation/builder"
 	"github.com/algotiqa/portfolio-trader/pkg/business/importexport"
 	"github.com/algotiqa/portfolio-trader/pkg/business/position"
 	"github.com/algotiqa/portfolio-trader/pkg/business/position/model"
@@ -389,7 +390,15 @@ func handlePortfolio(m *msg.Message) bool {
 func setPortfolio(pm *PortfolioMessage, create bool) bool {
 	slog.Info("setPortfolio: Portfolio change received", "create", create, "id", pm.Portfolio.Id)
 
-	err := dbms.RunInTransaction(func(tx *gorm.DB) error {
+	portBuilder := builder.NewSimpleBuilder()
+
+	data,err := json.Marshal(portBuilder.Config())
+	if err != nil {
+		slog.Error("setPortfolio: Cannot marshal builder's config")
+		return false
+	}
+
+	err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 		p, err := db.GetPortfolioById(tx, pm.Portfolio.Id)
 		if err != nil {
 			return err
@@ -421,6 +430,8 @@ func setPortfolio(pm *PortfolioMessage, create bool) bool {
 		p.AccountCurrencySymbol = pm.Currency.Symbol
 		p.SupportsAccounting    = pm.Account.SupportsAccounting
 		p.ConnectionId          = pm.Account.ConnectionId
+		p.BuilderName           = portBuilder.Name()
+		p.BuilderConfig         = string(data)
 
 		return db.UpdatePortfolio(tx, p)
 	})

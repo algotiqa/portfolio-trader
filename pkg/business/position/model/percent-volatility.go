@@ -21,7 +21,7 @@ import (
 //=============================================================================
 
 var DefAverageLength = 20
-var DefMaxVolatility = 1.5
+var DefMaxVolatility = 1.0
 
 var SpecAverageLength = core.NewNumberParamSpec[int    ]( "averageLength", true, 1, 1000, &DefAverageLength)
 var SpecMaxVolatility = core.NewNumberParamSpec[float64]( "maxVolatility", true, 0.1, 50, &DefMaxVolatility)
@@ -104,7 +104,7 @@ func (m *PercentVolatilityModel) Config() map[string]any {
 
 //=============================================================================
 
-func (m *PercentVolatilityModel) Spec() map[string]any {
+func (m *PercentVolatilityModel) Specs() map[string]any {
 	specs := make(map[string]any)
 
 	specs[SpecAverageLength.Name] = SpecAverageLength
@@ -119,11 +119,15 @@ func (m *PercentVolatilityModel) PositionInit(ts *TradingSnapshot) {}
 
 //=============================================================================
 
-func (m *PercentVolatilityModel) PositionFor(ts *TradingSnapshot) int {
+func (m *PercentVolatilityModel) PositionFor(ts *TradingSnapshot) float64 {
 	capAtRisk := ts.CurrentCapital * m.config.maxVolatility / 100
-	units     := int(capAtRisk / ts.AtrValue)
+	return capAtRisk / (ts.AtrValue * ts.PointValue)
+}
 
-	return units
+//=============================================================================
+
+func (m *PercentVolatilityModel) AtrLen() int {
+	return m.config.averageLength
 }
 
 //=============================================================================

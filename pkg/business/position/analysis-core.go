@@ -10,10 +10,8 @@
 package position
 
 import (
-	"math"
 	"time"
 
-	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/portfolio-trader/pkg/business/position/model"
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
@@ -37,8 +35,8 @@ func RunAnalysis(ts *db.TradingSystem, curModel, selModel model.PositionModel, t
 		res.UsedMargin = *pos.MarginOverride
 	}
 
-	grossRisk,errG := calcRiskValue(pos.RiskPerUnit, pos.RiskValue, trades, 0)
-	netRisk,errN   := calcRiskValue(pos.RiskPerUnit, pos.RiskValue, trades, ts.CostPerOperation)
+	grossRisk,errG := core.CalcRiskForPosition(pos.RiskPerUnit, pos.RiskValue, trades, 0)
+	netRisk,errN   := core.CalcRiskForPosition(pos.RiskPerUnit, pos.RiskValue, trades, ts.CostPerOperation)
 
 	baseline := model.NewFixedUnitModel()
 
@@ -119,7 +117,7 @@ func calcModelPerformance(mod model.PositionModel, trades *[]db.Trade, res *Anal
 
 	for _, trade := range *trades {
 		snapshot.AtrValue = calcAtr(&trade, atrMap)
-		position := mod.PositionFor(snapshot)
+		position := int(mod.PositionFor(snapshot))
 
 		//--- Check if we go above the max allowed position
 		if position > *params.MaxUnits {
@@ -186,63 +184,22 @@ func buildParamSpecs() map[string]any {
 func buildModelSpecs() map[string]any {
 	specs := make(map[string]any)
 
-	for k,v := range model.NewFixedUnitModel().Spec() {
+	for k,v := range model.NewFixedUnitModel().Specs() {
 		specs[k] = v
 	}
 
-	for k,v := range model.NewPercentRiskModel().Spec() {
+	for k,v := range model.NewPercentRiskModel().Specs() {
 		specs[k] = v
 	}
 
-	for k,v := range model.NewPercentVolatilityModel().Spec() {
+	for k,v := range model.NewPercentVolatilityModel().Specs() {
 		specs[k] = v
 	}
-	for k,v := range model.NewMarketMoneyModel().Spec() {
+	for k,v := range model.NewMarketMoneyModel().Specs() {
 		specs[k] = v
 	}
 
 	return specs
-}
-
-//=============================================================================
-
-func calcRiskValue(riskPerUnit db.RpuType, riskValue *float64, trades *[]db.Trade, costPerOper float64) (float64,error) {
-	if riskPerUnit == db.RpuFixedValue {
-		return *riskValue +2 * costPerOper,nil
-	}
-
-	returns := core.GetReturns(trades, db.TradeTypeAll, costPerOper)
-
-	if riskPerUnit == db.RpuStopLoss {
-		return core.CalcRisk(returns, costPerOper)
-	}
-
-	sum    := 0.0
-	maxVal := 0.0
-
-	var losses []float64
-	for _, ret := range returns {
-		if ret < 0 {
-			ret    = -ret
-			maxVal = math.Max(maxVal, ret)
-			sum   += ret
-			losses = append(losses, ret)
-		}
-	}
-
-	if losses == nil || len(losses) == 0 {
-		return 0, req.NewUnprocessableEntityError("no losses found")
-	}
-
-	if riskPerUnit == db.RpuMaxLoss {
-		return maxVal, nil
-	}
-
-	if riskPerUnit == db.RpuAvgLoss {
-		return sum / float64(len(losses)), nil
-	}
-
-	panic("Unknown riskPerUnit type: "+ riskPerUnit)
 }
 
 //=============================================================================

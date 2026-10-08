@@ -7,10 +7,9 @@
 //=== By using this file, you agree to the terms and conditions of that license.
 //=============================================================================
 
-package model
+package builder
 
 import (
-	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
 
@@ -20,101 +19,58 @@ import (
 //===
 //=============================================================================
 
-var DefUnits = 1
-
-var SpecUnits = core.NewNumberParamSpec[int]( "units", true, 1, 10000, &DefUnits)
-
 //=============================================================================
 //===
 //=== Config
 //===
 //=============================================================================
 
-type FixedUnitConfig struct {
-	units int
+type NoneConfig struct {
 }
 
 //=============================================================================
 //===
-//=== Model
+//=== Builder
 //===
 //=============================================================================
 
-type FixedUnitModel struct {
-	config *FixedUnitConfig
+type NoneBuilder struct {
+	config *NoneConfig
 }
 
 //=============================================================================
 
-func NewFixedUnitModel() *FixedUnitModel {
-	return &FixedUnitModel{
-		config: &FixedUnitConfig{
-			units: DefUnits,
+func NewNoneBuilder() *NoneBuilder {
+	return &NoneBuilder{
+		config: &NoneConfig{
 		},
 	}
 }
 
 //=============================================================================
 
-func NewFixedUnitModelWithParams(units int) *FixedUnitModel {
-	return &FixedUnitModel{
-		config: &FixedUnitConfig{
-			units: units,
-		},
-	}
+func (b *NoneBuilder) Name() db.BuilderName {
+	return db.BuilderNone
 }
 
 //=============================================================================
 
-func (m *FixedUnitModel) Name() db.ModelName {
-	return db.ModelFixedUnit
-}
-
-//=============================================================================
-
-func (m *FixedUnitModel) Init(config map[string]any) error {
-	units,err := core.MapNumber[int](config, SpecUnits)
-	if err != nil {
-		return err
-	}
-
-	m.config.units = *units
+func (b *NoneBuilder) Init(config map[string]any) error {
 	return nil
 }
 
 //=============================================================================
 
-func (m *FixedUnitModel) Config() map[string]any {
+func (b *NoneBuilder) Config() map[string]any {
 	cfg := make(map[string]any)
-	cfg[SpecUnits.Name] = m.config.units
-
 	return cfg
 }
 
 //=============================================================================
 
-func (m *FixedUnitModel) Specs() map[string]any {
+func (b *NoneBuilder) Specs() map[string]any {
 	specs := make(map[string]any)
-
-	specs[SpecUnits.Name] = SpecUnits
-
 	return specs
-}
-
-//=============================================================================
-
-func (m *FixedUnitModel) PositionInit(ts *TradingSnapshot) {}
-
-//=============================================================================
-
-func (m *FixedUnitModel) PositionFor(ts *TradingSnapshot) float64 {
-	return float64(m.config.units)
-}
-
-//=============================================================================
-
-func (m *FixedUnitModel) AtrLen() int {
-	return 0
 }
 
 //=============================================================================

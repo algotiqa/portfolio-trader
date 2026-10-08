@@ -25,24 +25,37 @@ import (
 //===
 //=============================================================================
 
+type BuilderName string
+
+//-----------------------------------------------------------------------------
+
+const (
+	BuilderNone   BuilderName = "none"
+	BuilderSimple BuilderName = "simple"
+)
+
+//-----------------------------------------------------------------------------
+
 type Portfolio struct {
-	Id                     uint      `json:"id" gorm:"primaryKey"`
-	Username               string    `json:"username"`
-	Name                   string    `json:"name"`
-	AccountPerc            float64   `json:"accountPerc"`
-	MaxMarginPerc          float64   `json:"maxMarginPerc"`
-	CorrelationPeriod      int       `json:"correlationPeriod"`
-	RunPeriod              int       `json:"runPeriod"`
-	AccountId              uint      `json:"accountId"`
-	AccountCode            string    `json:"accountCode"`
-	AccountName            string    `json:"accountName"`
-	AccountCurrentCapital  float64   `json:"accountCurrentCapital"`
-	AccountActive          bool      `json:"accountActive"`
-	AccountCurrencyId      uint      `json:"accountCurrencyId"`
-	AccountCurrencyCode    string    `json:"accountCurrencyCode"`
-	AccountCurrencySymbol  string    `json:"accountCurrencySymbol"`
-	SupportsAccounting     bool      `json:"supportsAccounting"`
-	ConnectionId           uint      `json:"connectionId"`
+	Id                     uint        `json:"id" gorm:"primaryKey"`
+	Username               string      `json:"username"`
+	Name                   string      `json:"name"`
+	AccountPerc            float64     `json:"accountPerc"`
+	MaxMarginPerc          float64     `json:"maxMarginPerc"`
+	CorrelationPeriod      int         `json:"correlationPeriod"`
+	RunPeriod              int         `json:"runPeriod"`
+	BuilderName            BuilderName `json:"managementType"`
+	BuilderConfig          string      `json:"managementConfig"`
+	AccountId              uint        `json:"accountId"`
+	AccountCode            string      `json:"accountCode"`
+	AccountName            string      `json:"accountName"`
+	AccountCurrentCapital  float64     `json:"accountCurrentCapital"`
+	AccountActive          bool        `json:"accountActive"`
+	AccountCurrencyId      uint        `json:"accountCurrencyId"`
+	AccountCurrencyCode    string      `json:"accountCurrencyCode"`
+	AccountCurrencySymbol  string      `json:"accountCurrencySymbol"`
+	SupportsAccounting     bool        `json:"supportsAccounting"`
+	ConnectionId           uint        `json:"connectionId"`
 }
 
 //=============================================================================
@@ -312,44 +325,7 @@ type Allocation struct {
 	CorrelationPeriod int         `json:"correlationPeriod"`
 	AccountCapital    float64     `json:"accountCapital"`
 	Status            AllocStatus `json:"status"`
-}
-
-//=============================================================================
-
-type AllocationFilter struct {
-	AllocationId    uint      `json:"allocationId"`
-	TradingSystemId uint      `json:"tradingSystemId"`
-	FilterPassed    bool      `json:"filterPassed"`
-	Comment         string    `json:"comment"`
-}
-
-//=============================================================================
-
-type LogLevel string
-
-const (
-	LogLevelInfo    LogLevel = "I"
-	LogLevelWarning LogLevel = "W"
-	LogLevelError   LogLevel = "E"
-)
-
-//-----------------------------------------------------------------------------
-
-type AllocationLog struct {
-	Id             uint     `json:"id" gorm:"primaryKey"`
-	AllocationId   uint     `json:"allocationId"`
-	Level          LogLevel `json:"level"`
-	Message        string   `json:"message"`
-}
-
-//=============================================================================
-
-type SystemCorrelation struct {
-	AllocationId     uint    `json:"allocationId"`
-	TradingSystem1Id uint    `json:"tradingSystem1Id"`
-	TradingSystem2Id uint    `json:"tradingSystem2Id"`
-	Correlation      float64 `json:"correlation"`
-	Message          string  `json:"message"`
+	Report            string      `json:"report"`
 }
 
 //=============================================================================
@@ -361,26 +337,6 @@ type AllocationFull struct {
 	AccountCode            string    `json:"accountCode"`
 	AccountName            string    `json:"accountName"`
 	AccountCurrencyCode    string    `json:"accountCurrencyCode"`
-}
-
-//=============================================================================
-
-type AllocationFilterFull struct {
-	AllocationFilter
-	TsName           string    `json:"tsName"`
-	TsDataSymbol     string    `json:"tsDataSymbol"`
-	TsBrokerSymbol   string    `json:"tsBrokerSymbol"`
-	TsMarketType     string    `json:"tsMarketType"`
-	TsStrategyType   string    `json:"tsStrategyType"`
-	TsRunning        bool      `json:"tsRunning"`
-}
-
-//=============================================================================
-
-type SystemCorrelationFull struct {
-	SystemCorrelation
-	TradingSystem1Name string  `json:"tradingSystem1Name"`
-	TradingSystem2Name string  `json:"tradingSystem2Name"`
 }
 
 //=============================================================================
@@ -397,10 +353,7 @@ func (Portfolio)         TableName() string { return "portfolio"          }
 func (EquityBar)         TableName() string { return "equity_bar"         }
 func (LivePeriod)        TableName() string { return "live_period"        }
 func (Allocation)        TableName() string { return "allocation"         }
-func (AllocationFilter)  TableName() string { return "allocation_filter"  }
-func (AllocationLog)     TableName() string { return "allocation_log"     }
 func (DailyReturn)       TableName() string { return "daily_return"       }
-func (SystemCorrelation) TableName() string { return "system_correlation" }
 
 //=============================================================================
 //===

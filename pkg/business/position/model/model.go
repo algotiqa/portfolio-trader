@@ -23,9 +23,10 @@ type PositionModel interface {
 	Name() db.ModelName
 	Init(config map[string]any) error
 	Config() map[string]any
-	Spec() map[string]any
+	Specs() map[string]any
 	PositionInit(ts *TradingSnapshot)
-	PositionFor(ts *TradingSnapshot) int
+	PositionFor(ts *TradingSnapshot) float64
+	AtrLen() int
 }
 
 //=============================================================================
@@ -35,6 +36,7 @@ type TradingSnapshot struct {
 	CurrentCapital float64
 	RiskValue      float64
 	AtrValue       float64
+	PointValue     float64
 }
 
 //=============================================================================

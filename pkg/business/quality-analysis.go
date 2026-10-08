@@ -59,7 +59,7 @@ func RunQualityAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, req *quality.An
 		fromDate = &tmp
 	}
 
-	man, err := platform.AnalyzeDataProduct(c, ts, fromDate, toDate, req.AtrLength, timeframe)
+	man, err := platform.AnalyzeDataProduct(c, ts.DataProductId, fromDate, toDate, req.AtrLength, timeframe)
 	if err != nil {
 		return nil, err
 	}

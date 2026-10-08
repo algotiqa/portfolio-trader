@@ -11,12 +11,13 @@ package platform
 
 import (
 	"fmt"
+	"log/slog"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/core/req"
-	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"github.com/algotiqa/types"
 )
 
@@ -76,14 +77,12 @@ type BarResult struct {
 //===
 //=============================================================================
 
-func AnalyzeDataProduct(c *auth.Context, ts *db.TradingSystem, from,to *time.Time, atrLen int, timeframe int) (*DataProductAnalysisResponse, error) {
-	id := ts.DataProductId
+func AnalyzeDataProduct(c *auth.Context, id uint, from,to *time.Time, atrLen int, timeframe int) (*DataProductAnalysisResponse, error) {
 	c.Log.Info("AnalyzeDataProduct: Asking data product analysis to data collector", "id", id, "from", from, "to", to)
 
 	token  := c.Token
 	client := req.GetDefaultClient()
-	srvUrl := fmt.Sprintf("%s/v1/data-products/%d/analysis?timeframe=%d&sessionId=%d&atrLen=%d",
-						platform.Data, id, timeframe, ts.TradingSessionId, atrLen)
+	srvUrl := fmt.Sprintf("%s/v1/data-products/%d/analysis?timeframe=%d&atrLen=%d", platform.Data, id, timeframe, atrLen)
 	if from != nil {
 		srvUrl = srvUrl + "&from="+ url.QueryEscape(from.Format(time.DateTime))
 	}
@@ -99,6 +98,37 @@ func AnalyzeDataProduct(c *auth.Context, ts *db.TradingSystem, from,to *time.Tim
 	}
 
 	c.Log.Info("AnalyzeDataProduct: Analysis received", "id", id)
+	return &res, nil
+}
+
+//=============================================================================
+
+func GetLatestDataProductAnalysis(id uint, daysBack, atrLen int, timeframe int) (*DataProductAnalysisResponse, error) {
+	slog.Info("GetLatestDataProductAnalysis: Asking data product analysis to data collector", "id", id, "dayBack", daysBack, "atrLen", atrLen)
+
+	token,err := auth.Token()
+	if err != nil {
+		return nil, err
+	}
+
+	client := req.GetDefaultClient()
+	srvUrl := fmt.Sprintf("%s/v1/data-products/%d/analysis?%s",
+		platform.Data, id,
+		url.Values{
+			"timeframe": {strconv.Itoa(timeframe)},
+			"atrLen":    {strconv.Itoa(atrLen)},
+			"daysBack":  {strconv.Itoa(daysBack)},
+		}.Encode(),
+	)
+
+	var res DataProductAnalysisResponse
+	err = req.DoGet(client, srvUrl, &res, token)
+	if err != nil {
+		slog.Error("GetLatestDataProductAnalysis: Got an error when accessing the data-collector", "id", id, "error", err.Error())
+		return nil, err
+	}
+
+	slog.Info("GetLatestDataProductAnalysis: Analysis received", "id", id)
 	return &res, nil
 }
 

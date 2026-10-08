@@ -93,7 +93,7 @@ func (m *PercentRiskModel) Config() map[string]any {
 
 //=============================================================================
 
-func (m *PercentRiskModel) Spec() map[string]any {
+func (m *PercentRiskModel) Specs() map[string]any {
 	specs := make(map[string]any)
 
 	specs[SpecRiskPerTrade.Name] = SpecRiskPerTrade
@@ -107,11 +107,15 @@ func (m *PercentRiskModel) PositionInit(ts *TradingSnapshot) {}
 
 //=============================================================================
 
-func (m *PercentRiskModel) PositionFor(ts *TradingSnapshot) int {
+func (m *PercentRiskModel) PositionFor(ts *TradingSnapshot) float64 {
 	capAtRisk := ts.CurrentCapital * m.config.riskPerTrade / 100
-	units     := int(capAtRisk / ts.RiskValue)
+	return capAtRisk / ts.RiskValue
+}
 
-	return units
+//=============================================================================
+
+func (m *PercentRiskModel) AtrLen() int {
+	return 0
 }
 
 //=============================================================================

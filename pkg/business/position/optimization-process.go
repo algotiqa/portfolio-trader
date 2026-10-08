@@ -87,7 +87,7 @@ func (er *ExecutionResult) FitnessValue() float64 {
 //=============================================================================
 
 func (op *OptimizationProcess) Start() error {
-	netRisk,err := calcRiskValue(op.optReq.Params.RiskPerUnit, op.optReq.Params.RiskValue, op.trades, op.ts.CostPerOperation)
+	netRisk,err := core.CalcRiskForPosition(op.optReq.Params.RiskPerUnit, op.optReq.Params.RiskValue, op.trades, op.ts.CostPerOperation)
 	if err != nil {
 		return req.NewUnprocessableEntityError(err.Error())
 	}
@@ -365,7 +365,7 @@ func (op *OptimizationProcess) runStep(mod model.PositionModel, spec *RunSpec) *
 		trade := trades[rand.Intn(size)]
 
 		snapshot.AtrValue = calcAtr(&trade, atrMap)
-		position := mod.PositionFor(snapshot)
+		position := int(mod.PositionFor(snapshot))
 
 		//--- Check if we go above the max allowed position
 		if position > spec.MaxUnits {

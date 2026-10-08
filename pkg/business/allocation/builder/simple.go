@@ -7,7 +7,7 @@
 //=== By using this file, you agree to the terms and conditions of that license.
 //=============================================================================
 
-package model
+package builder
 
 import (
 	"github.com/algotiqa/portfolio-trader/pkg/core"
@@ -20,9 +20,9 @@ import (
 //===
 //=============================================================================
 
-var DefUnits = 1
+var DefCorrThresh = 0.7
 
-var SpecUnits = core.NewNumberParamSpec[int]( "units", true, 1, 10000, &DefUnits)
+var SpecCorrThresh = core.NewNumberParamSpec[float64]( "corrThresh", true, 0.01, 0.99, &DefCorrThresh)
 
 //=============================================================================
 //===
@@ -30,91 +30,75 @@ var SpecUnits = core.NewNumberParamSpec[int]( "units", true, 1, 10000, &DefUnits
 //===
 //=============================================================================
 
-type FixedUnitConfig struct {
-	units int
+type SimpleConfig struct {
+	corrThresh float64
 }
 
 //=============================================================================
 //===
-//=== Model
+//=== Builder
 //===
 //=============================================================================
 
-type FixedUnitModel struct {
-	config *FixedUnitConfig
+type SimpleBuilder struct {
+	config *SimpleConfig
 }
 
 //=============================================================================
 
-func NewFixedUnitModel() *FixedUnitModel {
-	return &FixedUnitModel{
-		config: &FixedUnitConfig{
-			units: DefUnits,
+func NewSimpleBuilder() *SimpleBuilder {
+	return &SimpleBuilder{
+		config: &SimpleConfig{
+			corrThresh: DefCorrThresh,
 		},
 	}
 }
 
 //=============================================================================
 
-func NewFixedUnitModelWithParams(units int) *FixedUnitModel {
-	return &FixedUnitModel{
-		config: &FixedUnitConfig{
-			units: units,
+func NewSimpleBuilderWithParams(corrThresh float64) *SimpleBuilder {
+	return &SimpleBuilder{
+		config: &SimpleConfig{
+			corrThresh: corrThresh,
 		},
 	}
 }
 
 //=============================================================================
 
-func (m *FixedUnitModel) Name() db.ModelName {
-	return db.ModelFixedUnit
+func (b *SimpleBuilder) Name() db.BuilderName {
+	return db.BuilderSimple
 }
 
 //=============================================================================
 
-func (m *FixedUnitModel) Init(config map[string]any) error {
-	units,err := core.MapNumber[int](config, SpecUnits)
+func (b *SimpleBuilder) Init(config map[string]any) error {
+	corrThresh,err := core.MapNumber[float64](config, SpecCorrThresh)
 	if err != nil {
 		return err
 	}
 
-	m.config.units = *units
+	b.config.corrThresh = *corrThresh
 	return nil
 }
 
 //=============================================================================
 
-func (m *FixedUnitModel) Config() map[string]any {
+func (b *SimpleBuilder) Config() map[string]any {
 	cfg := make(map[string]any)
-	cfg[SpecUnits.Name] = m.config.units
+	cfg[SpecCorrThresh.Name] = b.config.corrThresh
 
 	return cfg
 }
 
 //=============================================================================
 
-func (m *FixedUnitModel) Specs() map[string]any {
+func (b *SimpleBuilder) Specs() map[string]any {
 	specs := make(map[string]any)
 
-	specs[SpecUnits.Name] = SpecUnits
+	specs[SpecCorrThresh.Name] = SpecCorrThresh
 
 	return specs
-}
-
-//=============================================================================
-
-func (m *FixedUnitModel) PositionInit(ts *TradingSnapshot) {}
-
-//=============================================================================
-
-func (m *FixedUnitModel) PositionFor(ts *TradingSnapshot) float64 {
-	return float64(m.config.units)
-}
-
-//=============================================================================
-
-func (m *FixedUnitModel) AtrLen() int {
-	return 0
 }
 
 //=============================================================================

@@ -152,7 +152,7 @@ func (m *MarketMoneyModel) Config() map[string]any {
 
 //=============================================================================
 
-func (m *MarketMoneyModel) Spec() map[string]any {
+func (m *MarketMoneyModel) Specs() map[string]any {
 	specs := make(map[string]any)
 
 	specs[SpecRiskPerTradeOnCap  .Name] = SpecRiskPerTradeOnCap
@@ -171,7 +171,7 @@ func (m *MarketMoneyModel) PositionInit(ts *TradingSnapshot) {
 
 //=============================================================================
 
-func (m *MarketMoneyModel) PositionFor(ts *TradingSnapshot) int {
+func (m *MarketMoneyModel) PositionFor(ts *TradingSnapshot) float64 {
 	capAtRisk := m.baseCapital                       * m.config.riskPerTradeOnCap  / 100
 	earAtRisk := (ts.CurrentCapital - m.baseCapital) * m.config.riskPerTradeOnEarn / 100
 
@@ -187,9 +187,13 @@ func (m *MarketMoneyModel) PositionFor(ts *TradingSnapshot) int {
 		}
 	}
 
-	units := int( (capAtRisk + earAtRisk) / ts.RiskValue)
+	return (capAtRisk + earAtRisk) / ts.RiskValue
+}
 
-	return units
+//=============================================================================
+
+func (m *MarketMoneyModel) AtrLen() int {
+	return 0
 }
 
 //=============================================================================

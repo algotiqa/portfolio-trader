@@ -148,3 +148,69 @@ func CalcSQN(list []float64) (float64,float64){
 }
 
 //=============================================================================
+
+func CalcSharpeRatio(list []float64) float64 {
+	sr := 0.0
+	mean, stdd := stats.MeanAndStdDev(list)
+
+	if stdd > 0.0 {
+		sr = Trunc2d(mean / stdd)
+	}
+
+	return sr
+}
+
+//=============================================================================
+
+func CalcRiskForPosition(riskPerUnit db.RpuType, riskValue *float64, trades *[]db.Trade, costPerOper float64) (float64,error) {
+	if riskPerUnit == db.RpuFixedValue {
+		return *riskValue +2 * costPerOper,nil
+	}
+
+	returns := GetReturns(trades, db.TradeTypeAll, costPerOper)
+
+	if riskPerUnit == db.RpuStopLoss {
+		return CalcRisk(returns, costPerOper)
+	}
+
+	sum    := 0.0
+	maxVal := 0.0
+
+	var losses []float64
+	for _, ret := range returns {
+		if ret < 0 {
+			ret    = -ret
+			maxVal = math.Max(maxVal, ret)
+			sum   += ret
+			losses = append(losses, ret)
+		}
+	}
+
+	if len(losses) == 0 {
+		return 0, req.NewUnprocessableEntityError("no losses found")
+	}
+
+	if riskPerUnit == db.RpuMaxLoss {
+		return maxVal, nil
+	}
+
+	if riskPerUnit == db.RpuAvgLoss {
+		return sum / float64(len(losses)), nil
+	}
+
+	panic("Unknown riskPerUnit type: "+ riskPerUnit)
+}
+
+//=============================================================================
+
+func NormalizeContracts(list *[]db.Trade) {
+	for index := range *list {
+		t := &(*list)[index]
+
+		if t.MaxContracts > 0 {
+			t.GrossReturn /= float64(t.MaxContracts)
+		}
+	}
+}
+
+//=============================================================================
