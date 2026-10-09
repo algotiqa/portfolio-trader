@@ -36,6 +36,19 @@ func FindDailyReturnsByTradingSystemId(tx *gorm.DB, tsId uint) (*[]DailyReturn, 
 
 //=============================================================================
 
+func FindDailyReturnsByTradingSystemsId(tx *gorm.DB, ids []uint) (*[]DailyReturn, error) {
+	var list []DailyReturn
+	res := tx.Find(&list, "trading_system_id in ?", ids)
+
+	if res.Error != nil {
+		return nil, req.NewServerErrorByError(res.Error)
+	}
+
+	return &list, nil
+}
+
+//=============================================================================
+
 func FindDailyReturnsByTsIdFromTime(tx *gorm.DB, tsId uint, fromDate *types.Date, toDate *types.Date) (*[]DailyReturn, error) {
 	toT   := time.Now().UTC()
 	fromT := toT.Add(-50 * 365 * 24 * time.Hour) //--- 50 years back

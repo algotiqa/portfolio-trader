@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/algotiqa/portfolio-trader/pkg/db"
+	"github.com/algotiqa/types"
 )
 
 //=============================================================================
@@ -36,6 +37,7 @@ type TradingSystem struct {
 	TradingPosition  *db.TradingPosition `json:"tradingPosition"`
 	Trades           []*Trade            `json:"trades"`
 	LivePeriods      []*LivePeriod       `json:"livePeriods"`
+	DailyReturns     []*DailyReturn      `json:"dailyReturns"`
 }
 
 //=============================================================================
@@ -54,6 +56,7 @@ type Trade struct {
 	EntryPriceAtBroker float64      `json:"entryPriceAtBroker"`
 	ExitDateAtBroker   *time.Time   `json:"exitDateAtBroker"`
 	ExitPriceAtBroker  float64      `json:"exitPriceAtBroker"`
+	EquityBars         []*EquityBar `json:"equityBars"`
 }
 
 //=============================================================================
@@ -61,6 +64,21 @@ type Trade struct {
 type LivePeriod struct {
 	Period  time.Time `json:"period"`
 	Active  bool      `json:"active"`
+}
+
+//=============================================================================
+
+type DailyReturn struct {
+	Date        types.Date  `json:"date"`
+	GrossReturn float64     `json:"grossReturn"`
+}
+
+//=============================================================================
+
+type EquityBar struct {
+	Date        time.Time  `json:"date"`
+	GrossReturn float64    `json:"grossReturn"`
+	Contracts   int        `json:"contracts"`
 }
 
 //=============================================================================
@@ -127,6 +145,25 @@ func NewLivePeriod(f *db.LivePeriod) *LivePeriod {
 	return &LivePeriod{
 		Period:  f.Period,
 		Active:  f.Active,
+	}
+}
+
+//=============================================================================
+
+func NewDailyReturn(dr *db.DailyReturn) *DailyReturn {
+	return &DailyReturn{
+		Date       : dr.Date,
+		GrossReturn: dr.GrossReturn,
+	}
+}
+
+//=============================================================================
+
+func NewEquityBar(eb *db.EquityBar) *EquityBar {
+	return &EquityBar{
+		Date       : eb.Date,
+		GrossReturn: eb.GrossReturn,
+		Contracts  : eb.Contracts,
 	}
 }
 

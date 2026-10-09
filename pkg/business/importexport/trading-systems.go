@@ -20,13 +20,19 @@ import (
 //=============================================================================
 
 func BuildTradingSystems(systems *[]db.TradingSystem, filters *[]db.TradingFilter, trades *[]db.Trade,
-						 periods *[]db.LivePeriod, positions *[]db.TradingPosition) []*TradingSystem {
+						 periods *[]db.LivePeriod, positions *[]db.TradingPosition, daily *[]db.DailyReturn,
+						 bars *[]db.EquityBar) []*TradingSystem {
 
-	tsMap := map[uint]*TradingSystem{}
+	tsMap  := map[uint]*TradingSystem{}
+	barMap := buildBarMap(bars)
+
+	//--- Export systems
 
 	for _,ts := range *systems {
 		tsMap[ts.Id] = NewTradingSystem(&ts)
 	}
+
+	//--- Export filters
 
 	for _, f := range *filters {
 		ts,ok := tsMap[f.TradingSystemId]
@@ -35,6 +41,8 @@ func BuildTradingSystems(systems *[]db.TradingSystem, filters *[]db.TradingFilte
 		}
 	}
 
+	//--- Export positions
+
 	for _, p := range *positions {
 		ts,ok := tsMap[p.TradingSystemId]
 		if ok {
@@ -42,17 +50,35 @@ func BuildTradingSystems(systems *[]db.TradingSystem, filters *[]db.TradingFilte
 		}
 	}
 
+	//--- Export trades and their equity bars
+
 	for _, tr := range *trades {
 		ts,ok := tsMap[tr.TradingSystemId]
 		if ok {
-			ts.Trades = append(ts.Trades, NewTrade(&tr))
+			ntr := NewTrade(&tr)
+			ntr.EquityBars = barMap[tr.Id]
+			ts.Trades = append(ts.Trades, ntr)
+
+			//--- Let's free some resources
+			barMap[tr.Id] = nil
 		}
 	}
+
+	//--- Export live periods
 
 	for _, lp := range *periods {
 		ts,ok := tsMap[lp.TradingSystemId]
 		if ok {
 			ts.LivePeriods = append(ts.LivePeriods, NewLivePeriod(&lp))
+		}
+	}
+
+	//--- Export daily returns
+
+	for _, dr := range *daily {
+		ts,ok := tsMap[dr.TradingSystemId]
+		if ok {
+			ts.DailyReturns = append(ts.DailyReturns, NewDailyReturn(&dr))
 		}
 	}
 
@@ -96,6 +122,9 @@ func ImportTradingSystem(tx *gorm.DB, ts *db.TradingSystem, data []byte) error {
 					err = addTrades(tx, ts.Id, its.Trades)
 					if err == nil {
 						err = addLivePeriods(tx, ts.Id, its.LivePeriods)
+						if err == nil {
+							err = addDailyReturns(tx, ts.Id, its.DailyReturns)
+						}
 					}
 				}
 			}
@@ -103,6 +132,22 @@ func ImportTradingSystem(tx *gorm.DB, ts *db.TradingSystem, data []byte) error {
 	}
 
 	return err
+}
+
+//=============================================================================
+//===
+//=== Private functions
+//===
+//=============================================================================
+
+func buildBarMap(bars *[]db.EquityBar) map[int64][]*EquityBar {
+	barMap := make(map[int64][]*EquityBar)
+
+	for _, eb := range *bars {
+		barMap[eb.TradeId] = append(barMap[eb.TradeId], NewEquityBar(&eb))
+	}
+
+	return barMap
 }
 
 //=============================================================================
@@ -141,9 +186,17 @@ func setTradingPosition(tx *gorm.DB, id uint, p *db.TradingPosition) error {
 
 func addTrades(tx *gorm.DB, id uint, list []*Trade) error {
 	for _, t := range list {
-		err := db.AddTrade(tx, convertTrade(id,t))
+		tr := convertTrade(id,t)
+		err := db.AddTrade(tx, tr)
 		if err != nil {
 			return err
+		}
+
+		for _, b := range t.EquityBars {
+			err = db.AddEquityBar(tx, convertEquityBar(tr.Id, b))
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -173,6 +226,17 @@ func convertTrade(id uint, t *Trade) *db.Trade {
 
 //=============================================================================
 
+func convertEquityBar(id int64, b *EquityBar) *db.EquityBar {
+	return &db.EquityBar{
+		TradeId    : id,
+		Date       : b.Date,
+		GrossReturn: b.GrossReturn,
+		Contracts  : b.Contracts,
+	}
+}
+
+//=============================================================================
+
 func addLivePeriods(tx *gorm.DB, id uint, list []*LivePeriod) error {
 	for _, lp := range list {
 		err := db.AddLivePeriod(tx, convertLivePeriod(id,lp))
@@ -191,6 +255,29 @@ func convertLivePeriod(id uint, l *LivePeriod) *db.LivePeriod {
 		TradingSystemId: id,
 		Period         : l.Period,
 		Active         : l.Active,
+	}
+}
+
+//=============================================================================
+
+func addDailyReturns(tx *gorm.DB, id uint, list []*DailyReturn) error {
+	for _, dr := range list {
+		err := db.AddDailyReturn(tx, convertDailyReturn(id,dr))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+//=============================================================================
+
+func convertDailyReturn(id uint, dr *DailyReturn) *db.DailyReturn {
+	return &db.DailyReturn{
+		TradingSystemId: id,
+		Date           : dr.Date,
+		GrossReturn    : dr.GrossReturn,
 	}
 }
 

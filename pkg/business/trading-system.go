@@ -125,9 +125,36 @@ func ExportTradingSystems(tx *gorm.DB, c *auth.Context, ids []uint) (*importexpo
 		return nil, err6
 	}
 
-	tss := importexport.BuildTradingSystems(systems, filters, trades, periods, positions)
+	daily, err7 := db.FindDailyReturnsByTradingSystemsId(tx, ids)
+	if err7 != nil {
+		return nil, err7
+	}
+
+	tradeIds := getTradeIds(trades)
+	bars, err8 := db.FindEquityBarsByTradesId(tx, tradeIds)
+	if err8 != nil {
+		return nil, err8
+	}
+
+	tss := importexport.BuildTradingSystems(systems, filters, trades, periods, positions, daily, bars)
 
 	return importexport.EncodeTradingSystems(tss)
+}
+
+//=============================================================================
+//===
+//===
+//===
+//=============================================================================
+
+func getTradeIds(trades *[]db.Trade) []int64 {
+	var ids []int64
+
+	for _, tr := range *trades {
+		ids = append(ids, tr.Id)
+	}
+
+	return ids
 }
 
 //=============================================================================
