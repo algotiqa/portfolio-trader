@@ -10,8 +10,10 @@
 package builder
 
 import (
+	"encoding/json"
 	"errors"
 
+	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
 
@@ -23,8 +25,7 @@ type PortfolioBuilder interface {
 	Specs()  map[string]any
 	Init(config map[string]any) error
 
-	//PositionInit(ts *TradingSnapshot)
-	//PositionFor(ts *TradingSnapshot) int
+	TunePosition(position float64, correlations []float64) float64
 }
 
 //=============================================================================
@@ -47,3 +48,19 @@ func New(name db.BuilderName, config map[string]any) (PortfolioBuilder, error) {
 
 //=============================================================================
 
+func Create(name db.BuilderName, config string) (PortfolioBuilder,error) {
+	cfgMap := make(map[string]any)
+	err := json.Unmarshal([]byte(config), &cfgMap)
+	if err != nil {
+		return nil,req.NewServerErrorByError(err)
+	}
+
+	b,err := New(name, cfgMap)
+	if err != nil {
+		return nil,req.NewServerErrorByError(err)
+	}
+
+	return b, nil
+}
+
+//=============================================================================

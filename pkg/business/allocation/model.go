@@ -10,6 +10,7 @@
 package allocation
 
 import (
+	"github.com/algotiqa/portfolio-trader/pkg/business/allocation/builder"
 	"github.com/algotiqa/portfolio-trader/pkg/business/position/model"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
@@ -40,6 +41,7 @@ type JobSpec struct {
 type Job struct {
 	spec               *JobSpec
 	portfolio          *db.Portfolio
+	builder            builder.PortfolioBuilder
 	tradingSystems     []*TradingSystemInfo
 	healthySystems     []*TradingSystem
 	filterOutcomes     []*FilterOutcome
@@ -140,22 +142,28 @@ type CorrelationMatrix struct {
 type SystemPosition struct {
 	tsi      *TradingSystemInfo
 	mod      model.PositionModel
-	risk     float64
-	atrValue float64
-	scaling  float64
-	position float64
+	Id              uint      `json:"id"`
+	Name            string    `json:"name"`
+	Model           string    `json:"model"`
+	Risk            float64   `json:"risk"`
+	AtrValue        float64   `json:"atrValue"`
+	InitialPosition float64   `json:"initialPosition"`
+	FinalPosition   int       `json:"finalPosition"`
 }
 
 //=============================================================================
 
 func NewSystemPosition(tsi *TradingSystemInfo, mod model.PositionModel, risk, atrValue float64) *SystemPosition {
 	return &SystemPosition{
-		tsi     : tsi,
-		mod     : mod,
-		risk    : risk,
-		atrValue: atrValue,
-		scaling : 1,
-		position: 0,
+		tsi            : tsi,
+		mod            : mod,
+		Id             : tsi.system.Id,
+		Name           : tsi.system.Name,
+		Model          : string(mod.Name()),
+		Risk           : risk,
+		AtrValue       : atrValue,
+		InitialPosition: 0,
+		FinalPosition  : 0,
 	}
 }
 
@@ -168,8 +176,11 @@ func NewSystemPosition(tsi *TradingSystemInfo, mod model.PositionModel, risk, at
 type Report struct {
 	TradingSystems     []*TradingSystem      `json:"tradingSystems"`
 	FilterOutcomes     []*FilterOutcome      `json:"filterOutcomes"`
-	Logs               []*Log                `json:"logs"`
 	Correlations       []*SystemCorrelation  `json:"correlations"`
+	SystemPositions    []*SystemPosition     `json:"systemPositions"`
+	ExcludedSystems    []*ExcludedSystem     `json:"excludedSystems"`
+	SystemActions      []*SystemAction       `json:"systemActions"`
+	Logs               []*Log                `json:"logs"`
 	CorrelationMatrix  *CorrelationMatrix    `json:"correlationMatrix"`
 }
 
@@ -216,6 +227,15 @@ func NewExcludedSystem(tsi *TradingSystemInfo, message string) *ExcludedSystem {
 		BrokerSymbol: tsi.system.BrokerSymbol,
 		Message     : message,
 	}
+}
+
+//=============================================================================
+
+type SystemAction struct {
+	Id             uint      `json:"id"`
+	Name           string    `json:"name"`
+	Action         Action    `json:"action"`
+	Message        string    `json:"message"`
 }
 
 //=============================================================================

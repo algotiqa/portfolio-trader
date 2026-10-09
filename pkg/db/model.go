@@ -60,6 +60,12 @@ type Portfolio struct {
 
 //=============================================================================
 
+func (p Portfolio) AvailableCapital() float64 {
+	return p.AccountCurrentCapital * p.AccountPerc / 100
+}
+
+//=============================================================================
+
 type TsStatus int8
 
 const (

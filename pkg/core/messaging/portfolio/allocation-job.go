@@ -15,6 +15,7 @@ import (
 
 	"github.com/algotiqa/core/dbms"
 	"github.com/algotiqa/portfolio-trader/pkg/business/allocation"
+	"github.com/algotiqa/portfolio-trader/pkg/business/allocation/builder"
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"github.com/algotiqa/types"
@@ -53,7 +54,13 @@ func retrieveInfo(a *db.Allocation) (*allocation.Job,error) {
 		if err != nil {
 			return err
 		}
-		job.SetPortfolio(p)
+
+		b,err := builder.Create(p.BuilderName, p.BuilderConfig)
+		if err != nil {
+			return err
+		}
+
+		job.SetData(p,b)
 
 		filt := map[string]any{}
 		filt["portfolio_id"] = a.PortfolioId

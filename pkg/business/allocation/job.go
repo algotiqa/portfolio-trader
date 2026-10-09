@@ -12,6 +12,7 @@ package allocation
 import (
 	"fmt"
 
+	"github.com/algotiqa/portfolio-trader/pkg/business/allocation/builder"
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
@@ -30,8 +31,9 @@ func NewJob(spec *JobSpec) *Job {
 
 //=============================================================================
 
-func (j *Job) SetPortfolio(p *db.Portfolio) {
+func (j *Job) SetData(p *db.Portfolio, b builder.PortfolioBuilder) {
 	j.portfolio = p
+	j.builder   = b
 }
 
 //=============================================================================

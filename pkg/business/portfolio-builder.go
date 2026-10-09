@@ -63,7 +63,7 @@ func GetPortfolioBuilder(tx *gorm.DB, c *auth.Context, id uint) (*PortfolioBuild
 		return nil,err
 	}
 
-	b,err := createBuilder(p.BuilderName, p.BuilderConfig)
+	b,err := builder.Create(p.BuilderName, p.BuilderConfig)
 	if err != nil {
 		return nil,err
 	}
@@ -106,23 +106,6 @@ func SetPortfolioBuilder(tx *gorm.DB, c *auth.Context, id uint, spec *PortfolioB
 //===
 //=== Private
 //===
-//=============================================================================
-
-func createBuilder(name db.BuilderName, config string) (builder.PortfolioBuilder,error) {
-	cfgMap := make(map[string]any)
-	err := json.Unmarshal([]byte(config), &cfgMap)
-	if err != nil {
-		return nil,req.NewServerErrorByError(err)
-	}
-
-	b,err := builder.New(name, cfgMap)
-	if err != nil {
-		return nil,req.NewServerErrorByError(err)
-	}
-
-	return b, nil
-}
-
 //=============================================================================
 
 func createBuilderInfo(b builder.PortfolioBuilder) *PortfolioBuilder {

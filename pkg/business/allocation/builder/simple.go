@@ -102,3 +102,18 @@ func (b *SimpleBuilder) Specs() map[string]any {
 }
 
 //=============================================================================
+
+func (b *SimpleBuilder) TunePosition(position float64, correlations []float64) float64 {
+	if len(correlations) > 0 {
+		//--- Correlations are sorted. The first one has the max correlation
+		maxCorr := correlations[0]
+
+		if maxCorr > b.config.corrThresh {
+			return position / (1+maxCorr)
+		}
+	}
+
+	return position
+}
+
+//=============================================================================

@@ -28,13 +28,16 @@ import (
 //=============================================================================
 
 func (j *Job) BuildPortfolioAllocation() *Report {
+	var survivors []*SystemPosition
+
 	if len(j.tradingSystems) == 0 {
 		j.log(LogLevelError, "No trading systems assigned to portfolio")
 	} else {
 		activeSystems := j.calcFilterOutcomes()
-		survivors     := j.setupProcess(activeSystems)
+		survivors      = j.setupProcess(activeSystems)
 
 		j.log(LogLevelInfo, "Healthy systems passing the filter: %v/%v", len(activeSystems), len(j.tradingSystems))
+		j.log(LogLevelInfo, "Available capital: %v %v", j.portfolio.AvailableCapital(), j.portfolio.AccountCurrencyCode)
 
 		for {
 			if len(survivors) == 0 {
@@ -53,12 +56,9 @@ func (j *Job) BuildPortfolioAllocation() *Report {
 			j.log(LogLevelInfo, "Survivors decreased (%v --> %v). Looping again with less systems", len(survivors), len(newSurvivors))
 			survivors = newSurvivors
 		}
-
-		//TODO:costruire gli active system per il report
-		//anche se non ci sono sistemi che passano, occorre disattivare quelli accesi
 	}
 
-	return j.buildReport()
+	return j.buildReport(survivors)
 }
 
 //=============================================================================
@@ -212,20 +212,23 @@ func (j *Job) buildCorrelationMatrix(activeSystems []*SystemPosition) {
 
 func (j *Job) calcPosition(activeSystems []*SystemPosition) []*SystemPosition {
 	var survivors []*SystemPosition
+	p := j.portfolio
 
 	for _, sp := range activeSystems {
 		tsi := sp.tsi
 
 		snapshot := &model.TradingSnapshot{
-			InitialCapital: j.portfolio.AccountCurrentCapital,
-			CurrentCapital: j.portfolio.AccountCurrentCapital,
-			RiskValue     : sp.risk,
-			AtrValue      : sp.atrValue,
+			InitialCapital: p.AvailableCapital(),
+			CurrentCapital: p.AvailableCapital(),
+			RiskValue     : sp.Risk,
+			AtrValue      : sp.AtrValue,
 			PointValue    : sp.tsi.system.PointValue,
 		}
 
-		sp.position = sp.mod.PositionFor(snapshot)
-		intPosition := int(sp.position)
+		position := sp.mod.PositionFor(snapshot)
+		sp.InitialPosition = position
+		position = j.builder.TunePosition(position, j.getCorrelationsForSystem(tsi.system.Id))
+		intPosition := int(position)
 
 		//--- Check if we go above the max allowed position
 
@@ -234,7 +237,7 @@ func (j *Job) calcPosition(activeSystems []*SystemPosition) []*SystemPosition {
 		if intPosition > pos.MaxUnits {
 			j.log(LogLevelInfo, "Clamped position for '%v' : %v --> %v (max units exceeded)", tsi.system.Name, intPosition, pos.MaxUnits)
 			intPosition = pos.MaxUnits
-			sp.position = float64(pos.MaxUnits)
+			position = float64(pos.MaxUnits)
 		}
 
 		//--- Check if we have enough margin to trade
@@ -244,22 +247,20 @@ func (j *Job) calcPosition(activeSystems []*SystemPosition) []*SystemPosition {
 			margin = *pos.MarginOverride
 		}
 
-		maxCapitalUnderMargin := snapshot.CurrentCapital * j.portfolio.MaxMarginPerc/100
+		maxCapitalUnderMargin := snapshot.CurrentCapital * p.MaxMarginPerc/100
 		if margin * float64(intPosition) >= maxCapitalUnderMargin {
 			j.log(LogLevelInfo, "Clamped position for '%v' : %v --> %v (margin exceeded)", tsi.system.Name, intPosition, pos.MaxUnits)
-			sp.position = snapshot.CurrentCapital / margin
-			intPosition = int(sp.position)
+			position = snapshot.CurrentCapital / margin
+			intPosition = int(position)
 		}
 
-
-		//la correzione alla correlazione ancora non è stata usata
-
 		if intPosition == 0 {
-			sPos := strconv.FormatFloat(sp.position, 'f', 3, 64)
+			sPos := strconv.FormatFloat(position, 'f', 3, 64)
 			j.addExcludedSystem(tsi,"Position below 1: "+ sPos)
 			continue
 		}
 
+		sp.FinalPosition = intPosition
 		survivors = append(survivors, sp)
 	}
 
@@ -268,27 +269,90 @@ func (j *Job) calcPosition(activeSystems []*SystemPosition) []*SystemPosition {
 
 //=============================================================================
 
-func (j *Job) buildReport() *Report {
+func (j *Job) getCorrelationsForSystem(id uint) []float64 {
+	var list []float64
+
+	for _, sc := range j.correlations {
+		if sc.Ts1Id == id || sc.Ts2Id == id {
+			list = append(list, sc.Correlation)
+		}
+	}
+
+	//--- Sort in descending mode
+	slices.SortFunc[[]float64](list, func(a,b float64) int {
+		if a < b {
+			return 1
+		}
+		if a > b {
+			return -1
+		}
+		return 0
+	})
+
+	return list
+}
+
+//=============================================================================
+
+func (j *Job) buildReport(positions []*SystemPosition) *Report {
 	//--- Sorts in descending order
 	corr := j.correlations
-	slices.SortFunc(corr, func(a,b *SystemCorrelation) int {
+	slices.SortFunc[[]*SystemCorrelation](corr, func(a,b *SystemCorrelation) int {
 		if a.Correlation < b.Correlation {
 			return 1
 		}
 		if a.Correlation > b.Correlation {
 			return -1
 		}
-
 		return 0
 	})
+
+	//--- Remove some useless decimals
+
+	for _, sp := range positions {
+		sp.InitialPosition = core.Trunc2d(sp.InitialPosition)
+	}
 
 	return &Report{
 		TradingSystems   : j.healthySystems,
 		FilterOutcomes   : j.filterOutcomes,
-		Logs             : j.logs,
 		Correlations     : j.correlations,
+		SystemPositions  : positions,
+		ExcludedSystems  : j.excludedSystems,
+		SystemActions    : j.buildSystemActions(),
+		Logs             : j.logs,
 		CorrelationMatrix: j.correlationMatrix,
 	}
+}
+
+//=============================================================================
+
+func (j *Job) buildSystemActions() []*SystemAction {
+	var list []*SystemAction
+
+	for _,fo := range j.filterOutcomes {
+		if fo.Action == ActionTurnOn || fo.Action == ActionTurnOff {
+			sa := &SystemAction{
+				Id     : fo.TsId,
+				Name   : fo.TsName,
+				Action : fo.Action,
+				Message: "Outcome from the filter",
+			}
+			list = append(list, sa)
+		}
+	}
+
+	for _,es := range j.excludedSystems {
+		sa := &SystemAction{
+			Id     : es.Id,
+			Name   : es.Name,
+			Action : ActionTurnOff,
+			Message: "System excluded: "+es.Name,
+		}
+		list = append(list, sa)
+	}
+
+	return list
 }
 
 //=============================================================================

@@ -74,3 +74,9 @@ func (b *NoneBuilder) Specs() map[string]any {
 }
 
 //=============================================================================
+
+func (b *NoneBuilder) TunePosition(position float64, correlations []float64) float64 {
+	return position
+}
+
+//=============================================================================
