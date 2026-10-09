@@ -40,7 +40,7 @@ func BuildNetProfits(grossProfits *[]float64, costPerOper float64) *[]float64 {
 	netSlice := []float64{}
 
 	for _, gross := range *grossProfits {
-		net := gross - 2*costPerOper
+		net := NetCost(gross, costPerOper)
 		netSlice = append(netSlice, net)
 	}
 

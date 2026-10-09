@@ -47,7 +47,7 @@ func CalcRisk(returns []float64, costPerOper float64) (float64, error) {
 	counts := map[float64]int{}
 
 	for _, ret := range returns {
-		if ret < -2*costPerOper {
+		if ret < NetCost(0, costPerOper) {
 			count, ok := counts[ret]
 			if !ok {
 				counts[ret] = 1
@@ -109,7 +109,7 @@ func GetReturns(trades *[]db.Trade, tradeType string, costPerOper float64) []flo
 
 	for _, t := range *trades {
 		if tradeType == db.TradeTypeAll || tradeType == t.TradeType {
-			returns := t.GrossReturn - 2*costPerOper
+			returns := NetCost(t.GrossReturn, costPerOper)
 			list = append(list, returns)
 		}
 	}
@@ -164,7 +164,7 @@ func CalcSharpeRatio(list []float64) float64 {
 
 func CalcRiskForPosition(riskPerUnit db.RpuType, riskValue *float64, trades *[]db.Trade, costPerOper float64) (float64,error) {
 	if riskPerUnit == db.RpuFixedValue {
-		return *riskValue +2 * costPerOper,nil
+		return NetRisk(*riskValue, costPerOper),nil
 	}
 
 	returns := GetReturns(trades, db.TradeTypeAll, costPerOper)
@@ -217,6 +217,12 @@ func NormalizeContracts(list *[]db.Trade) {
 
 func NetCost(grossReturn float64, costPerOper float64) float64 {
 	return grossReturn - 2*costPerOper
+}
+
+//=============================================================================
+
+func NetRisk(grossRisk float64, costPerOper float64) float64 {
+	return grossRisk + 2*costPerOper
 }
 
 //=============================================================================

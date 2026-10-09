@@ -377,7 +377,7 @@ func (op *OptimizationProcess) runStep(mod model.PositionModel, spec *RunSpec) *
 			position = int(snapshot.CurrentCapital / margin)
 		}
 
-		currReturn := (trade.GrossReturn - 2 * spec.CostPerOper) * float64(position)
+		currReturn := core.NetCost(trade.GrossReturn, spec.CostPerOper) * float64(position)
 		snapshot.CurrentCapital += currReturn
 
 		if snapshot.CurrentCapital > maxEquity {

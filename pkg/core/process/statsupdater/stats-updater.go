@@ -167,7 +167,7 @@ func updateLastStats(ts *db.TradingSystem, trades *[]db.Trade) {
 
 	for _, trade := range *trades {
 		grossReturn += trade.GrossReturn
-		netReturn   += trade.GrossReturn - 2*ts.CostPerOperation
+		netReturn   += core.NetCost(trade.GrossReturn, ts.CostPerOperation)
 		numTrades++
 
 		grossEquity = append(grossEquity, grossReturn)
@@ -286,7 +286,7 @@ func calcEquityTime(trades *[]db.Trade, lastDays int, costPerOper float64) ([]st
 
 	for _, trade := range *trades {
 		day := trade.ExitDate.Sub(startDate) / (time.Hour * 24)
-		values[day] += trade.GrossReturn - 2*costPerOper
+		values[day] += core.NetCost(trade.GrossReturn, costPerOper)
 	}
 
 	for i := 1; i < len(values); i++ {
@@ -334,9 +334,9 @@ func calcEquityTrades(trades *[]db.Trade, costPerOper float64) ([]string, []floa
 	netProfit := 0.0
 
 	for i, trade := range *trades {
-		netProfit += trade.GrossReturn - 2*costPerOper
+		netProfit += core.NetCost(trade.GrossReturn, costPerOper)
 
-		xAxis = append(xAxis, strconv.Itoa(i+1))
+		xAxis  = append(xAxis, strconv.Itoa(i+1))
 		values = append(values, netProfit)
 	}
 

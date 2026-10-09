@@ -271,16 +271,16 @@ func calcRolling(res *AnalysisResponse) {
 func updateRollingInfo(tr *db.Trade, ri *RollingInfo, costPerOper float64) {
 	ri.Trades.Total++
 	ri.GrossReturns.Total += tr.GrossReturn
-	ri.NetReturns  .Total += tr.GrossReturn - 2*costPerOper
+	ri.NetReturns  .Total += core.NetCost(tr.GrossReturn, costPerOper)
 
 	if tr.TradeType == db.TradeTypeLong {
 		ri.Trades.Long++
 		ri.GrossReturns.Long += tr.GrossReturn
-		ri.NetReturns  .Long += tr.GrossReturn - 2*costPerOper
+		ri.NetReturns  .Long += core.NetCost(tr.GrossReturn, costPerOper)
 	} else {
 		ri.Trades.Short++
 		ri.GrossReturns.Short += tr.GrossReturn
-		ri.NetReturns  .Short += tr.GrossReturn - 2*costPerOper
+		ri.NetReturns  .Short += core.NetCost(tr.GrossReturn, costPerOper)
 	}
 }
 
