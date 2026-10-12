@@ -10,12 +10,20 @@
 package position
 
 import (
+	"log/slog"
 	"time"
 
+	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/portfolio-trader/pkg/business/position/model"
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/platform"
+	"github.com/algotiqa/types"
 )
+
+//=============================================================================
+
+const AtrMaxBackDays = 5
 
 //=============================================================================
 //===
@@ -45,10 +53,20 @@ func RunAnalysis(ts *db.TradingSystem, curModel, selModel model.PositionModel, t
 	res.NetRisk          = netRisk
 	res.CostPerOperation = ts.CostPerOperation
 
-	res.Baseline      = calcAnalysisResult(baseline, trades, res)
-	res.Current       = calcAnalysisResult(curModel, trades, res)
-	res.Selected      = calcAnalysisResult(selModel, trades, res)
+	var errC, errS error
+
+	res.Baseline,_    = calcAnalysisResult(ts, baseline, trades, res)
+	res.Current, errC = calcAnalysisResult(ts, curModel, trades, res)
+	res.Selected,errS = calcAnalysisResult(ts, selModel, trades, res)
 	res.Time          = calcTime(trades)
+
+	if errC != nil {
+		return nil, errC
+	}
+
+	if errS != nil {
+		return nil, errS
+	}
 
 	return res,nil
 }
@@ -77,28 +95,46 @@ func extractParameters(p *db.TradingPosition) *Parameters {
 
 //=============================================================================
 
-func calcAnalysisResult(model model.PositionModel, trades *[]db.Trade, res *AnalysisResponse) *AnalysisResult {
+func calcAnalysisResult(ts *db.TradingSystem, model model.PositionModel, trades *[]db.Trade, res *AnalysisResponse) (*AnalysisResult,error) {
 	if model == nil {
-		return nil
+		return nil,nil
 	}
 
 	ar := &AnalysisResult{
 		Model : NewModel(model.Name(), model.Config()),
 	}
 
-	if ! (trades == nil || len(*trades)==0 || res.NoLosses) {
-		ar.Gross = calcModelPerformance(model, trades, res, 0, res.GrossRisk)
-		ar.Net   = calcModelPerformance(model, trades, res, res.CostPerOperation, res.NetRisk)
+	var atrMap map[types.Date]float64
+	if model.AtrLen() > 0 {
+		data,err := platform.GetLatestDataProductAnalysis(ts.Username, ts.DataProductId,365*100, model.AtrLen(), 1440)
+		if err != nil {
+			return nil,req.NewServerErrorByError(err)
+		}
+		atrMap = buildAtrMap(data.BarResults)
 	}
 
-	return ar
+	var errG,errN error
+
+	if ! (trades == nil || len(*trades)==0 || res.NoLosses) {
+		ar.Gross,errG = calcModelPerformance(model, trades, res, 0,                    res.GrossRisk, atrMap, ts.PointValue)
+		ar.Net  ,errN = calcModelPerformance(model, trades, res, res.CostPerOperation, res.NetRisk,   atrMap, ts.PointValue)
+
+		if errG != nil || errN != nil {
+			//--- ErrG and errN are the same, we just need to check one
+			return nil,errG
+		}
+	}
+
+	return ar,nil
 }
 
 //=============================================================================
 
-func calcModelPerformance(mod model.PositionModel, trades *[]db.Trade, res *AnalysisResponse, costPerOper float64, risk float64) *ModelPerformance {
+func calcModelPerformance(mod model.PositionModel, trades *[]db.Trade, res *AnalysisResponse, costPerOper float64,
+						  risk float64, atrMap map[types.Date]float64, pointValue float64) (*ModelPerformance,error) {
 	var equity    []float64
 	var positions []int
+	var err       error
 
 	params := res.Params
 
@@ -107,16 +143,20 @@ func calcModelPerformance(mod model.PositionModel, trades *[]db.Trade, res *Anal
 		CurrentCapital: *params.InitialCapital,
 		RiskValue     : risk,
 		AtrValue      : 0,
+		PointValue    : pointValue,
 	}
 
 	mod.PositionInit(snapshot)
 
-	atrMap := make(map[int]float64) //TODO
 	margin := res.UsedMargin
 	ruined := false
 
 	for _, trade := range *trades {
-		snapshot.AtrValue = calcAtr(&trade, atrMap)
+		snapshot.AtrValue,err = calcAtr(&trade, atrMap)
+		if err != nil {
+			return nil,err
+		}
+
 		position := int(mod.PositionFor(snapshot))
 
 		//--- Check if we go above the max allowed position
@@ -161,7 +201,7 @@ func calcModelPerformance(mod model.PositionModel, trades *[]db.Trade, res *Anal
 		ReturnOnAccount : core.Trunc2d(retOnAcc),
 		ReturnDrawdRatio: core.Trunc2d(ratio),
 		Ruined          : ruined,
-	}
+	},nil
 }
 
 //=============================================================================
@@ -204,8 +244,27 @@ func buildModelSpecs() map[string]any {
 
 //=============================================================================
 
-func calcAtr(t *db.Trade, atrMap map[int]float64) float64 {
-	return 0 //TODO
+func calcAtr(t *db.Trade, atrMap map[types.Date]float64) (float64,error) {
+	if atrMap == nil {
+		return 0,nil
+	}
+
+	//--- If we need to calculate the position for today, we have to use the ATR value
+	//--- of yesterday, because today is not closed yet. This is why we are subtracting 1
+
+	origDate := types.ToDate(t.EntryDate)
+	posDate  := origDate.AddDays(-1)
+
+	for i := 0; i<AtrMaxBackDays; i++ {
+		atr, ok := atrMap[posDate]
+		if ok {
+			return atr,nil
+		}
+
+		posDate = posDate.AddDays(-1)
+	}
+
+	return 0,req.NewUnprocessableEntityError("missing ATR for date: %v", origDate.String())
 }
 
 //=============================================================================
@@ -218,6 +277,21 @@ func calcTime(trades *[]db.Trade) []time.Time {
 	}
 
 	return res
+}
+
+//=============================================================================
+
+func buildAtrMap(days []*platform.BarResult) map[types.Date]float64 {
+	atrMap := make(map[types.Date]float64)
+
+	for _, br := range days {
+		date := types.ToDate(&br.Time)
+		atr  := br.Atr
+slog.Info("Timezone: "+br.Time.Location().String()+", Date: "+date.String())
+		atrMap[date] = atr
+	}
+
+	return atrMap
 }
 
 //=============================================================================

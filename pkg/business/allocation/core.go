@@ -111,7 +111,7 @@ func (j *Job) setupProcess(activeSystems []*TradingSystemInfo) []*SystemPosition
 		atrVal := 0.0
 		atrLen := mod.AtrLen()
 		if atrLen > 0 {
-			res,errp := platform.GetLatestDataProductAnalysis(tsi.system.DataProductId,j.spec.TradeYears*365, atrLen, 1440)
+			res,errp := platform.GetLatestDataProductAnalysis(tsi.system.Username, tsi.system.DataProductId,j.spec.TradeYears*365, atrLen, 1440)
 			if errp != nil {
 				j.addExcludedSystem(tsi,"Cannot get ATR: "+errp.Error())
 				continue

@@ -18,6 +18,8 @@ import (
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/core/stats"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/platform"
+	"github.com/algotiqa/types"
 )
 
 //=============================================================================
@@ -213,7 +215,7 @@ func (op *OptimizationProcess) runFixedUnit(spec *RunSpec) {
 	if mc.EnableFixedUnit {
 		for _, units := range *mc.Units.Steps() {
 			mod := model.NewFixedUnitModelWithParams(units)
-			er  := op.executeSimulation(mod, spec)
+			er,_:= op.executeSimulation(mod, spec, nil)
 
 			op.info.addResult(er, op.optReq.Targets)
 
@@ -232,7 +234,7 @@ func (op *OptimizationProcess) runPercentRisk(spec *RunSpec) {
 	if mc.EnablePercentRisk {
 		for _, riskPerTrade := range *mc.RiskPerTrade.Steps() {
 			mod := model.NewPercentRiskModelWithParams(riskPerTrade)
-			er  := op.executeSimulation(mod, spec)
+			er,_:= op.executeSimulation(mod, spec, nil)
 
 			op.info.addResult(er, op.optReq.Targets)
 
@@ -250,12 +252,30 @@ func (op *OptimizationProcess) runPercentVol(spec *RunSpec) {
 
 	if mc.EnablePercentVol {
 		for _, avgLen := range *mc.AverageLength.Steps() {
-			//--- Load ATR data here...
+			//--- Load ATR data
+			data,err := platform.GetLatestDataProductAnalysis(op.ts.Username, op.ts.DataProductId, 365*100, avgLen, 1440)
+			if err != nil {
+				slog.Error("runPercentVol: Cannot get ATR data for data product", "dataProductId", op.ts.DataProductId, "error", err)
+				_= core.SendEvent(op.ts.Username, "pt.position.cannotRetrieveAtr", map[string]any{
+					"symbol": op.ts.DataSymbol,
+					"system": op.ts.Name,
+				})
+				return
+			}
+
+			atrMap := buildAtrMap(data.BarResults)
 
 			for _, maxVol := range *mc.MaxVolatility.Steps() {
-				mod := model.NewPercentVolatilityModelWithParams(avgLen, maxVol)
-				er  := op.executeSimulation(mod, spec)
-
+				mod    := model.NewPercentVolatilityModelWithParams(avgLen, maxVol)
+				er,err := op.executeSimulation(mod, spec, atrMap)
+				if err != nil {
+					slog.Error("runPercentVol: Got an error while optimizing", "dataProductId", op.ts.DataProductId, "error", err)
+					_= core.SendEvent(op.ts.Username, "pt.position.cannotFindAtr", map[string]any{
+						"symbol": op.ts.DataSymbol,
+						"system": op.ts.Name,
+					})
+					return
+				}
 				op.info.addResult(er, op.optReq.Targets)
 
 				if op.stopping {
@@ -276,7 +296,7 @@ func (op *OptimizationProcess) runMarketMoney(spec *RunSpec) {
 			for _, riskOnEarn := range *mc.RiskPerTradeOnEarn.Steps() {
 				for _, percOnCap := range *mc.PercentageOnCapital.Steps() {
 					mod := model.NewMarketMoneyModelWithParams(riskOnCap, riskOnEarn, model.McTypePercOnCapital, percOnCap)
-					er  := op.executeSimulation(mod, spec)
+					er,_:= op.executeSimulation(mod, spec, nil)
 
 					op.info.addResult(er, op.optReq.Targets)
 
@@ -291,7 +311,7 @@ func (op *OptimizationProcess) runMarketMoney(spec *RunSpec) {
 
 //=============================================================================
 
-func (op *OptimizationProcess) executeSimulation(mod model.PositionModel, spec *RunSpec) *ExecutionResult {
+func (op *OptimizationProcess) executeSimulation(mod model.PositionModel, spec *RunSpec, atrMap map[types.Date]float64) (*ExecutionResult,error) {
 	failCount := 0.0
 	succCount := 0.0
 
@@ -302,7 +322,10 @@ func (op *OptimizationProcess) executeSimulation(mod model.PositionModel, spec *
 	var retDrawdRatios []float64
 
 	for i:=0; i<spec.RunsPerSimul; i++ {
-		res := op.runStep(mod, spec)
+		res,err := op.runStep(mod, spec, atrMap)
+		if err != nil {
+			return nil,err
+		}
 
 		finalCapitals = append(finalCapitals , res.FinalCapital)
 		returns       = append(returns       , res.Return)
@@ -333,12 +356,12 @@ func (op *OptimizationProcess) executeSimulation(mod model.PositionModel, spec *
 		ProbOfSuccess        : core.Trunc2d(probOfSucc * 100),
 		Model                : string(mod.Name()),
 		Config               : mod.Config(),
-	}
+	},nil
 }
 
 //=============================================================================
 
-func (op *OptimizationProcess) runStep(mod model.PositionModel, spec *RunSpec) *RunStepResult {
+func (op *OptimizationProcess) runStep(mod model.PositionModel, spec *RunSpec, atrMap map[types.Date]float64) (*RunStepResult, error) {
 	trades := *op.trades
 
 	snapshot := &model.TradingSnapshot{
@@ -351,7 +374,6 @@ func (op *OptimizationProcess) runStep(mod model.PositionModel, spec *RunSpec) *
 	mod.PositionInit(snapshot)
 
 	maxEquity := 0.0
-	atrMap    := make(map[int]float64) //TODO
 	failed    := false
 	size      := len(trades)
 	margin    := spec.UsedMargin
@@ -359,12 +381,18 @@ func (op *OptimizationProcess) runStep(mod model.PositionModel, spec *RunSpec) *
 	drawdownPerc    := 0.0
 	maxDrawdownPerc := 0.0
 
+	var err error
+
 	//--- Main loop -----------------------------------
 
 	for i:=0; i<spec.TradesToGenerate; i++ {
 		trade := trades[rand.Intn(size)]
 
-		snapshot.AtrValue = calcAtr(&trade, atrMap)
+		snapshot.AtrValue,err = calcAtr(&trade, atrMap)
+		if err != nil {
+			return nil, err
+		}
+
 		position := int(mod.PositionFor(snapshot))
 
 		//--- Check if we go above the max allowed position
@@ -416,7 +444,7 @@ func (op *OptimizationProcess) runStep(mod model.PositionModel, spec *RunSpec) *
 		ReturnOnAccount : retOnAcc * 100,
 		ReturnDrawdRatio: ratio,
 		Failed          : failed,
-	}
+	},nil
 }
 
 //=============================================================================

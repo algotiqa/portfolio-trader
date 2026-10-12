@@ -103,7 +103,7 @@ func AnalyzeDataProduct(c *auth.Context, id uint, from,to *time.Time, atrLen int
 
 //=============================================================================
 
-func GetLatestDataProductAnalysis(id uint, daysBack, atrLen int, timeframe int) (*DataProductAnalysisResponse, error) {
+func GetLatestDataProductAnalysis(user string, id uint, daysBack, atrLen int, timeframe int) (*DataProductAnalysisResponse, error) {
 	slog.Info("GetLatestDataProductAnalysis: Asking data product analysis to data collector", "id", id, "dayBack", daysBack, "atrLen", atrLen)
 
 	token,err := auth.Token()
@@ -122,7 +122,7 @@ func GetLatestDataProductAnalysis(id uint, daysBack, atrLen int, timeframe int) 
 	)
 
 	var res DataProductAnalysisResponse
-	err = req.DoGet(client, srvUrl, &res, token)
+	err = req.DoGetOnBehalfOf(client, srvUrl, &res, token, user)
 	if err != nil {
 		slog.Error("GetLatestDataProductAnalysis: Got an error when accessing the data-collector", "id", id, "error", err.Error())
 		return nil, err
