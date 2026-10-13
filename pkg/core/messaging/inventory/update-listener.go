@@ -131,7 +131,7 @@ func setTradingSystem(tsm *TradingSystemMessage, create bool) bool {
 		ts.InSampleFrom       = tsm.TradingSystem.InSampleFrom
 		ts.InSampleTo         = tsm.TradingSystem.InSampleTo
 		ts.EngineCode         = tsm.TradingSystem.EngineCode
-		ts.Trading            = isNew && tsm.TradingSystem.Finalized
+		ts.Trading            = tsm.TradingSystem.Finalized
 
 		err = db.UpdateTradingSystem(tx, ts)
 
