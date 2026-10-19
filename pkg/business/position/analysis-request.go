@@ -67,7 +67,7 @@ type AnalysisRequest struct {
 
 var DefInitialCapital = 15000.0
 var DefMaxTolDrawdPerc= 25.0
-var DefMaxUnits       = 1
+var DefMaxUnits       = 100
 var DefRiskValue      = 150.0
 var DefRiskPerUnit    = db.RpuStopLoss
 
