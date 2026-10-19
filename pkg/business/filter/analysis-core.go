@@ -50,9 +50,9 @@ func CalcActivation(ts *db.TradingSystem, filter *db.TradingFilter, list []db.Tr
 
 func RunAnalysis(ts *db.TradingSystem, filter *db.TradingFilter, list *[]db.Trade) *AnalysisResponse {
 	res := &AnalysisResponse{}
-	res.TradingSystem.Id = ts.Id
+	res.TradingSystem.Id   = ts.Id
 	res.TradingSystem.Name = ts.Name
-	res.Filter = filter
+	res.Filter             = filter
 
 	//--- Creates slices
 
@@ -74,10 +74,13 @@ func RunAnalysis(ts *db.TradingSystem, filter *db.TradingFilter, list *[]db.Trad
 	calcFilteredEquity(res)
 
 	unfilteredDrawdown, maxUnfDD := core.BuildDrawDown(&e.UnfilteredEquity)
-	filteredDrawdown, maxFilDD := core.BuildDrawDown(&e.FilteredEquity)
+	filteredDrawdown,   maxFilDD := core.BuildDrawDown(&e.FilteredEquity)
 
 	e.UnfilteredDrawdown = *unfilteredDrawdown
-	e.FilteredDrawdown = *filteredDrawdown
+	e.FilteredDrawdown   = *filteredDrawdown
+
+	core.Trunc2dSlice(e.UnfilteredDrawdown)
+	core.Trunc2dSlice(e.FilteredDrawdown)
 
 	calcSummary(res, maxUnfDD, maxFilDD)
 
@@ -104,8 +107,8 @@ func calcUnfilteredEquityAndProfit(e *Equities, ts *db.TradingSystem, tradeList 
 		netEquity += netProfit
 
 		e.Time[i]             = *t.ExitDate
-		e.UnfilteredEquity[i] = netEquity
-		e.NetProfit[i]        = netProfit
+		e.UnfilteredEquity[i] = core.Trunc2d(netEquity)
+		e.NetProfit[i]        = core.Trunc2d(netProfit)
 	}
 }
 
@@ -399,11 +402,11 @@ func calcDrawdownActivation(e *Equities, f *db.TradingFilter) *Activation {
 //=============================================================================
 
 func calcFilterActivation(e *Equities, a *Activations, f *db.TradingFilter) {
-	avgEquStrategy := NewActivationStrategy(a.EquityVsAverage, f.EquAvgEnabled)
-	posProfStrategy := NewActivationStrategy(a.PositiveProfit, f.PosProEnabled)
-	winPerStrategy := NewActivationStrategy(a.WinningPercentage, f.WinPerEnabled)
-	oldNewStrategy := NewActivationStrategy(a.OldVsNew, f.OldNewEnabled)
-	trendStrategy := NewActivationStrategy(a.Trendline, f.TrendlineEnabled)
+	avgEquStrategy   := NewActivationStrategy(a.EquityVsAverage, f.EquAvgEnabled)
+	posProfStrategy  := NewActivationStrategy(a.PositiveProfit, f.PosProEnabled)
+	winPerStrategy   := NewActivationStrategy(a.WinningPercentage, f.WinPerEnabled)
+	oldNewStrategy   := NewActivationStrategy(a.OldVsNew, f.OldNewEnabled)
+	trendStrategy    := NewActivationStrategy(a.Trendline, f.TrendlineEnabled)
 	drawdownStrategy := NewActivationStrategy(a.Drawdown, f.DrawdownEnabled)
 
 	e.FilterActivation = make([]int8, len(e.Time))
@@ -416,8 +419,8 @@ func calcFilterActivation(e *Equities, a *Activations, f *db.TradingFilter) {
 		posPro := posProfStrategy.IsActive(t)
 		winPer := winPerStrategy.IsActive(t)
 		oldNew := oldNewStrategy.IsActive(t)
-		trend := trendStrategy.IsActive(t)
-		drawd := drawdownStrategy.IsActive(t)
+		trend  := trendStrategy.IsActive(t)
+		drawd  := drawdownStrategy.IsActive(t)
 
 		if avgEqu && posPro && winPer && oldNew && trend && drawd {
 			e.FilterActivation[i] = 1
@@ -442,7 +445,7 @@ func calcFilteredEquity(res *AnalysisResponse) {
 		}
 
 		sum += value
-		equ.FilteredEquity[i] = sum
+		equ.FilteredEquity[i] = core.Trunc2d(sum)
 	}
 }
 
@@ -452,12 +455,12 @@ func calcSummary(res *AnalysisResponse, maxUnfDD, maxFilDD float64) {
 	sum := &res.Summary
 	last := len(res.Equities.Time) - 1
 
-	sum.UnfProfit = res.Equities.UnfilteredEquity[last]
-	sum.FilProfit = res.Equities.FilteredEquity[last]
-	sum.UnfMaxDrawdown = maxUnfDD
-	sum.FilMaxDrawdown = maxFilDD
-	sum.UnfWinningPerc = core.CalcWinningPercentage(res.Equities.NetProfit, nil)
-	sum.FilWinningPerc = core.CalcWinningPercentage(res.Equities.NetProfit, res.Equities.FilterActivation)
+	sum.UnfProfit       = core.Trunc2d(res.Equities.UnfilteredEquity[last])
+	sum.FilProfit       = core.Trunc2d(res.Equities.FilteredEquity[last])
+	sum.UnfMaxDrawdown  = core.Trunc2d(maxUnfDD)
+	sum.FilMaxDrawdown  = core.Trunc2d(maxFilDD)
+	sum.UnfWinningPerc  = core.CalcWinningPercentage(res.Equities.NetProfit, nil)
+	sum.FilWinningPerc  = core.CalcWinningPercentage(res.Equities.NetProfit, res.Equities.FilterActivation)
 	sum.UnfAverageTrade = core.CalcAverageTrade(res.Equities.NetProfit, nil)
 	sum.FilAverageTrade = core.CalcAverageTrade(res.Equities.NetProfit, res.Equities.FilterActivation)
 }

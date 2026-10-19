@@ -28,6 +28,14 @@ type Value struct {
 
 //=============================================================================
 
+func (v *Value) Trunc2d() {
+	v.Total = core.Trunc2d(v.Total)
+	v.Long  = core.Trunc2d(v.Long)
+	v.Short = core.Trunc2d(v.Short)
+}
+
+//=============================================================================
+
 type Performance struct {
 	Return        Value `json:"return"`
 	MaxDrawdown   Value `json:"maxDrawdown"`
@@ -118,8 +126,10 @@ func (a *AnnualAggregate) addTrade(tr *db.Trade, cost float64) {
 //-----------------------------------------------------------------------------
 
 func (a *AnnualAggregate) consolidate() {
+	a.GrossReturn   = core.Trunc2d(a.GrossReturn)
 	a.GrossAvgTrade = core.Trunc2d(a.GrossReturn / float64(a.Trades))
 	a.GrossWinPerc  = core.Trunc2d(a.GrossWinPerc / float64(a.Trades) * 100)
+	a.NetReturn     = core.Trunc2d(a.NetReturn)
 	a.NetAvgTrade   = core.Trunc2d(a.NetReturn / float64(a.Trades))
 	a.NetWinPerc    = core.Trunc2d(a.NetWinPerc / float64(a.Trades) * 100)
 }
@@ -163,6 +173,14 @@ type RollingInfo struct {
 	Trades       Value `json:"trades"`
 	GrossReturns Value `json:"grossReturns"`
 	NetReturns   Value `json:"netReturns"`
+}
+
+//=============================================================================
+
+func (ri *RollingInfo) Trunc2d() {
+	ri.Trades      .Trunc2d()
+	ri.GrossReturns.Trunc2d()
+	ri.NetReturns  .Trunc2d()
 }
 
 //=============================================================================

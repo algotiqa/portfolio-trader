@@ -252,8 +252,8 @@ func calcRolling(res *AnalysisResponse) {
 
 	for _, tr := range *res.Trades {
 		year := tr.EntryDate.Year()
-		dow := int(tr.EntryDate.Weekday())
-		mon := int(tr.EntryDate.Month()) - 1
+		dow  := int(tr.EntryDate.Weekday())
+		mon  := int(tr.EntryDate.Month()) - 1
 
 		dowRI := &res.Rolling.Daily[dow]
 		monRI := &res.Rolling.Monthly[mon]
@@ -263,6 +263,28 @@ func calcRolling(res *AnalysisResponse) {
 
 		res.Rolling.DayYoY   = updateYoY(res.Rolling.DayYoY,   year, &tr, dow, costPerOper, 7)
 		res.Rolling.MonthYoY = updateYoY(res.Rolling.MonthYoY, year, &tr, mon, costPerOper, 12)
+	}
+
+	//--- Avoid spurious digits
+
+	for _, ri := range res.Rolling.Daily {
+		ri.Trunc2d()
+	}
+
+	for _, ri := range res.Rolling.Monthly {
+		ri.Trunc2d()
+	}
+
+	for _, yoy := range res.Rolling.DayYoY {
+		for _, ri := range yoy.Data {
+			ri.Trunc2d()
+		}
+	}
+
+	for _, yoy := range res.Rolling.MonthYoY {
+		for _, ri := range yoy.Data {
+			ri.Trunc2d()
+		}
 	}
 }
 

@@ -27,6 +27,14 @@ func Trunc2d(value float64) float64 {
 
 //=============================================================================
 
+func Trunc2dSlice(value []float64) {
+	for i, v := range value {
+		value[i] = Trunc2d(v)
+	}
+}
+
+//=============================================================================
+
 func GetLocation(timezone string, ts *db.TradingSystem) (*time.Location, error) {
 	if timezone == "exchange" {
 		timezone = ts.Timezone
