@@ -21,6 +21,20 @@ import (
 
 //=============================================================================
 
+type Metrics struct {
+	NetReturn     float64 `json:"netReturn"`
+	Trades        int     `json:"trades"`
+	AverageTrade  float64 `json:"averageTrade"`
+	ProfitFactor  float64 `json:"profitFactor"`
+	WinningPerc   float64 `json:"winningPerc"`
+	MaxDrawdown   float64 `json:"maxDrawdown"`
+	SharpeRatio   float64 `json:"sharpeRatio"`
+	Sqn100        float64 `json:"sqn100"`
+	ReturnDDRatio float64 `json:"returnDDRatio"`
+}
+
+//=============================================================================
+
 func Trunc2d(value float64) float64 {
 	return float64(int(math.Floor(value*100))) / 100
 }
@@ -55,7 +69,7 @@ func CalcRisk(returns []float64, costPerOper float64) (float64, error) {
 	counts := map[float64]int{}
 
 	for _, ret := range returns {
-		if ret < NetCost(0, costPerOper) {
+		if ret < NetReturn(0, costPerOper) {
 			count, ok := counts[ret]
 			if !ok {
 				counts[ret] = 1
@@ -112,13 +126,15 @@ type riskInfo struct {
 
 //=============================================================================
 
-func GetReturns(trades *[]db.Trade, tradeType string, costPerOper float64) []float64 {
+func GetReturns(trades *[]db.Trade, tradeType string, costPerOper float64, fromDate *time.Time) []float64 {
 	var list []float64
 
 	for _, t := range *trades {
 		if tradeType == db.TradeTypeAll || tradeType == t.TradeType {
-			returns := NetCost(t.GrossReturn, costPerOper)
-			list = append(list, returns)
+			if fromDate == nil || t.ExitDate.After(*fromDate) {
+				returns := NetReturn(t.GrossReturn, costPerOper)
+				list = append(list, returns)
+			}
 		}
 	}
 
@@ -140,6 +156,10 @@ func CalcRMultiple(returns []float64, risk float64) []float64 {
 //=============================================================================
 
 func CalcSQN(list []float64) (float64,float64){
+	if len(list) == 0 {
+		return 0.0, 0.0
+	}
+
 	mean, stdd := stats.MeanAndStdDev(list)
 	listLen := float64(len(list))
 	capLen := math.Min(listLen, 100)
@@ -159,6 +179,11 @@ func CalcSQN(list []float64) (float64,float64){
 
 func CalcSharpeRatio(list []float64) float64 {
 	sr := 0.0
+
+	if len(list) == 0 {
+		return sr
+	}
+
 	mean, stdd := stats.MeanAndStdDev(list)
 
 	if stdd > 0.0 {
@@ -175,7 +200,7 @@ func CalcRiskForPosition(riskPerUnit db.RpuType, riskValue *float64, trades *[]d
 		return NetRisk(*riskValue, costPerOper),nil
 	}
 
-	returns := GetReturns(trades, db.TradeTypeAll, costPerOper)
+	returns := GetReturns(trades, db.TradeTypeAll, costPerOper, nil)
 
 	if riskPerUnit == db.RpuStopLoss {
 		return CalcRisk(returns, costPerOper)
@@ -223,7 +248,7 @@ func NormalizeContracts(list *[]db.Trade) {
 
 //=============================================================================
 
-func NetCost(grossReturn float64, costPerOper float64) float64 {
+func NetReturn(grossReturn float64, costPerOper float64) float64 {
 	return grossReturn - 2*costPerOper
 }
 
@@ -231,6 +256,84 @@ func NetCost(grossReturn float64, costPerOper float64) float64 {
 
 func NetRisk(grossRisk float64, costPerOper float64) float64 {
 	return grossRisk + 2*costPerOper
+}
+
+//=============================================================================
+
+func CalcMetrics(trades *[]db.Trade, costPerOper float64, startDate *time.Time) *Metrics {
+	netTotal  := 0.0
+	netProf   := 0.0
+	netLoss   := 0.0
+	countTotal:= 0
+	countProf := 0
+	countLoss := 0
+
+	var returns []float64
+
+	for _, t := range *trades {
+		if startDate == nil || t.ExitDate.After(*startDate) {
+			netRet := NetReturn(t.GrossReturn, costPerOper)
+			netTotal += netRet
+			countTotal++
+			returns = append(returns, netRet)
+
+			if netRet > 0 {
+				netProf += netRet
+				countProf++
+			}
+			if netRet < 0 {
+				netLoss += netRet
+				countLoss++
+			}
+		}
+	}
+
+	//--- Calc average trade and winning %
+
+	avgTrade    := 0.0
+	winningPerc := 0.0
+
+	if countTotal > 0 {
+		avgTrade    = netTotal / float64(countTotal)
+		winningPerc = float64(countProf) / float64(countTotal) * 100
+	}
+
+	//--- Calc profit factor
+
+	profFactor := 0.0
+	if netLoss != 0 {
+		profFactor = netProf / math.Abs(netLoss)
+	}
+
+	//--- Calc sharpe and sqn
+
+	sharpeRatio := CalcSharpeRatio(returns)
+	_, sqn100   := CalcSQN(returns)
+
+	//--- Calc max drawdown
+
+	equity   := BuildEquity(&returns)
+	_, maxDD := BuildDrawDown(equity)
+
+	//--- Calc return/maxDrawdown ratio
+
+	retDDRatio := 0.0
+	if maxDD != 0 {
+		retDDRatio = netTotal / math.Abs(maxDD)
+	}
+
+
+	return &Metrics{
+		NetReturn    : Trunc2d(netTotal),
+		Trades       : countTotal,
+		AverageTrade : Trunc2d(avgTrade),
+		ProfitFactor : Trunc2d(profFactor),
+		WinningPerc  : Trunc2d(winningPerc),
+		MaxDrawdown  : Trunc2d(maxDD),
+		SharpeRatio  : sharpeRatio,
+		Sqn100       : sqn100,
+		ReturnDDRatio: Trunc2d(retDDRatio),
+	}
 }
 
 //=============================================================================

@@ -95,7 +95,7 @@ func calcQualityCell(res *AnalysisResponse, trades *[]db.Trade, dir int, vol int
 func calcQualityMetrics(trades *[]db.Trade, tradeType string, direction int, volatility int, costPerOper float64,
 						marketRegime MarketRegime) *Metrics {
 
-	returns   := core.GetReturns(trades, tradeType, costPerOper)
+	returns   := core.GetReturns(trades, tradeType, costPerOper, nil)
 	risk, err := core.CalcRisk(returns, costPerOper)
 	if err != nil {
 		return &Metrics{

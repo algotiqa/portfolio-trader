@@ -52,6 +52,7 @@ func Init(router *gin.Engine, cfg *app.Config, logger *slog.Logger) {
 	router.DELETE("/api/portfolio/v1/trading-systems/:id/position-optimization", ctrl.Secure(stopPositionOptimization,   roles.Admin_User_Service))
 
 	router.GET   ("/api/portfolio/v1/trading-systems/export",                    ctrl.Secure(exportTradingSystems,       roles.Admin_User_Service))
+	router.GET   ("/api/portfolio/v1/trading-systems/metrics",                   ctrl.Secure(computeMetrics,             roles.Admin_User_Service))
 
 	router.GET   ("/api/portfolio/v1/portfolios/:id/assignable-systems",         ctrl.Secure(getAssignableTradingSystems,         roles.Admin_User_Service))
 	router.GET   ("/api/portfolio/v1/portfolios/:id/assigned-systems",           ctrl.Secure(getAssignedTradingSystems,           roles.Admin_User_Service))

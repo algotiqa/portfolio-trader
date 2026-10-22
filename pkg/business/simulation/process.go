@@ -126,7 +126,7 @@ func (p *Process) GetLastTradeDate() types.Date {
 //=============================================================================
 
 func run(req *Request, trades *[]db.Trade, tradeType string, costPerOper float64) *Details {
-	returns := core.GetReturns(trades, tradeType, costPerOper)
+	returns := core.GetReturns(trades, tradeType, costPerOper, nil)
 	size := len(returns)
 	if size == 0 {
 		return &Details{}

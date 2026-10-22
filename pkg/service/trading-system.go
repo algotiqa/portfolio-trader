@@ -305,6 +305,22 @@ func getFilterOptimizationInfo(c *auth.Context) {
 }
 
 //=============================================================================
+
+func computeMetrics(c *auth.Context) {
+	pId := c.GetParamAsString("portfolioId", "")
+
+	err := dbms.RunInTransaction(func(tx *gorm.DB) error {
+		res, terr := business.ComputeMetrics(tx, c, pId)
+		if terr == nil {
+			return c.ReturnObject(res)
+		}
+		return terr
+	})
+
+	c.ReturnError(err)
+}
+
+//=============================================================================
 //===
 //=== Simulation
 //===
