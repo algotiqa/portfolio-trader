@@ -169,7 +169,7 @@ func calcModelPerformance(mod model.PositionModel, trades *[]db.Trade, res *Anal
 			position = int(snapshot.CurrentCapital / margin)
 		}
 
-		currReturn := core.NetCost(trade.GrossReturn, costPerOper) * float64(position)
+		currReturn := core.NetReturn(trade.GrossReturn, costPerOper) * float64(position)
 		snapshot.CurrentCapital += currReturn
 
 		equity    = append(equity,    snapshot.CurrentCapital)

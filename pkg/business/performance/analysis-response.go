@@ -88,7 +88,7 @@ func NewAggregate(tr *db.Trade, cost float64) *AnnualAggregate {
 		GrossReturn  : tr.GrossReturn,
 		GrossAvgTrade: 0,
 		GrossWinPerc : 0,
-		NetReturn    : core.NetCost(tr.GrossReturn, cost),
+		NetReturn    : core.NetReturn(tr.GrossReturn, cost),
 		NetAvgTrade  : 0,
 		NetWinPerc   : 0,
 		Trades       : 1,
@@ -108,7 +108,7 @@ func NewAggregate(tr *db.Trade, cost float64) *AnnualAggregate {
 //-----------------------------------------------------------------------------
 
 func (a *AnnualAggregate) addTrade(tr *db.Trade, cost float64) {
-	netReturn := core.NetCost(tr.GrossReturn, cost)
+	netReturn := core.NetReturn(tr.GrossReturn, cost)
 
 	a.GrossReturn += tr.GrossReturn
 	a.NetReturn   += netReturn
