@@ -300,7 +300,7 @@ func CalcMetrics(trades *[]db.Trade, costPerOper float64, startDate *time.Time) 
 
 	//--- Calc profit factor
 
-	profFactor := 0.0
+	profFactor := 10.0
 	if netLoss != 0 {
 		profFactor = netProf / math.Abs(netLoss)
 	}
@@ -317,11 +317,10 @@ func CalcMetrics(trades *[]db.Trade, costPerOper float64, startDate *time.Time) 
 
 	//--- Calc return/maxDrawdown ratio
 
-	retDDRatio := 0.0
+	retDDRatio := 10.0
 	if maxDD != 0 {
 		retDDRatio = netTotal / math.Abs(maxDD)
 	}
-
 
 	return &Metrics{
 		NetReturn    : Trunc2d(netTotal),
