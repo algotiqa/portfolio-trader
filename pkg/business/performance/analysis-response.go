@@ -193,10 +193,10 @@ type YoYRolling struct {
 //=============================================================================
 
 type Rolling struct {
-	Daily    [7]RollingInfo  `json:"daily"`
-	Monthly  [12]RollingInfo `json:"monthly"`
-	DayYoY   []*YoYRolling   `json:"dayYoY"`
-	MonthYoY []*YoYRolling   `json:"monthYoY"`
+	Daily    [7 ] RollingInfo `json:"daily"`
+	Monthly  [12] RollingInfo `json:"monthly"`
+	DayYoY   [  ]*YoYRolling  `json:"dayYoY"`
+	MonthYoY [  ]*YoYRolling  `json:"monthYoY"`
 }
 
 //=============================================================================

@@ -86,7 +86,7 @@ func calcEquities(ts *db.TradingSystem, trades *[]db.Trade, tradeType string) (*
 		GrossDrawdown: grossDD,
 		NetDrawdown:   netDD,
 		Trades:        len(*timeSlice),
-	}, maxGrossDD, maxNetDD
+	}, core.Trunc2d(maxGrossDD), core.Trunc2d(maxNetDD)
 }
 
 //=============================================================================
@@ -96,7 +96,7 @@ func calcProfit(equity *[]float64) float64 {
 		return 0
 	}
 
-	return (*equity)[len(*equity)-1]
+	return core.Trunc2d((*equity)[len(*equity)-1])
 }
 
 //=============================================================================
@@ -267,11 +267,13 @@ func calcRolling(res *AnalysisResponse) {
 
 	//--- Avoid spurious digits
 
-	for _, ri := range res.Rolling.Daily {
+	for i := range res.Rolling.Daily {
+		ri := &res.Rolling.Daily[i]
 		ri.Trunc2d()
 	}
 
-	for _, ri := range res.Rolling.Monthly {
+	for i := range res.Rolling.Monthly {
+		ri := &res.Rolling.Monthly[i]
 		ri.Trunc2d()
 	}
 
