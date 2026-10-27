@@ -419,7 +419,9 @@ func setPortfolio(pm *PortfolioMessage, create bool) bool {
 		p.AccountPerc           = pm.Portfolio.AccountPerc
 		p.MaxMarginPerc         = pm.Portfolio.MaxMarginPerc
 		p.CorrelationPeriod     = pm.Portfolio.CorrelationPeriod
+		p.PeriodType            = pm.Portfolio.PeriodType
 		p.RunPeriod             = pm.Portfolio.RunPeriod
+		p.Paused                = pm.Portfolio.Paused
 		p.AccountId             = pm.Portfolio.AccountId
 		p.AccountCode           = pm.Account.Code
 		p.AccountName           = pm.Account.Name

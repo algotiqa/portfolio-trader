@@ -131,14 +131,16 @@ type Account struct {
 //=============================================================================
 
 type Portfolio struct {
-	Id                uint      `json:"id"`
-	Username          string    `json:"username"`
-	AccountId         uint      `json:"accountId"`
-	Name              string    `json:"name"`
-	AccountPerc       float64   `json:"accountPerc"`
-	MaxMarginPerc     float64   `json:"maxMarginPerc"`
-	CorrelationPeriod int       `json:"correlationPeriod"`
-	RunPeriod         int       `json:"runPeriod"`
+	Id                uint          `json:"id"`
+	Username          string        `json:"username"`
+	AccountId         uint          `json:"accountId"`
+	Name              string        `json:"name"`
+	AccountPerc       float64       `json:"accountPerc"`
+	MaxMarginPerc     float64       `json:"maxMarginPerc"`
+	CorrelationPeriod int           `json:"correlationPeriod"`
+	PeriodType        db.PeriodType `json:"periodType"`
+	RunPeriod         int           `json:"runPeriod"`
+	Paused            bool          `json:"paused"`
 }
 
 //=============================================================================

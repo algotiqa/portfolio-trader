@@ -25,6 +25,17 @@ import (
 //===
 //=============================================================================
 
+type PeriodType string
+
+//-----------------------------------------------------------------------------
+
+const (
+	PeriodTypeWeekly  PeriodType = "WE"
+	PeriodTypeMonthly PeriodType = "MO"
+)
+
+//-----------------------------------------------------------------------------
+
 type BuilderName string
 
 //-----------------------------------------------------------------------------
@@ -43,7 +54,9 @@ type Portfolio struct {
 	AccountPerc            float64     `json:"accountPerc"`
 	MaxMarginPerc          float64     `json:"maxMarginPerc"`
 	CorrelationPeriod      int         `json:"correlationPeriod"`
+	PeriodType             PeriodType  `json:"periodType"`
 	RunPeriod              int         `json:"runPeriod"`
+	Paused                 bool        `json:"paused"`
 	BuilderName            BuilderName `json:"managementType"`
 	BuilderConfig          string      `json:"managementConfig"`
 	AccountId              uint        `json:"accountId"`
@@ -151,24 +164,8 @@ func (ts TradingSystem) IsTrading() bool {
 //=============================================================================
 
 type TradingFilter struct {
-	TradingSystemId  uint `json:"omit" gorm:"primaryKey"`
-	EquAvgEnabled    bool `json:"equAvgEnabled"`
-	EquAvgLen        int  `json:"equAvgLen"`
-	PosProEnabled    bool `json:"posProEnabled"`
-	PosProLen        int  `json:"posProLen"`
-	WinPerEnabled    bool `json:"winPerEnabled"`
-	WinPerLen        int  `json:"winPerLen"`
-	WinPerValue      int  `json:"winPerValue"`
-	OldNewEnabled    bool `json:"oldNewEnabled"`
-	OldNewOldLen     int  `json:"oldNewOldLen"`
-	OldNewOldPerc    int  `json:"oldNewOldPerc"`
-	OldNewNewLen     int  `json:"oldNewNewLen"`
-	TrendlineEnabled bool `json:"trendlineEnabled"`
-	TrendlineLen     int  `json:"trendlineLen"`
-	TrendlineValue   int  `json:"trendlineValue"`
-	DrawdownEnabled  bool `json:"drawdownEnabled"`
-	DrawdownMin      int  `json:"drawdownMin"`
-	DrawdownMax      int  `json:"drawdownMax"`
+	TradingSystemId  uint   `json:"omit" gorm:"primaryKey"`
+	Config           string `json:"config"`
 }
 
 //=============================================================================
