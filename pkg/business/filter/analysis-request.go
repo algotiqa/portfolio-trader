@@ -9,7 +9,10 @@
 
 package filter
 
-import "github.com/algotiqa/portfolio-trader/pkg/core"
+import (
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/criteria"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
+)
 
 //=============================================================================
 //===
@@ -25,23 +28,51 @@ type AnalysisRequest struct {
 //=============================================================================
 
 type TradingFilter struct {
-	EquAvgEnabled    bool   `json:"equAvgEnabled"`
-	EquAvgLen        int    `json:"equAvgLen"`
-	PosProEnabled    bool   `json:"posProEnabled"`
-	PosProLen        int    `json:"posProLen"`
-	WinPerEnabled    bool   `json:"winPerEnabled"`
-	WinPerLen        int    `json:"winPerLen"`
-	WinPerValue      int    `json:"winPerValue"`
-	OldNewEnabled    bool   `json:"oldNewEnabled"`
-	OldNewOldLen     int    `json:"oldNewOldLen"`
-	OldNewOldPerc    int    `json:"oldNewOldPerc"`
-	OldNewNewLen     int    `json:"oldNewNewLen"`
-	TrendlineEnabled bool   `json:"trendlineEnabled"`
-	TrendlineLen     int    `json:"trendlineLen"`
-	TrendlineValue   int    `json:"trendlineValue"`
-	DrawdownEnabled  bool   `json:"drawdownEnabled"`
-	DrawdownMin      int    `json:"drawdownMin"`
-	DrawdownMax      int    `json:"drawdownMax"`
+	Activation    Config  `json:"activation"`
+	Deactivation  Config  `json:"deactivation"`
 }
 
 //=============================================================================
+
+func NewTradingFilter() *TradingFilter {
+	return &TradingFilter{
+		Activation  : Config{
+			CombinationMode: CombinationModeAll,
+		},
+		Deactivation: Config{
+			CombinationMode: CombinationModeOne,
+		},
+	}
+}
+
+//=============================================================================
+
+type CombinationMode string
+
+//-----------------------------------------------------------------------------
+
+const (
+	CombinationModeAll  CombinationMode = "A" //--- This is an AND
+	CombinationModeMost CombinationMode = "M" //--- Majority of conditions are satisfied (50% +1)
+	CombinationModeOne  CombinationMode = "O" //--- This is an OR
+)
+
+//-----------------------------------------------------------------------------
+
+type Config struct {
+	CombinationMode   CombinationMode                  `json:"combinationMode"`
+	NetReturn         criteria.NetReturnConfig         `json:"netReturn"`
+	AverageTrade      criteria.AverageTradeConfig      `json:"averageTrade"`
+	EquityVsAverage   criteria.EquityVsAverageConfig   `json:"equityVsAverage"`
+	WinningPercentage criteria.WinningPercentageConfig `json:"winningPercentage"`
+	MaxDrawdown       criteria.MaxDrawdownConfig       `json:"maxDrawdown"`
+	TrendLine         criteria.TrendLineConfig         `json:"trendLine"`
+	ProfitFactor      criteria.ProfitFactorConfig      `json:"profitFactor"`
+	SharpeRatio       criteria.SharpeRatioConfig       `json:"sharpeRatio"`
+	Sqn100            criteria.Sqn100Config            `json:"sqn100"`
+	ReturnMaxDDRatio  criteria.ReturnMaxDDRatioConfig  `json:"returnMaxDDRatio"`
+}
+
+//=============================================================================
+
+

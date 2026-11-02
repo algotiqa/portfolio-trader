@@ -74,11 +74,17 @@ func (j *Job) calcFilterOutcomes() []*TradingSystemInfo {
 		if tsi.healthy {
 			tsi.filterPassed = true
 			if tsi.filter != nil {
-				tsi.filterPassed = filter.CalcActivation(tsi.system, tsi.filter, *tsi.trades)
-			}
+				filt,err := filter.ConvertFromDbFilter(tsi.filter)
+				if err != nil {
+					j.log(LogLevelError, "Error converting filter to db filter: %v", err.Error())
+					tsi.filterPassed = false
+				} else {
+					tsi.filterPassed = filter.CalcActivation(tsi.system, filt, tsi.trades, j.portfolio)
 
-			//TODO: Add filter details
-			j.addFilter(tsi, tsi.filterPassed, "")
+					//TODO: Add filter details
+					j.addFilter(tsi, tsi.filterPassed, "")
+				}
+			}
 
 			if tsi.filterPassed {
 				list = append(list, tsi)

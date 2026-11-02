@@ -12,7 +12,7 @@ package filter
 import (
 	"time"
 
-	"github.com/algotiqa/portfolio-trader/pkg/core"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/criteria"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
 
@@ -23,11 +23,12 @@ import (
 //=============================================================================
 
 type AnalysisResponse struct {
-	TradingSystem TradingSystem     `json:"tradingSystem"`
-	Filter        *db.TradingFilter `json:"filter"`
-	Summary       Summary           `json:"summary"`
-	Equities      Equities          `json:"equities"`
-	Activations   *Activations      `json:"activations"`
+	TradingSystem    TradingSystem `json:"tradingSystem"`
+	Filter          *TradingFilter `json:"filter"`
+	Summary          Summary       `json:"summary"`
+	Equities         Equities      `json:"equities"`
+	Outcomes        *Outcomes      `json:"outcomes"`
+	Portfolio       *db.Portfolio  `json:"portfolio"`
 }
 
 //=============================================================================
@@ -54,81 +55,22 @@ type Summary struct {
 
 type Equities struct {
 	Time               []time.Time `json:"time"`
-	NetProfit          []float64   `json:"netProfit"`
 	UnfilteredEquity   []float64   `json:"unfilteredEquity"`
 	FilteredEquity     []float64   `json:"filteredEquity"`
 	UnfilteredDrawdown []float64   `json:"unfilteredDrawdown"`
 	FilteredDrawdown   []float64   `json:"filteredDrawdown"`
-	FilterActivation   []int8      `json:"filterActivation"`
-	Average            *core.Serie `json:"average"`
 }
 
 //=============================================================================
 
-type Activation struct {
-	Time   []time.Time `json:"time"`
-	Values []int8      `json:"values"`
-}
-
-//-----------------------------------------------------------------------------
-
-func (p *Activation) AddPoint(time time.Time, value int8) {
-	p.Time = append(p.Time, time)
-	p.Values = append(p.Values, value)
-}
-
-//-----------------------------------------------------------------------------
-
-func (p *Activation) IsLastActive() bool {
-	return p.Values[len(p.Values)-1] != 0
-}
-
-//=============================================================================
-
-type Activations struct {
-	EquityVsAverage   *Activation `json:"equityVsAverage"`
-	PositiveProfit    *Activation `json:"positiveProfit"`
-	WinningPercentage *Activation `json:"winningPercentage"`
-	OldVsNew          *Activation `json:"oldVsNew"`
-	Trendline         *Activation `json:"trendline"`
-	Drawdown          *Activation `json:"drawdown"`
-}
-
-//-----------------------------------------------------------------------------
-
-func (a *Activations) IsLastActive() bool {
-	equVsAvg  := true
-	posProf   := true
-	winPerc   := true
-	oldNew    := true
-	trendline := true
-	drawdown  := true
-
-	if a.EquityVsAverage != nil {
-		equVsAvg = a.EquityVsAverage.IsLastActive()
-	}
-
-	if a.PositiveProfit != nil {
-		posProf = a.PositiveProfit.IsLastActive()
-	}
-
-	if a.WinningPercentage != nil {
-		winPerc = a.WinningPercentage.IsLastActive()
-	}
-
-	if a.OldVsNew != nil {
-		oldNew = a.OldVsNew.IsLastActive()
-	}
-
-	if a.Trendline != nil {
-		trendline = a.Trendline.IsLastActive()
-	}
-
-	if a.Drawdown != nil {
-		drawdown = a.Drawdown.IsLastActive()
-	}
-
-	return equVsAvg && posProf && winPerc && oldNew && trendline && drawdown
+type Outcomes struct {
+	Activations     []*criteria.Activation  `json:"activations"`
+	Deactivations   []*criteria.Activation  `json:"deactivations"`
+	CombinedActiv   []int                   `json:"combinedActiv"`
+	CombinedDeact   []int                   `json:"combinedDeact"`
+	CombinedFinal   []int                   `json:"combinedFinal"`
+	SampledFinal    []int                   `json:"sampledFinal"`
+	FinalActivation *criteria.Activation    `json:"finalActivation"`
 }
 
 //=============================================================================

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter"
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
@@ -27,7 +28,18 @@ func SetTradingFilters(tx *gorm.DB, c *auth.Context, tsId uint, f *filter.Tradin
 		return err
 	}
 
-	tf := convertFilter(f)
+	//--- Validate input
+
+	_,err = filter.NewEvaluator(f)
+	if err != nil {
+		return err
+	}
+
+	tf,err := filter.ConvertToDbFilter(f)
+	if err != nil {
+		return err
+	}
+
 	tf.TradingSystemId = tsId
 
 	return db.SetTradingFilter(tx, tf)
@@ -42,17 +54,31 @@ func RunFilterAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, far *filter.Anal
 	}
 
 	//--- Get filtering config (if not provided)
-	var filters *db.TradingFilter
+
+	var filters *filter.TradingFilter
 
 	if far.Filter == nil {
-		filters, err = db.GetTradingFilterByTsId(tx, tsId)
+		var dbf *db.TradingFilter
+		dbf, err = db.GetTradingFilterByTsId(tx, tsId)
 		if err != nil {
 			return nil, err
 		}
-
+		filters,err = filter.ConvertFromDbFilter(dbf)
+		if err != nil {
+			return nil, err
+		}
 	} else {
-		filters = convertFilter(far.Filter)
+		filters = far.Filter
 	}
+
+	//--- Validate input, creating an evaluator
+
+	eval,err := filter.NewEvaluator(filters)
+	if err != nil {
+		return nil, err
+	}
+
+	//--- Get trades
 
 	fromTime, toTime, err := core.CalcSelectedPeriod(&far.Period, time.UTC)
 	if err != nil {
@@ -64,8 +90,21 @@ func RunFilterAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, far *filter.Anal
 		return nil, err
 	}
 
+	//--- Get portfolio
+
+	if ts.PortfolioId == nil || *ts.PortfolioId == 0 {
+		return nil, req.NewBadRequestError("missing portfolio id")
+	}
+
+	p,err := getPortfolio(tx, c, *ts.PortfolioId, "RunFilterAnalysis")
+	if err != nil {
+		return nil, err
+	}
+
+	//--- Run analysis
+
 	core.NormalizeContracts(trades)
-	res := filter.RunAnalysis(ts, filters, trades)
+	res := filter.RunAnalysis(ts, filters, trades, p, eval)
 
 	return res, err
 }
@@ -109,34 +148,6 @@ func StopFilterOptimization(c *auth.Context, tsId uint) error {
 func GetFilterOptimizationInfo(c *auth.Context, tsId uint) (*filter.OptimizationResponse, error) {
 	info := filter.GetOptimizationInfo(tsId)
 	return filter.NewOptimizationResponse(info), nil
-}
-
-//=============================================================================
-//===
-//=== Private methods
-//===
-//=============================================================================
-
-func convertFilter(f *filter.TradingFilter) *db.TradingFilter {
-	return &db.TradingFilter{
-		EquAvgEnabled:    f.EquAvgEnabled,
-		EquAvgLen:        f.EquAvgLen,
-		PosProEnabled:    f.PosProEnabled,
-		PosProLen:        f.PosProLen,
-		WinPerEnabled:    f.WinPerEnabled,
-		WinPerLen:        f.WinPerLen,
-		WinPerValue:      f.WinPerValue,
-		OldNewEnabled:    f.OldNewEnabled,
-		OldNewOldLen:     f.OldNewOldLen,
-		OldNewOldPerc:    f.OldNewOldPerc,
-		OldNewNewLen:     f.OldNewNewLen,
-		TrendlineEnabled: f.TrendlineEnabled,
-		TrendlineLen:     f.TrendlineLen,
-		TrendlineValue:   f.TrendlineValue,
-		DrawdownEnabled:  f.DrawdownEnabled,
-		DrawdownMin:      f.DrawdownMin,
-		DrawdownMax:      f.DrawdownMax,
-	}
 }
 
 //=============================================================================

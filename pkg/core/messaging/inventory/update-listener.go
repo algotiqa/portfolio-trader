@@ -17,6 +17,7 @@ import (
 	"github.com/algotiqa/core/msg"
 	"github.com/algotiqa/portfolio-trader/pkg/business"
 	"github.com/algotiqa/portfolio-trader/pkg/business/allocation/builder"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter"
 	"github.com/algotiqa/portfolio-trader/pkg/business/importexport"
 	"github.com/algotiqa/portfolio-trader/pkg/business/position"
 	"github.com/algotiqa/portfolio-trader/pkg/business/position/model"
@@ -137,15 +138,18 @@ func setTradingSystem(tsm *TradingSystemMessage, create bool) bool {
 
 		if err == nil && isNew {
 			if len(tsm.PortfolioPack) == 0 {
-				err = db.SetTradingFilter(tx, &db.TradingFilter{
-					TradingSystemId: ts.Id,
-				})
+				var dbF *db.TradingFilter
+				dbF,err = filter.ConvertToDbFilter(filter.NewTradingFilter())
 				if err == nil {
-					var p *db.TradingPosition
-					p,err = getDefaultTradingPosition()
+					dbF.TradingSystemId = ts.Id
+					err = db.SetTradingFilter(tx, dbF)
 					if err == nil {
-						p.TradingSystemId = ts.Id
-						err = db.SetTradingPosition(tx, p)
+						var p *db.TradingPosition
+						p,err = getDefaultTradingPosition()
+						if err == nil {
+							p.TradingSystemId = ts.Id
+							err = db.SetTradingPosition(tx, p)
+						}
 					}
 				}
 			} else {

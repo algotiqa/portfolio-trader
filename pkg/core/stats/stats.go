@@ -111,6 +111,10 @@ func LinearRegression(x []time.Time, y []float64) float64 {
 		den += aux * aux
 	}
 
+	if den == 0 {
+		return 0
+	}
+
 	return num / den
 }
 

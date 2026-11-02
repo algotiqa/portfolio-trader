@@ -127,7 +127,7 @@ func BuildDrawDownPercentage(equity *[]float64) (*[]float64, float64, float64) {
 
 //=============================================================================
 
-func CalcWinningPercentage(profits []float64, filter []int8) float64 {
+func CalcWinningPercentage(profits []float64, filter []int) float64 {
 	tot := 0
 	pos := 0
 
@@ -151,7 +151,7 @@ func CalcWinningPercentage(profits []float64, filter []int8) float64 {
 
 //=============================================================================
 
-func CalcAverageTrade(profits []float64, filter []int8) float64 {
+func CalcAverageTrade(profits []float64, filter []int) float64 {
 	sum := 0.0
 	num := 0.0
 

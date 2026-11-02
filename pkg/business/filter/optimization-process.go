@@ -92,11 +92,12 @@ func (op *OptimizationProcess) generate(algo optimization.Algorithm) {
 //=============================================================================
 
 func (op *OptimizationProcess) runAnalysis(filter *db.TradingFilter) float64 {
-	sum := RunAnalysis(op.ts, filter, op.trades).Summary
-	run := op.createRun(filter, &sum)
-	op.info.addResult(run)
-
-	return run.FitnessValue
+	//sum := RunAnalysis(op.ts, filter, op.trades).Summary
+	//run := op.createRun(filter, &sum)
+	//op.info.addResult(run)
+	//
+	//return run.FitnessValue
+	return 0
 }
 
 //=============================================================================
@@ -118,12 +119,13 @@ func (op *OptimizationProcess) createRun(filter *db.TradingFilter, sum *Summary)
 //=============================================================================
 
 func (op *OptimizationProcess) calcBaseValue() float64 {
-	baseline := op.optReq.Baseline
-
-	sum := RunAnalysis(op.ts, baseline, op.trades).Summary
-	run := op.createRun(baseline, &sum)
-
-	return run.FitnessValue
+	//baseline := op.optReq.Baseline
+	//
+	//sum := RunAnalysis(op.ts, baseline, op.trades).Summary
+	//run := op.createRun(baseline, &sum)
+	//
+	//return run.FitnessValue
+	return 0
 }
 
 //=============================================================================
