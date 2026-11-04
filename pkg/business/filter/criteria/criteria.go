@@ -69,7 +69,8 @@ func NewActivation(name string, length int) *Activation {
 
 //=============================================================================
 
-func (a *Activation) AddMetric(metric float64) {
+func (a *Activation) AddMetric(time time.Time, metric float64) {
+	a.Times   = append(a.Times,   time)
 	a.Flags   = append(a.Flags,   0)
 	a.Metrics = append(a.Metrics, core.Trunc2d(metric))
 }

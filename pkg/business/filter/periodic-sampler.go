@@ -71,8 +71,12 @@ func (s *WeeklyPeriodSampler) Sample(time []time.Time, activations []int) ([]int
 		} else {
 			prev   = activations[i-1]
 			res[i] = prev
-			date   = date.AddDate(0, 0, 7*s.runPeriod)
 			a.AddFlag(date, prev)
+			date = date.AddDate(0, 0, 7*s.runPeriod)
+			for date.Before(t) {
+				a.AddFlag(date, prev)
+				date = date.AddDate(0, 0, 7*s.runPeriod)
+			}
 		}
 	}
 
@@ -114,8 +118,12 @@ func (s *MonthlyPeriodSampler) Sample(time []time.Time, activations []int) ([]in
 		} else {
 			prev   = activations[i-1]
 			res[i] = prev
-			date   = date.AddDate(0, s.runPeriod, 0)
 			a.AddFlag(date, prev)
+			date = date.AddDate(0, s.runPeriod, 0)
+			for date.Before(t) {
+				a.AddFlag(date, prev)
+				date = date.AddDate(0, s.runPeriod, 0)
+			}
 		}
 	}
 

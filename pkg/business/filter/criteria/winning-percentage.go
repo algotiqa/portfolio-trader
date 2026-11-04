@@ -80,7 +80,7 @@ func (c *WinningPercentageCriteria) Eval(s *Snapshot) {
 
 	a := NewActivation(WinningPercentage, length)
 
-	for i := range s.Time {
+	for i,t := range s.Time {
 		if s.NetReturn[i] != 0 {
 			totCount++
 
@@ -106,7 +106,7 @@ func (c *WinningPercentageCriteria) Eval(s *Snapshot) {
 				metric = posCount * 100 / totCount
 			}
 
-			a.AddMetric(metric)
+			a.AddMetric(t, metric)
 		}
 	}
 

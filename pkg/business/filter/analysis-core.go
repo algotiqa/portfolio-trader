@@ -127,8 +127,9 @@ func calcFilteredEquity(netProfit []float64, activations []int) []float64 {
 
 	for i, value := range netProfit {
 		if i > 0 {
-			//--- We have to use the activation at time [i-1]
-			if activations[i-1] == 0 {
+			//--- We have to use the activation at time [i] because it has been sampled
+			//--- and already have a 1 trade delay
+			if activations[i] == 0 {
 				value = 0.0
 			}
 		}

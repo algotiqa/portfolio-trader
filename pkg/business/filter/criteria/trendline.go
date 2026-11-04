@@ -83,10 +83,10 @@ func (c *TrendLineCriteria) Eval(s *Snapshot) {
 
 	a := NewActivation(TrendLine, length)
 
-	for i, _ := range s.Time {
+	for i,t := range s.Time {
 		if i >= length-1 {
 			slope := stats.LinearRegression(s.Time[i-length+1:i], s.Equity[i-length+1:i])
-			a.AddMetric(slope)
+			a.AddMetric(t, slope)
 		}
 	}
 

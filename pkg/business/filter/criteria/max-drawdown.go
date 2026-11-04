@@ -75,8 +75,8 @@ func (c *MaxDrawdownCriteria) Eval(s *Snapshot) {
 
 	a := NewActivation(MaxDrawdown, 1)
 
-	for i := range s.Time {
-		a.AddMetric(s.Drawdown[i])
+	for i,t := range s.Time {
+		a.AddMetric(t, s.Drawdown[i])
 	}
 
 	c.activation = a

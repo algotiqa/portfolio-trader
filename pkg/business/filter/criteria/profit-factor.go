@@ -80,7 +80,7 @@ func (c *ProfitFactorCriteria) Eval(s *Snapshot) {
 
 	a := NewActivation(NetReturn, length)
 
-	for i := range s.Time {
+	for i,t := range s.Time {
 		if s.NetReturn[i] > 0 {
 			profit += s.NetReturn[i]
 		}
@@ -108,7 +108,7 @@ func (c *ProfitFactorCriteria) Eval(s *Snapshot) {
 				metric = profit / loss
 			}
 
-			a.AddMetric(metric)
+			a.AddMetric(t, metric)
 		}
 	}
 

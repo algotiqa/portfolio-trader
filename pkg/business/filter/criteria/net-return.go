@@ -79,7 +79,7 @@ func (c *NetReturnCriteria) Eval(s *Snapshot) {
 
 	a := NewActivation(NetReturn, length)
 
-	for i := range s.Time {
+	for i,t := range s.Time {
 		if i >= length-1 {
 			retSum = s.Equity[i]
 
@@ -87,7 +87,7 @@ func (c *NetReturnCriteria) Eval(s *Snapshot) {
 				retSum -= s.Equity[i-length]
 			}
 
-			a.AddMetric(retSum)
+			a.AddMetric(t, retSum)
 		}
 	}
 

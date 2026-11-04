@@ -82,14 +82,14 @@ func (c *EquityVsAverageCriteria) Eval(s *Snapshot) {
 
 	a := NewActivation(EquityVsAverage, length)
 
-	for i := range s.Time {
+	for i,t := range s.Time {
 		maSum += s.Equity[i]
 
 		if i >= length-1 {
 			if i > length-1 {
 				maSum -= s.Equity[i-length]
 			}
-			a.AddMetric(maSum/float64(length))
+			a.AddMetric(t, maSum/float64(length))
 		}
 	}
 

@@ -78,7 +78,7 @@ func (c *AverageTradeCriteria) Eval(s *Snapshot) {
 
 	a := NewActivation(AverageTrade, length)
 
-	for i := range s.Time {
+	for i,t := range s.Time {
 		if i >= length-1 {
 			retSum = s.Equity[i]
 			count++
@@ -88,7 +88,7 @@ func (c *AverageTradeCriteria) Eval(s *Snapshot) {
 				count--
 			}
 
-			a.AddMetric(retSum/count)
+			a.AddMetric(t,retSum/count)
 		}
 	}
 
