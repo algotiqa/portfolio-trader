@@ -9,7 +9,12 @@
 
 package criteria
 
-import "github.com/algotiqa/core/req"
+import (
+	"math"
+
+	"github.com/algotiqa/core/req"
+	"golang.org/x/exp/stats"
+)
 
 //=============================================================================
 
@@ -72,13 +77,31 @@ func (c *Sqn100Criteria) Eval(s *Snapshot) {
 		return
 	}
 
-	a := NewActivation(Sqn100, 0)
+	length := c.config.Length
+
+	a := NewActivation(Sqn100,length)
+
+	for i,t := range s.Time {
+		if i >= length-1 {
+			mean, stdd := stats.MeanAndStdDev(s.NetReturn[i-length+1:i+1])
+
+			sqn := -1.0
+
+			if stdd > 0 {
+				trades := math.Min(float64(length), 100)
+				sqn = (mean/stdd)*math.Sqrt(trades)
+			}
+
+			a.AddMetric(t, sqn)
+		}
+	}
 
 	//--- We may not be able to calculate if length is too high
 
 	if a.Flags != nil {
 		c.activation = a
-		c.evaluate(0,nil)
+		skipValue := -1.0
+		c.evaluate(c.config.Value, &skipValue)
 	}
 }
 

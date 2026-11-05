@@ -51,7 +51,7 @@ func BuildNetProfits(grossProfits *[]float64, costPerOper float64) *[]float64 {
 
 func BuildEquity(profits *[]float64) *[]float64 {
 	equity := []float64{}
-	value := 0.0
+	value  := 0.0
 
 	for _, profit := range *profits {
 		value += profit

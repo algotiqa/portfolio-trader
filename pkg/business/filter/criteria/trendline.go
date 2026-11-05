@@ -37,8 +37,8 @@ func (c *TrendLineConfig) validate() error {
 		return req.NewBadRequestError("trendLine.length must be between %v and %v", 1, 1000)
 	}
 
-	if c.Value < 1 || c.Value > 300 {
-		return req.NewBadRequestError("trendLine.value must be between %v and %v", 1, 300)
+	if c.Value < -3 || c.Value > 3 {
+		return req.NewBadRequestError("trendLine.value must be between %v and %v", -3, 3)
 	}
 
 	return nil
@@ -85,7 +85,7 @@ func (c *TrendLineCriteria) Eval(s *Snapshot) {
 
 	for i,t := range s.Time {
 		if i >= length-1 {
-			slope := stats.LinearRegression(s.Time[i-length+1:i], s.Equity[i-length+1:i])
+			slope := stats.LinearRegression(s.Time[i-length+1:i+1], s.Equity[i-length+1:i+1])
 			a.AddMetric(t, slope)
 		}
 	}

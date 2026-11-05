@@ -9,7 +9,10 @@
 
 package criteria
 
-import "github.com/algotiqa/core/req"
+import (
+	"github.com/algotiqa/core/req"
+	"golang.org/x/exp/stats"
+)
 
 //=============================================================================
 
@@ -72,13 +75,30 @@ func (c *SharpeRatioCriteria) Eval(s *Snapshot) {
 		return
 	}
 
-	a := NewActivation(SharpeRatio, 0)
+	length := c.config.Length
+
+	a := NewActivation(SharpeRatio,length)
+
+	for i,t := range s.Time {
+		if i >= length-1 {
+			mean, stdd := stats.MeanAndStdDev(s.NetReturn[i-length+1:i+1])
+
+			sr := -1.0
+
+			if stdd > 0 {
+				sr = mean/stdd
+			}
+
+			a.AddMetric(t, sr)
+		}
+	}
 
 	//--- We may not be able to calculate if length is too high
 
 	if a.Flags != nil {
 		c.activation = a
-		c.evaluate(0,nil)
+		skipValue := -1.0
+		c.evaluate(c.config.Value, &skipValue)
 	}
 }
 

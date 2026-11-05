@@ -11,6 +11,7 @@ package criteria
 
 import (
 	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
 )
 
 //=============================================================================
@@ -77,30 +78,32 @@ func (c *ReturnMaxDDRatioCriteria) Eval(s *Snapshot) {
 	//retSum := 0.0
 	length := c.config.Length
 
-	a := NewActivation(AverageTrade, length)
+	a := NewActivation(ReturnMaxDDRatio, length)
 
-	//for i, t := range s.Time {
-	//	if i >= length-1 {
-			//retSum = s.Equity[i]
-			//maxDD := 0.0
-			//
-			//for j:=0; j<length; j++ {
-			//	maxDD = math.Min(maxDD, s.Drawdown[i -j])
-			//}
-			//
-			//if i > length-1 {
-			//	retSum -= s.Equity[i-length]
-			//}
-			//
-			//a.AddMetric(t, retSum/count)
-	//	}
-	//}
+	for i, t := range s.Time {
+		if i >= length-1 {
+			returns := s.NetReturn[i-length+1:i+1]
+			equity  := core.BuildEquity(&returns)
+			_,maxDD := core.BuildDrawDown(equity)
+
+			ret := (*equity)[len(*equity) -1]
+
+			if maxDD == 0 {
+				ret = -1
+			} else {
+				ret = ret / -maxDD
+			}
+
+			a.AddMetric(t, ret)
+		}
+	}
 
 	//--- We may not be able to calculate if length is too high
 
 	if a.Flags != nil {
 		c.activation = a
-		c.evaluate(c.config.Value, nil)
+		skipValue := -1.0
+		c.evaluate(c.config.Value, &skipValue)
 	}
 }
 

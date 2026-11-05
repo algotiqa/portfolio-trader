@@ -36,6 +36,10 @@ func (c *ProfitFactorConfig) validate() error {
 		return req.NewBadRequestError("profitFactor.length must be between %v and %v", 1, 1000)
 	}
 
+	if c.Value < 0 || c.Value > 10 {
+		return req.NewBadRequestError("profitFactor.value must be between %v and %v", 0, 10)
+	}
+
 	return nil
 }
 
@@ -78,7 +82,7 @@ func (c *ProfitFactorCriteria) Eval(s *Snapshot) {
 	loss   := 0.0
 	length := c.config.Length
 
-	a := NewActivation(NetReturn, length)
+	a := NewActivation(ProfitFactor, length)
 
 	for i,t := range s.Time {
 		if s.NetReturn[i] > 0 {
@@ -95,10 +99,10 @@ func (c *ProfitFactorCriteria) Eval(s *Snapshot) {
 
 				if oldVal > 0 {
 					profit -= oldVal
+				}
 
-					if oldVal < 0 {
-						loss += oldVal
-					}
+				if oldVal < 0 {
+					loss += oldVal
 				}
 			}
 
