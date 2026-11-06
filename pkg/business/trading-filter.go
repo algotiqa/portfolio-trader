@@ -53,20 +53,23 @@ func RunFilterAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, far *filter.Anal
 		return nil, err
 	}
 
-	//--- Get filtering config (if not provided)
+	//--- Get filtering config to have a baseline
+
+	var dbf *db.TradingFilter
+	dbf, err = db.GetTradingFilterByTsId(tx, tsId)
+	if err != nil {
+		return nil, err
+	}
+
+	var baseline *filter.TradingFilter
+	baseline,err = filter.ConvertFromDbFilter(dbf)
+	if err != nil {
+		return nil, err
+	}
 
 	var filters *filter.TradingFilter
-
 	if far.Filter == nil {
-		var dbf *db.TradingFilter
-		dbf, err = db.GetTradingFilterByTsId(tx, tsId)
-		if err != nil {
-			return nil, err
-		}
-		filters,err = filter.ConvertFromDbFilter(dbf)
-		if err != nil {
-			return nil, err
-		}
+		filters = baseline
 	} else {
 		filters = far.Filter
 	}
@@ -105,6 +108,7 @@ func RunFilterAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, far *filter.Anal
 
 	core.NormalizeContracts(trades)
 	res := filter.RunAnalysis(ts, filters, trades, p, eval)
+	res.Baseline = baseline
 
 	return res, err
 }

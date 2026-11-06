@@ -25,6 +25,7 @@ import (
 type AnalysisResponse struct {
 	TradingSystem    TradingSystem `json:"tradingSystem"`
 	Filter          *TradingFilter `json:"filter"`
+	Baseline        *TradingFilter `json:"baseline"`
 	Summary          Summary       `json:"summary"`
 	Equities         Equities      `json:"equities"`
 	Outcomes        *Outcomes      `json:"outcomes"`
