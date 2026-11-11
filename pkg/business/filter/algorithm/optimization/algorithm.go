@@ -9,7 +9,9 @@
 
 package optimization
 
-import "github.com/algotiqa/portfolio-trader/pkg/db"
+import (
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/model"
+)
 
 //=============================================================================
 
@@ -17,10 +19,12 @@ type Context interface {
 	FilterConfig() *FilterConfig
 	AlgorithmConfig() *AlgorithmConfig
 	IsStopping() bool
-	Baseline() db.TradingFilter
+	Baseline() model.TradingFilter
 
-	RunAnalysis(filter *db.TradingFilter) float64
+	RunAnalysis(filter *model.TradingFilter) (float64,error)
 	LogInfo(message string)
+	EndProcess()
+	ExitWithError(err error)
 }
 
 //=============================================================================
@@ -28,7 +32,7 @@ type Context interface {
 type Algorithm interface {
 	Init(ctx Context)
 	Optimize()
-	StepsCount() uint
+	Steps() int64
 }
 
 //=============================================================================

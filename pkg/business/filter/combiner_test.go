@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/model"
 	"golang.org/x/exp/slices"
 
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter/criteria"
@@ -40,14 +41,14 @@ func testSnapshot(equity []float64, netReturn []float64, drawdown []float64) *cr
 //=============================================================================
 
 func TestNewCombinerValidation(t *testing.T) {
-	unknown := &Config{CombinationMode: "X"}
+	unknown := &model.FilterConfig{CombinationMode: "X"}
 
 	if _, err := NewCombiner(unknown, criteria.RunModeActivation); err == nil {
 		t.Errorf("Expected an error for an unknown combination mode")
 	}
 
-	invalid := &Config{
-		CombinationMode: CombinationModeAll,
+	invalid := &model.FilterConfig{
+		CombinationMode: model.CombinationModeAll,
 		NetReturn:       criteria.NetReturnConfig{Enabled: true, Length: 0, Value: 0},
 	}
 
@@ -55,8 +56,8 @@ func TestNewCombinerValidation(t *testing.T) {
 		t.Errorf("Expected an error for an invalid enabled criterion")
 	}
 
-	disabled := &Config{
-		CombinationMode: CombinationModeAll,
+	disabled := &model.FilterConfig{
+		CombinationMode: model.CombinationModeAll,
 		NetReturn:       criteria.NetReturnConfig{Enabled: false, Length: 0, Value: 0},
 	}
 
@@ -75,16 +76,16 @@ func TestCombinerCombinationModes(t *testing.T) {
 	s := testSnapshot(equity, netProfit, drawdown)
 
 	tests := []struct {
-		mode     CombinationMode
+		mode     model.CombinationMode
 		expected []int
 	}{
-		{CombinationModeOne , []int{1, 1, 1, 1}},
-		{CombinationModeAll , []int{0, 0, 0, 0}},
-		{CombinationModeMost, []int{1, 0, 0, 1}},
+		{model.CombinationModeOne , []int{1, 1, 1, 1}},
+		{model.CombinationModeAll , []int{0, 0, 0, 0}},
+		{model.CombinationModeMost, []int{1, 0, 0, 1}},
 	}
 
 	for _, tt := range tests {
-		cfg := &Config{
+		cfg := &model.FilterConfig{
 			CombinationMode:   tt.mode,
 			NetReturn:         criteria.NetReturnConfig        {Enabled: true, Length: 1, Value: 0},
 			WinningPercentage: criteria.WinningPercentageConfig{Enabled: true, Length: 3, Value: 50},
@@ -113,8 +114,8 @@ func TestCombinerActivations(t *testing.T) {
 
 	s := testSnapshot(equity, netProfit, drawdown)
 
-	cfg := &Config{
-		CombinationMode:   CombinationModeOne,
+	cfg := &model.FilterConfig{
+		CombinationMode:   model.CombinationModeOne,
 		NetReturn:         criteria.NetReturnConfig        {Enabled: true, Length: 1, Value: 0},
 		WinningPercentage: criteria.WinningPercentageConfig{Enabled: true, Length: 3, Value: 50},
 		MaxDrawdown:       criteria.MaxDrawdownConfig      {Enabled: true, Value: -5},
@@ -153,8 +154,8 @@ func TestCombinerActivations(t *testing.T) {
 func TestCombinerNoCriteria(t *testing.T) {
 	s := testSnapshot([]float64{1, 2, 3, 4}, []float64{0, 0, 0, 0}, []float64{0, 0, 0, 0})
 
-	for _, mode := range []CombinationMode{CombinationModeOne, CombinationModeAll, CombinationModeMost} {
-		cfg := &Config{CombinationMode: mode}
+	for _, mode := range []model.CombinationMode{model.CombinationModeOne, model.CombinationModeAll, model.CombinationModeMost} {
+		cfg := &model.FilterConfig{CombinationMode: mode}
 
 		c, err := NewCombiner(cfg, criteria.RunModeActivation)
 		if err != nil {

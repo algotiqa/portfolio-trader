@@ -11,6 +11,7 @@ package criteria
 
 import (
 	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
 )
 
 //=============================================================================
@@ -24,18 +25,17 @@ const MaxDrawdown = "maxDrawdown"
 //=============================================================================
 
 type MaxDrawdownConfig struct {
-	Enabled bool    `json:"enabled"`
-	Value   float64 `json:"value"`
+	Config
 }
 
 //=============================================================================
 
 func (c *MaxDrawdownConfig) validate() error {
-	if c.Value > 0 {
-		return req.NewBadRequestError("maxDrawdown.value must be <= 0")
+	if c.Value < MinDrawdownValue || c.Value > MaxDrawdownValue {
+		return req.NewBadRequestError("maxDrawdown.value must be between %v and %v", MinDrawdownValue, MaxDrawdownValue)
 	}
 
-	return nil
+	return c.Config.validate()
 }
 
 //=============================================================================
@@ -73,14 +73,26 @@ func (c *MaxDrawdownCriteria) Eval(s *Snapshot) {
 		return
 	}
 
-	a := NewActivation(MaxDrawdown, 1)
+	length := c.config.Length
+
+	a := NewActivation(MaxDrawdown, length)
 
 	for i,t := range s.Time {
-		a.AddMetric(t, s.Drawdown[i])
+		if i >= length-1 {
+			returns  := s.NetReturn[i-length+1:i+1]
+			equity   := core.BuildEquity(&returns)
+			_, maxDD := core.BuildDrawDown(equity)
+
+			a.AddMetric(t, maxDD)
+		}
 	}
 
-	c.activation = a
-	c.evaluate(c.config.Value, nil)
+	//--- We may not be able to calculate if length is too high
+
+	if a.Flags != nil {
+		c.activation = a
+		c.evaluate(c.config.Value, nil)
+	}
 }
 
 //=============================================================================

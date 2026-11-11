@@ -9,8 +9,6 @@
 
 package criteria
 
-import "github.com/algotiqa/core/req"
-
 //=============================================================================
 
 const AverageTrade = "averageTrade"
@@ -22,19 +20,13 @@ const AverageTrade = "averageTrade"
 //=============================================================================
 
 type AverageTradeConfig struct {
-	Enabled bool    `json:"enabled"`
-	Length  int     `json:"length"`
-	Value   float64 `json:"value"`
+	Config
 }
 
 //=============================================================================
 
 func (c *AverageTradeConfig) validate() error {
-	if c.Length < 1 || c.Length > 1000 {
-		return req.NewBadRequestError("averageTrade.length must be between %v and %v", 1, 1000)
-	}
-
-	return nil
+	return c.Config.validate()
 }
 
 //=============================================================================

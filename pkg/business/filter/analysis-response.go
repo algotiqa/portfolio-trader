@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter/criteria"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/model"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
 
@@ -23,13 +24,13 @@ import (
 //=============================================================================
 
 type AnalysisResponse struct {
-	TradingSystem    TradingSystem `json:"tradingSystem"`
-	Filter          *TradingFilter `json:"filter"`
-	Baseline        *TradingFilter `json:"baseline"`
-	Summary          Summary       `json:"summary"`
-	Equities         Equities      `json:"equities"`
-	Outcomes        *Outcomes      `json:"outcomes"`
-	Portfolio       *db.Portfolio  `json:"portfolio"`
+	TradingSystem    TradingSystem       `json:"tradingSystem"`
+	Filter          *model.TradingFilter `json:"filter"`
+	Baseline        *model.TradingFilter `json:"baseline"`
+	Summary          Summary             `json:"summary"`
+	Equities         Equities            `json:"equities"`
+	Outcomes        *Outcomes            `json:"outcomes"`
+	Portfolio       *db.Portfolio        `json:"portfolio"`
 }
 
 //=============================================================================

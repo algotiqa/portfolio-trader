@@ -34,12 +34,12 @@ type FieldOptimization[T int|float64] struct {
 
 //=============================================================================
 
-func (f *FieldOptimization[T]) StepsCount() uint {
+func (f *FieldOptimization[T]) StepsCount() int64 {
 	if !f.Enabled {
 		return 1
 	}
 
-	return uint((f.MaxValue - f.MinValue) / f.Step) +1
+	return int64((f.MaxValue - f.MinValue) / f.Step) +1
 }
 
 //=============================================================================
@@ -88,8 +88,8 @@ func (f *FieldOptimization[T]) Validate(min, max T) error {
 
 		//--- Validate step
 
-		if f.Step < 0 || f.Step > max {
-			return fmt.Errorf("step value out of range (0 .. %v]", max)
+		if f.Step < 0 {
+			return errors.New("step value must be positive")
 		}
 
 		if f.Step == 0 {

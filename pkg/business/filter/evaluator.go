@@ -11,6 +11,7 @@ package filter
 
 import (
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter/criteria"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/model"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
 
@@ -26,7 +27,7 @@ type Evaluator struct {
 
 //=============================================================================
 
-func NewEvaluator(f *TradingFilter) (*Evaluator,error) {
+func NewEvaluator(f *model.TradingFilter) (*Evaluator,error) {
 	activComb, err := NewCombiner(&f.Activation, criteria.RunModeActivation)
 	if err != nil {
 		return nil, err

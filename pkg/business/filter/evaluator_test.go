@@ -12,6 +12,7 @@ package filter
 import (
 	"testing"
 
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/model"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"golang.org/x/exp/slices"
 
@@ -20,14 +21,14 @@ import (
 
 //=============================================================================
 
-func hysteresisFilter() *TradingFilter {
-	return &TradingFilter{
-		Activation: Config{
-			CombinationMode: CombinationModeOne,
+func hysteresisFilter() *model.TradingFilter {
+	return &model.TradingFilter{
+		Activation: model.FilterConfig{
+			CombinationMode: model.CombinationModeOne,
 			NetReturn:       criteria.NetReturnConfig{Enabled: true, Length: 1, Value: 0},
 		},
-		Deactivation: Config{
-			CombinationMode: CombinationModeOne,
+		Deactivation: model.FilterConfig{
+			CombinationMode: model.CombinationModeOne,
 			MaxDrawdown:     criteria.MaxDrawdownConfig{Enabled: true, Value: -5},
 		},
 	}
@@ -58,9 +59,9 @@ func TestEvaluatorHysteresis(t *testing.T) {
 //=============================================================================
 
 func TestEvaluatorStartsActive(t *testing.T) {
-	f := &TradingFilter{
-		Activation:   Config{CombinationMode: CombinationModeOne},
-		Deactivation: Config{CombinationMode: CombinationModeOne},
+	f := &model.TradingFilter{
+		Activation:   model.FilterConfig{CombinationMode: model.CombinationModeOne},
+		Deactivation: model.FilterConfig{CombinationMode: model.CombinationModeOne},
 	}
 
 	eval, err := NewEvaluator(f)

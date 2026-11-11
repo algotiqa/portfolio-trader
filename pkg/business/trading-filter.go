@@ -15,6 +15,7 @@ import (
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/model"
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 	"gorm.io/gorm"
@@ -22,7 +23,7 @@ import (
 
 //=============================================================================
 
-func SetTradingFilters(tx *gorm.DB, c *auth.Context, tsId uint, f *filter.TradingFilter) error {
+func SetTradingFilters(tx *gorm.DB, c *auth.Context, tsId uint, f *model.TradingFilter) error {
 	_, err := getTradingSystemAndCheckAccess(tx, c, tsId)
 	if err != nil {
 		return err
@@ -61,13 +62,13 @@ func RunFilterAnalysis(tx *gorm.DB, c *auth.Context, tsId uint, far *filter.Anal
 		return nil, err
 	}
 
-	var baseline *filter.TradingFilter
+	var baseline *model.TradingFilter
 	baseline,err = filter.ConvertFromDbFilter(dbf)
 	if err != nil {
 		return nil, err
 	}
 
-	var filters *filter.TradingFilter
+	var filters *model.TradingFilter
 	if far.Filter == nil {
 		filters = baseline
 	} else {
@@ -121,7 +122,20 @@ func StartFilterOptimization(tx *gorm.DB, c *auth.Context, tsId uint, oreq *filt
 		return err
 	}
 
-	trades, err := db.FindTradesByTsIdFromTime(tx, ts.Id, oreq.StartDate, nil)
+	//--- Get location of timezone to shift dates
+
+	loc, err := time.LoadLocation(ts.Timezone)
+	if err != nil {
+		c.Log.Error("StartFilterOptimization: Bad timezone in trading system", "timezone", ts.Timezone, "error", err)
+		return nil
+	}
+
+	fromTime, toTime, err := core.CalcSelectedPeriod(oreq.Period, loc)
+	if err != nil {
+		return err
+	}
+
+	trades, err := db.FindTradesByTsIdFromTime(tx, ts.Id, fromTime, toTime)
 	if err != nil {
 		return err
 	}
@@ -131,9 +145,20 @@ func StartFilterOptimization(tx *gorm.DB, c *auth.Context, tsId uint, oreq *filt
 		return err
 	}
 
+	//--- Get portfolio
+
+	if ts.PortfolioId == nil || *ts.PortfolioId == 0 {
+		return req.NewBadRequestError("missing portfolio id")
+	}
+
+	p,err := getPortfolio(tx, c, *ts.PortfolioId, "StartFilterOptimization")
+	if err != nil {
+		return err
+	}
+
 	c.Log.Info("StartFilterOptimization: Starting optimization", "tsId", ts.Id, "tsName", ts.Name)
 	core.NormalizeContracts(trades)
-	filter.StartOptimization(ts, trades, oreq)
+	filter.StartOptimization(ts, trades, oreq, fromTime, p)
 
 	return nil
 }

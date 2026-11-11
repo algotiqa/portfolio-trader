@@ -10,6 +10,7 @@
 package optimization
 
 import (
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/criteria"
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 )
 
@@ -19,83 +20,325 @@ import (
 //===
 //=============================================================================
 
-const MaxTradesLength     = 300
-const MaxTrendlineValue   = 200
-const MaxOldNewPercentage = 200
-const MaxWinningPercentage= 100
-const MaxDrawdown         = 50000
-
-//=============================================================================
-
 type FilterConfig struct {
-	EnablePosProfit bool   `json:"enablePosProfit"`
-	EnableOldNew    bool   `json:"enableOldNew"`
-	EnableWinPerc   bool   `json:"enableWinPerc"`
-	EnableEquAvg    bool   `json:"enableEquAvg"`
-	EnableTrendline bool   `json:"enableTrendline"`
-	EnableDrawdown  bool   `json:"enableDrawdown"`
-
-	PosProLen      core.FieldOptimization[int]  `json:"posProLen"`
-	OldNewOldLen   core.FieldOptimization[int]  `json:"oldNewOldLen"`
-	OldNewNewLen   core.FieldOptimization[int]  `json:"oldNewNewLen"`
-	OldNewOldPerc  core.FieldOptimization[int]  `json:"oldNewOldPerc"`
-	WinPercLen     core.FieldOptimization[int]  `json:"winPercLen"`
-	WinPercPerc    core.FieldOptimization[int]  `json:"winPercPerc"`
-	EquAvgLen      core.FieldOptimization[int]  `json:"equAvgLen"`
-	TrendlineLen   core.FieldOptimization[int]  `json:"trendlineLen"`
-	TrendlineValue core.FieldOptimization[int]  `json:"trendlineValue"`
-	DrawdownMin    core.FieldOptimization[int]  `json:"drawdownMin"`
-	DrawdownMax    core.FieldOptimization[int]  `json:"drawdownMax"`
+	Activation   Config `json:"activation"`
+	Deactivation Config `json:"deactivation"`
 }
 
 //=============================================================================
 
 func (fc *FilterConfig) Validate() error {
-	if err := fc.PosProLen.Validate(1, MaxTradesLength); err != nil {
+	err := fc.Activation.Validate()
+	if err != nil {
 		return err
 	}
 
-	if err := fc.OldNewOldLen.Validate(1, MaxTradesLength); err != nil {
-		return err
-	}
-
-	if err := fc.OldNewNewLen.Validate(1, MaxTradesLength); err != nil {
-		return err
-	}
-
-	if err := fc.OldNewOldPerc.Validate(1, MaxOldNewPercentage); err != nil {
-		return err
-	}
-
-	if err := fc.WinPercLen.Validate(1, MaxTradesLength); err != nil {
-		return err
-	}
-
-	if err := fc.WinPercPerc.Validate(1, MaxWinningPercentage); err != nil {
-		return err
-	}
-
-	if err := fc.EquAvgLen.Validate(1, MaxTradesLength); err != nil {
-		return err
-	}
-
-	if err := fc.TrendlineLen.Validate(1, MaxTradesLength); err != nil {
-		return err
-	}
-
-	if err := fc.TrendlineValue.Validate(1, MaxTrendlineValue); err != nil {
-		return err
-	}
-
-	if err := fc.DrawdownMin.Validate(1, MaxDrawdown); err != nil {
-		return err
-	}
-
-	if err := fc.DrawdownMax.Validate(1, MaxDrawdown); err != nil {
+	err = fc.Deactivation.Validate()
+	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+//=============================================================================
+
+type Config struct {
+	NetReturn         NetReturnOptimiz
+	AverageTrade      AverageTradeOptimiz
+	EquityVsAverage   EquityVsAverageOptimiz
+	WinningPercentage WinningPercentageOptimiz
+	MaxDrawdown       MaxDrawdownOptimiz
+	TrendLine         TrendLineOptimiz
+	ProfitFactor      ProfitFactorOptimiz
+	SharpeRatio       SharpeRatioOptimiz
+	Sqn100            Sqn100Optimiz
+	ReturnMaxDDRatio  ReturnMaxDDRatioOptimiz
+}
+
+//=============================================================================
+
+func (c *Config) Validate() error {
+	if err := c.NetReturn.Validate(); err != nil {
+		return err
+	}
+
+	if err := c.AverageTrade.Validate(); err != nil {
+		return err
+	}
+
+	if err := c.EquityVsAverage.Validate(); err != nil {
+		return err
+	}
+
+	if err := c.WinningPercentage.Validate(); err != nil {
+		return err
+	}
+
+	if err := c.MaxDrawdown.Validate(); err != nil {
+		return err
+	}
+
+	if err := c.TrendLine.Validate(); err != nil {
+		return err
+	}
+
+	if err := c.ProfitFactor.Validate(); err != nil {
+		return err
+	}
+
+	if err := c.SharpeRatio.Validate(); err != nil {
+		return err
+	}
+
+	if err := c.Sqn100.Validate(); err != nil {
+		return err
+	}
+
+	if err := c.ReturnMaxDDRatio.Validate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//=============================================================================
+
+func (c *Config) Steps() int64 {
+	return	c.NetReturn        .Steps() +
+			c.AverageTrade     .Steps()+
+			c.EquityVsAverage  .Steps() +
+			c.WinningPercentage.Steps() +
+			c.MaxDrawdown      .Steps() +
+			c.TrendLine        .Steps() +
+			c.ProfitFactor     .Steps() +
+			c.SharpeRatio      .Steps() +
+			c.Sqn100           .Steps() +
+			c.ReturnMaxDDRatio .Steps()
+}
+
+//=============================================================================
+//===
+//=== Base optimization config
+//===
+//=============================================================================
+
+type Optimization struct {
+	Enabled bool                            `json:"enabled"`
+	Length  core.FieldOptimization[int]     `json:"length"`
+	Value   core.FieldOptimization[float64] `json:"value"`
+}
+
+//=============================================================================
+
+func (c *Optimization) Validate() error {
+	if c.Enabled {
+		if err := c.Length.Validate(criteria.MinTradesLength, criteria.MaxTradesLength); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+//=============================================================================
+
+func (c *Optimization) Steps() int64 {
+	if c.Enabled {
+		return c.Length.StepsCount() * c.Value.StepsCount()
+	}
+
+	return 0
+}
+
+//=============================================================================
+//===
+//=== Net return
+//===
+//=============================================================================
+
+type NetReturnOptimiz struct {
+	Optimization
+}
+
+//=============================================================================
+
+func (c *NetReturnOptimiz) Validate() error {
+	return c.Optimization.Validate()
+}
+
+//=============================================================================
+//===
+//=== AverageTrade
+//===
+//=============================================================================
+
+type AverageTradeOptimiz struct {
+	Optimization
+}
+
+//=============================================================================
+
+func (c *AverageTradeOptimiz) Validate() error {
+	return c.Optimization.Validate()
+}
+
+//=============================================================================
+//===
+//=== Equity vs average
+//===
+//=============================================================================
+
+type EquityVsAverageOptimiz struct {
+	Optimization
+}
+
+//=============================================================================
+
+func (c *EquityVsAverageOptimiz) Validate() error {
+	return c.Optimization.Validate()
+}
+
+//=============================================================================
+//===
+//=== Winning percentage
+//===
+//=============================================================================
+
+type WinningPercentageOptimiz struct {
+	Optimization
+}
+
+//=============================================================================
+
+func (c *WinningPercentageOptimiz) Validate() error {
+	if c.Enabled {
+		if err := c.Value.Validate(criteria.MinWinningPercentage, criteria.MaxWinningPercentage); err != nil {
+			return err
+		}
+	}
+
+	return c.Optimization.Validate()
+}
+
+//=============================================================================
+//===
+//=== Max drawdown
+//===
+//=============================================================================
+
+type MaxDrawdownOptimiz struct {
+	Optimization
+}
+
+//=============================================================================
+
+func (c *MaxDrawdownOptimiz) Validate() error {
+	if c.Enabled {
+		if err := c.Value.Validate(criteria.MinDrawdownValue, criteria.MaxDrawdownValue); err != nil {
+			return err
+		}
+	}
+
+	return c.Optimization.Validate()
+}
+
+//=============================================================================
+//===
+//=== Trendline
+//===
+//=============================================================================
+
+type TrendLineOptimiz struct {
+	Optimization
+}
+
+//=============================================================================
+
+func (c *TrendLineOptimiz) Validate() error {
+	if c.Enabled {
+		if err := c.Value.Validate(criteria.MinTrendlineValue, criteria.MaxTrendlineValue); err != nil {
+			return err
+		}
+	}
+
+	return c.Optimization.Validate()
+}
+
+//=============================================================================
+//===
+//=== Profit factor
+//===
+//=============================================================================
+
+type ProfitFactorOptimiz struct {
+	Optimization
+}
+
+//=============================================================================
+
+func (c *ProfitFactorOptimiz) Validate() error {
+	if c.Enabled {
+		if err := c.Value.Validate(criteria.MinProfitFactor, criteria.MaxProfitFactor); err != nil {
+			return err
+		}
+	}
+
+	return c.Optimization.Validate()
+}
+
+//=============================================================================
+//===
+//=== Sharpe ratio
+//===
+//=============================================================================
+
+type SharpeRatioOptimiz struct {
+	Optimization
+}
+
+//=============================================================================
+
+func (c *SharpeRatioOptimiz) Validate() error {
+	return c.Optimization.Validate()
+}
+
+//=============================================================================
+//===
+//=== Sqn 100
+//===
+//=============================================================================
+
+type Sqn100Optimiz struct {
+	Optimization
+}
+
+//=============================================================================
+
+func (c *Sqn100Optimiz) Validate() error {
+	return c.Optimization.Validate()
+}
+
+//=============================================================================
+//===
+//=== Return / max drawdown
+//===
+//=============================================================================
+
+type ReturnMaxDDRatioOptimiz struct {
+	Optimization
+}
+
+//=============================================================================
+
+func (c *ReturnMaxDDRatioOptimiz) Validate() error {
+	if c.Enabled {
+		if err := c.Value.Validate(criteria.MinReturnMaxDDValue, criteria.MaxReturnMaxDDValue); err != nil {
+			return err
+		}
+	}
+
+	return c.Optimization.Validate()
 }
 
 //=============================================================================

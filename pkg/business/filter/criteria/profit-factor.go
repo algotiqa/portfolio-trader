@@ -24,23 +24,17 @@ const ProfitFactor = "profitFactor"
 //=============================================================================
 
 type ProfitFactorConfig struct {
-	Enabled bool    `json:"enabled"`
-	Length  int     `json:"length"`
-	Value   float64 `json:"value"`
+	Config
 }
 
 //=============================================================================
 
 func (c *ProfitFactorConfig) validate() error {
-	if c.Length < 1 || c.Length > 1000 {
-		return req.NewBadRequestError("profitFactor.length must be between %v and %v", 1, 1000)
+	if c.Value < MinProfitFactor || c.Value > MaxProfitFactor {
+		return req.NewBadRequestError("profitFactor.value must be between %v and %v", MinProfitFactor, MaxProfitFactor)
 	}
 
-	if c.Value < 0 || c.Value > 10 {
-		return req.NewBadRequestError("profitFactor.value must be between %v and %v", 0, 10)
-	}
-
-	return nil
+	return c.Config.validate()
 }
 
 //=============================================================================

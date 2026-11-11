@@ -11,11 +11,11 @@ package filter
 
 import (
 	"errors"
-	"time"
 
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm"
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
-	"github.com/algotiqa/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/model"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
 )
 
 //=============================================================================
@@ -24,11 +24,11 @@ import (
 //===
 //=============================================================================
 
-const FieldToOptimizeNetProfit = "netProfit"
-const FieldToOptimizeAvgTrade = "avgTrade"
-const FieldToOptimizeDrawDown = "maxDD"
-const FieldToOptimizeNetProfitAvgTrade = "netProfit*avgTrade"
-const FieldToOptimizeNetProfitAvgTradeMaxDD = "netProfit*avgTrade/maxDD"
+const FieldToOptimizeNetReturn              = "netReturn"
+const FieldToOptimizeAvgTrade               = "avgTrade"
+const FieldToOptimizeDrawDown               = "maxDD"
+const FieldToOptimizeNetReturnAvgTrade      = "netReturn*avgTrade"
+const FieldToOptimizeNetReturnAvgTradeMaxDD = "netReturn*avgTrade/maxDD"
 
 //=============================================================================
 
@@ -40,21 +40,21 @@ type AlgorithmSpec struct {
 //=============================================================================
 
 type OptimizationRequest struct {
-	StartDate       *time.Time                 `json:"startDate,omitempty"`
+	Period          *core.SelectedPeriod       `json:"period,omitempty"`
 	FieldToOptimize string                     `json:"fieldToOptimize"`
 	FilterConfig    *optimization.FilterConfig `json:"filterConfig"`
 	Algorithm       *AlgorithmSpec             `json:"algorithm"`
-	Baseline        *db.TradingFilter          `json:"baseline"`
+	Baseline        *model.TradingFilter       `json:"baseline"`
 }
 
 //=============================================================================
 
 func (r *OptimizationRequest) Validate() error {
-	if r.FieldToOptimize != FieldToOptimizeNetProfit &&
-		r.FieldToOptimize != FieldToOptimizeAvgTrade &&
-		r.FieldToOptimize != FieldToOptimizeDrawDown &&
-		r.FieldToOptimize != FieldToOptimizeNetProfitAvgTrade &&
-		r.FieldToOptimize != FieldToOptimizeNetProfitAvgTradeMaxDD {
+	if  r.FieldToOptimize != FieldToOptimizeNetReturn         &&
+		r.FieldToOptimize != FieldToOptimizeAvgTrade          &&
+		r.FieldToOptimize != FieldToOptimizeDrawDown          &&
+		r.FieldToOptimize != FieldToOptimizeNetReturnAvgTrade &&
+		r.FieldToOptimize != FieldToOptimizeNetReturnAvgTradeMaxDD {
 		return errors.New("Invalid field to optimize: " + r.FieldToOptimize)
 	}
 

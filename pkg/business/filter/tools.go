@@ -13,12 +13,13 @@ import (
 	"encoding/json"
 
 	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/model"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
 
 //=============================================================================
 
-func ConvertToDbFilter(f *TradingFilter) (*db.TradingFilter,error) {
+func ConvertToDbFilter(f *model.TradingFilter) (*db.TradingFilter,error) {
 	config,err := json.Marshal(f)
 	if err != nil {
 		return nil,req.NewServerErrorByError(err)
@@ -31,8 +32,8 @@ func ConvertToDbFilter(f *TradingFilter) (*db.TradingFilter,error) {
 
 //=============================================================================
 
-func ConvertFromDbFilter(dbf *db.TradingFilter) (*TradingFilter,error) {
-	var f TradingFilter
+func ConvertFromDbFilter(dbf *db.TradingFilter) (*model.TradingFilter,error) {
+	var f model.TradingFilter
 	err := json.Unmarshal([]byte(dbf.Config), &f)
 	if err != nil {
 		return nil,req.NewServerErrorByError(err)

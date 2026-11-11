@@ -16,7 +16,7 @@ import (
 
 //=============================================================================
 
-const ReturnMaxDDRatio = "returnMaxddRatio"
+const ReturnMaxDDRatio = "returnMaxDDRatio"
 
 //=============================================================================
 //===
@@ -25,19 +25,17 @@ const ReturnMaxDDRatio = "returnMaxddRatio"
 //=============================================================================
 
 type ReturnMaxDDRatioConfig struct {
-	Enabled bool    `json:"enabled"`
-	Length  int     `json:"length"`
-	Value   float64 `json:"value"`
+	Config
 }
 
 //=============================================================================
 
 func (c *ReturnMaxDDRatioConfig) validate() error {
-	if c.Length < 1 || c.Length > 1000 {
-		return req.NewBadRequestError("returnMaxDDRatio.length must be between %v and %v", 1, 1000)
+	if c.Value < MinReturnMaxDDValue || c.Value > MaxReturnMaxDDValue {
+		return req.NewBadRequestError("returnMaxDDRatio.value must be between %v and %v", MinReturnMaxDDValue, MaxReturnMaxDDValue)
 	}
 
-	return nil
+	return c.Config.validate()
 }
 
 //=============================================================================

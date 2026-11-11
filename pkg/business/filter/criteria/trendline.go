@@ -25,23 +25,17 @@ const TrendLine = "trendLine"
 //=============================================================================
 
 type TrendLineConfig struct {
-	Enabled bool    `json:"enabled"`
-	Length  int     `json:"length"`
-	Value   float64 `json:"value"`
+	Config
 }
 
 //=============================================================================
 
 func (c *TrendLineConfig) validate() error {
-	if c.Length < 1 || c.Length > 1000 {
-		return req.NewBadRequestError("trendLine.length must be between %v and %v", 1, 1000)
+	if c.Value < MinTrendlineValue || c.Value > MaxTrendlineValue {
+		return req.NewBadRequestError("trendLine.value must be between %v and %v", MinTrendlineValue, MaxTrendlineValue)
 	}
 
-	if c.Value < -3 || c.Value > 3 {
-		return req.NewBadRequestError("trendLine.value must be between %v and %v", -3, 3)
-	}
-
-	return nil
+	return c.Config.validate()
 }
 
 //=============================================================================

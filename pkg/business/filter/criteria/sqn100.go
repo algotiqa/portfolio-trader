@@ -12,7 +12,6 @@ package criteria
 import (
 	"math"
 
-	"github.com/algotiqa/core/req"
 	"golang.org/x/exp/stats"
 )
 
@@ -27,19 +26,13 @@ const Sqn100 = "sqn100"
 //=============================================================================
 
 type Sqn100Config struct {
-	Enabled bool    `json:"enabled"`
-	Length  int     `json:"length"`
-	Value   float64 `json:"value"`
+	Config
 }
 
 //=============================================================================
 
 func (c *Sqn100Config) validate() error {
-	if c.Length < 1 || c.Length > 1000 {
-		return req.NewBadRequestError("sqn100.length must be between %v and %v", 1, 1000)
-	}
-
-	return nil
+	return c.Config.validate()
 }
 
 //=============================================================================

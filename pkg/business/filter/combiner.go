@@ -12,12 +12,13 @@ package filter
 import (
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter/criteria"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/model"
 )
 
 //=============================================================================
 
 type Combiner struct {
-	combinationMode CombinationMode
+	combinationMode model.CombinationMode
 	criterias       []criteria.FilteringCriteria
 	activations     []*criteria.Activation
 	outcome         []int
@@ -25,7 +26,7 @@ type Combiner struct {
 
 //=============================================================================
 
-func NewCombiner(cfg *Config, runMode criteria.RunMode) (*Combiner,error) {
+func NewCombiner(cfg *model.FilterConfig, runMode criteria.RunMode) (*Combiner,error) {
 	netRet,err := criteria.NewNetReturnCriteria(&cfg.NetReturn, runMode)
 	if err != nil {
 		return nil, err
@@ -76,7 +77,7 @@ func NewCombiner(cfg *Config, runMode criteria.RunMode) (*Combiner,error) {
 		return nil, err
 	}
 
-	if cfg.CombinationMode != CombinationModeOne && cfg.CombinationMode != CombinationModeMost && cfg.CombinationMode != CombinationModeAll {
+	if cfg.CombinationMode != model.CombinationModeOne && cfg.CombinationMode != model.CombinationModeMost && cfg.CombinationMode != model.CombinationModeAll {
 		return nil, req.NewBadRequestError("unknown filter combination mode: %v", cfg.CombinationMode)
 	}
 
@@ -143,15 +144,15 @@ func (c *Combiner) calcActivationAt(i int) int {
 		outcomes += a.Active(i)
 	}
 
-	if c.combinationMode == CombinationModeOne && outcomes > 0 {
+	if c.combinationMode == model.CombinationModeOne && outcomes > 0 {
 		return 1
 	}
 
-	if c.combinationMode == CombinationModeAll && outcomes == size {
+	if c.combinationMode == model.CombinationModeAll && outcomes == size {
 		return 1
 	}
 
-	if c.combinationMode == CombinationModeMost && outcomes >= size/2 +1 {
+	if c.combinationMode == model.CombinationModeMost && outcomes >= size/2 +1 {
 		return 1
 	}
 

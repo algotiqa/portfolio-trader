@@ -24,25 +24,25 @@ func NewRandomCandidate(fc *optimization.FilterConfig) *Candidate {
 		parts: []Part{},
 	}
 
-	if fc.EnablePosProfit {
-		c.parts = append(c.parts, NewPosProfitPart(fc))
-	}
-
-	if fc.EnableEquAvg {
-		c.parts = append(c.parts, NewEquityVsAvgPart(fc))
-	}
-
-	if fc.EnableOldNew {
-		c.parts = append(c.parts, NewOldVsNewPart(fc))
-	}
-
-	if fc.EnableWinPerc {
-		c.parts = append(c.parts, NewWinningPercPart(fc))
-	}
-
-	if fc.EnableTrendline {
-		c.parts = append(c.parts, NewTrendlinePart(fc))
-	}
+	//if fc.EnablePosProfit {
+	//	c.parts = append(c.parts, NewPosProfitPart(fc))
+	//}
+	//
+	//if fc.EnableEquAvg {
+	//	c.parts = append(c.parts, NewEquityVsAvgPart(fc))
+	//}
+	//
+	//if fc.EnableOldNew {
+	//	c.parts = append(c.parts, NewOldVsNewPart(fc))
+	//}
+	//
+	//if fc.EnableWinPerc {
+	//	c.parts = append(c.parts, NewWinningPercPart(fc))
+	//}
+	//
+	//if fc.EnableTrendline {
+	//	c.parts = append(c.parts, NewTrendlinePart(fc))
+	//}
 
 	return c
 }

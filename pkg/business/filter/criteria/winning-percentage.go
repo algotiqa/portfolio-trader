@@ -9,9 +9,7 @@
 
 package criteria
 
-import (
-	"github.com/algotiqa/core/req"
-)
+import "github.com/algotiqa/core/req"
 
 //=============================================================================
 
@@ -24,19 +22,17 @@ const WinningPercentage = "winningPercentage"
 //=============================================================================
 
 type WinningPercentageConfig struct {
-	Enabled bool    `json:"enabled"`
-	Length  int     `json:"length"`
-	Value   float64 `json:"value"`
+	Config
 }
 
 //=============================================================================
 
 func (c *WinningPercentageConfig) validate() error {
-	if c.Length < 1 || c.Length > 1000 {
-		return req.NewBadRequestError("winningPercentage.length must be between %v and %v", 1, 1000)
+	if c.Value < MinWinningPercentage || c.Value > MaxWinningPercentage {
+		return req.NewBadRequestError("profitFactor.value must be between %v and %v", MinWinningPercentage, MaxWinningPercentage)
 	}
 
-	return nil
+	return c.Config.validate()
 }
 
 //=============================================================================

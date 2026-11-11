@@ -11,9 +11,10 @@ package filter
 
 import (
 	"log/slog"
+	"time"
 
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
-	"github.com/algotiqa/portfolio-trader/pkg/db"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/model"
 )
 
 //=============================================================================
@@ -54,13 +55,13 @@ func (oc *OptimizationContext) IsStopping() bool {
 
 //=============================================================================
 
-func (oc *OptimizationContext) Baseline() db.TradingFilter {
+func (oc *OptimizationContext) Baseline() model.TradingFilter {
 	return *oc.op.optReq.Baseline
 }
 
 //=============================================================================
 
-func (oc *OptimizationContext) RunAnalysis(filter *db.TradingFilter) float64 {
+func (oc *OptimizationContext) RunAnalysis(filter *model.TradingFilter) (float64,error) {
 	return oc.op.runAnalysis(filter)
 }
 
@@ -68,6 +69,26 @@ func (oc *OptimizationContext) RunAnalysis(filter *db.TradingFilter) float64 {
 
 func (oc *OptimizationContext) LogInfo(message string) {
 	slog.Info(message, "tsId", oc.op.ts.Id, "tsName", oc.op.ts.Name)
+}
+
+//=============================================================================
+
+func (oc *OptimizationContext) EndProcess() {
+	oc.op.info.EndTime = time.Now()
+	oc.op.info.Status  = OptimStatusComplete
+
+	slog.Info("EndProcess: Completed.")
+}
+
+//=============================================================================
+
+func (oc *OptimizationContext) ExitWithError(err error) {
+	oc.op.info.EndTime = time.Now()
+	oc.op.info.Status  = OptimStatusError
+	oc.op.info.Error   = err
+	oc.op.stopping     = true
+
+	slog.Error(err.Error(), "tsId", oc.op.ts.Id, "tsName", oc.op.ts.Name)
 }
 
 //=============================================================================

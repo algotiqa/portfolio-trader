@@ -11,6 +11,7 @@ package simple
 
 import (
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/model"
 )
 
 //=============================================================================
@@ -34,123 +35,99 @@ func New() optimization.Algorithm {
 
 func (sa *simpleAlgorithm) Init(ctx optimization.Context) {
 	sa.ctx = ctx
-	sa.fc = ctx.FilterConfig()
+	sa.fc  = ctx.FilterConfig()
 }
 
 //=============================================================================
 
-func (sa *simpleAlgorithm) StepsCount() uint {
-	return sa.stepsCountPosProfit() +
-		sa.stepsCountOldNew() +
-		sa.stepsCountWinPerc() +
-		sa.stepsCountEquAvg() +
-		sa.stepsCountTrendline() +
-		sa.stepsCountDrawdown()
+func (sa *simpleAlgorithm) Steps() int64 {
+	return sa.fc.Activation.Steps() * sa.fc.Deactivation.Steps()
 }
 
 //=============================================================================
 
 func (sa *simpleAlgorithm) Optimize() {
-	if !sa.generatePosProfit() {
-		if !sa.generateOldVsNew() {
-			if !sa.generateWinPerc() {
-				if !sa.generateEquVsAvg() {
-					if !sa.generateTrendline() {
-						if !sa.generateDrawdown() {
+	if sa.generateCriteriaA(&sa.fc.Activation.NetReturn.Optimization, netReturnFuncA) {
+		if sa.generateCriteriaA(&sa.fc.Activation.AverageTrade.Optimization, averageTradeFuncA) {
+			if sa.generateCriteriaA(&sa.fc.Activation.EquityVsAverage.Optimization, equityVsAverageFuncA) {
+				if sa.generateCriteriaA(&sa.fc.Activation.WinningPercentage.Optimization, winningPercentageFuncA) {
+					if sa.generateCriteriaA(&sa.fc.Activation.MaxDrawdown.Optimization, maxDrawdownFuncA) {
+						if sa.generateCriteriaA(&sa.fc.Activation.TrendLine.Optimization, trendLineFuncA) {
+							if sa.generateCriteriaA(&sa.fc.Activation.ProfitFactor.Optimization, profitFactorFuncA) {
+								if sa.generateCriteriaA(&sa.fc.Activation.SharpeRatio.Optimization, sharpeRatioFuncA) {
+									if sa.generateCriteriaA(&sa.fc.Activation.Sqn100.Optimization, sqn100FuncA) {
+										if sa.generateCriteriaA(&sa.fc.Activation.ReturnMaxDDRatio.Optimization, returnMaxDDRatioFuncA) {
+										}
+									}
+								}
+							}
 						}
 					}
 				}
 			}
 		}
 	}
+
+	sa.ctx.EndProcess()
 }
 
 //=============================================================================
 //===
-//=== Private functions
+//=== Activations
 //===
 //=============================================================================
 
-func (sa *simpleAlgorithm) stepsCountPosProfit() uint {
-	if sa.fc.EnablePosProfit {
-		return sa.fc.PosProLen.StepsCount()
+func (sa *simpleAlgorithm) generateCriteriaA(o *optimization.Optimization, f SetFunction) bool {
+	if o.Enabled {
+		for _, leng := range *o.Length.Steps() {
+			for _,val := range *o.Value.Steps() {
+				//--- Get a copy of the baseline (passed by value)
+				tf := sa.ctx.Baseline()
+				f(&tf, leng, val)
+
+				if sa.generateDeactivations(&tf) {
+					//--- Check if we have to stop the process
+
+					if sa.ctx.IsStopping() {
+						return false
+					}
+				} else {
+					return false
+				}
+			}
+		}
 	}
 
-	return 0
+	return true
 }
 
 //=============================================================================
-
-func (sa *simpleAlgorithm) stepsCountOldNew() uint {
-	if sa.fc.EnableOldNew {
-		return sa.fc.OldNewOldLen.StepsCount() * sa.fc.OldNewNewLen.StepsCount() * sa.fc.OldNewOldPerc.StepsCount()
-	}
-
-	return 0
-}
-
+//===
+//=== Deactivations
+//===
 //=============================================================================
 
-func (sa *simpleAlgorithm) stepsCountWinPerc() uint {
-	if sa.fc.EnableWinPerc {
-		return sa.fc.WinPercLen.StepsCount() * sa.fc.WinPercPerc.StepsCount()
-	}
-
-	return 0
-}
-
-//=============================================================================
-
-func (sa *simpleAlgorithm) stepsCountEquAvg() uint {
-	if sa.fc.EnableEquAvg {
-		return sa.fc.EquAvgLen.StepsCount()
-	}
-
-	return 0
-}
-
-//=============================================================================
-
-func (sa *simpleAlgorithm) stepsCountTrendline() uint {
-	if sa.fc.EnableTrendline {
-		return sa.fc.TrendlineLen.StepsCount() * sa.fc.TrendlineValue.StepsCount()
-	}
-
-	return 0
-}
-
-//=============================================================================
-
-func (sa *simpleAlgorithm) stepsCountDrawdown() uint {
-	if sa.fc.EnableDrawdown {
-		return sa.fc.DrawdownMin.StepsCount() * sa.fc.DrawdownMax.StepsCount()
-	}
-
-	return 0
-}
-
-//=============================================================================
-
-func (sa *simpleAlgorithm) generatePosProfit() bool {
-	if sa.fc.EnablePosProfit {
-		sa.ctx.LogInfo("generatePosProfit: Optimizing positive profit")
-
-		//for _, posProLen := range *sa.fc.PosProLen.Steps() {
-		//	f := sa.ctx.Baseline()
-		//	f.PosProEnabled = true
-		//	f.PosProLen = posProLen
-		//
-		//	go func() {
-		//		sa.ctx.RunAnalysis(&f)
-		//	}()
-		//
-		//	//--- Check if we have to stop the process
-		//
-		//	if sa.ctx.IsStopping() {
-		//		sa.ctx.LogInfo("generatePosProfit: Got stop request")
-		//		return true
-		//	}
-		//}
+func (sa *simpleAlgorithm) generateDeactivations(tf *model.TradingFilter) bool {
+	if sa.generateCriteriaD(tf, &sa.fc.Deactivation.NetReturn.Optimization, netReturnFuncD) {
+		if sa.generateCriteriaD(tf, &sa.fc.Deactivation.AverageTrade.Optimization, averageTradeFuncD) {
+			if sa.generateCriteriaD(tf, &sa.fc.Deactivation.EquityVsAverage.Optimization, equityVsAverageFuncD) {
+				if sa.generateCriteriaD(tf, &sa.fc.Deactivation.WinningPercentage.Optimization, winningPercentageFuncD) {
+					if sa.generateCriteriaD(tf, &sa.fc.Deactivation.MaxDrawdown.Optimization, maxDrawdownFuncD) {
+						if sa.generateCriteriaD(tf, &sa.fc.Deactivation.TrendLine.Optimization, trendLineFuncD) {
+							if sa.generateCriteriaD(tf, &sa.fc.Deactivation.ProfitFactor.Optimization, profitFactorFuncD) {
+								if sa.generateCriteriaD(tf, &sa.fc.Deactivation.SharpeRatio.Optimization, sharpeRatioFuncD) {
+									if sa.generateCriteriaD(tf, &sa.fc.Deactivation.Sqn100.Optimization, sqn100FuncD) {
+										if sa.generateCriteriaD(tf, &sa.fc.Deactivation.ReturnMaxDDRatio.Optimization, returnMaxDDRatioFuncD) {
+											return true
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 	return false
@@ -158,152 +135,202 @@ func (sa *simpleAlgorithm) generatePosProfit() bool {
 
 //=============================================================================
 
-func (sa *simpleAlgorithm) generateOldVsNew() bool {
-	if sa.fc.EnableOldNew {
-		sa.ctx.LogInfo("generateOldVsNew: Optimizing old vs new periods")
+func (sa *simpleAlgorithm) generateCriteriaD(base *model.TradingFilter, o *optimization.Optimization, f SetFunction) bool {
+	if o.Enabled {
+		for _, leng := range *o.Length.Steps() {
+			for _, val := range *o.Value.Steps() {
+				tf := *base
+				f(&tf, leng, val)
 
-		//for _, oldNewOldLen := range *sa.fc.OldNewOldLen.Steps() {
-		//	for _, oldNewNewLen := range *sa.fc.OldNewNewLen.Steps() {
-		//		for _, oldNewOldPerc := range *sa.fc.OldNewOldPerc.Steps() {
-		//			f := sa.ctx.Baseline()
-		//			f.OldNewEnabled = true
-		//			f.OldNewOldLen = oldNewOldLen
-		//			f.OldNewNewLen = oldNewNewLen
-		//			f.OldNewOldPerc = oldNewOldPerc
-		//
-		//			go func() {
-		//				sa.ctx.RunAnalysis(&f)
-		//			}()
-		//
-		//			//--- Check if we have to stop the process
-		//
-		//			if sa.ctx.IsStopping() {
-		//				sa.ctx.LogInfo("generateOldVsNew: Got stop request")
-		//				return true
-		//			}
-		//		}
-		//	}
-		//}
+				_,err := sa.ctx.RunAnalysis(&tf)
+				if err != nil {
+					sa.ctx.ExitWithError(err)
+					return false
+				}
+
+				//--- Check if we have to stop the process
+
+				if sa.ctx.IsStopping() {
+					sa.ctx.LogInfo("generateTrendLineD: Got stop request")
+					return false
+				}
+			}
+		}
 	}
 
-	return false
+	return true
+}
+
+//=============================================================================
+//===
+//=== Functions
+//===
+//=============================================================================
+
+type SetFunction func(tf *model.TradingFilter, length int, value float64)
+
+//=============================================================================
+//=== Activations
+//=============================================================================
+
+func netReturnFuncA(tf *model.TradingFilter, length int, value float64) {
+	tf.Activation.NetReturn.Enabled = true
+	tf.Activation.NetReturn.Length  = length
+	tf.Activation.NetReturn.Value   = value
 }
 
 //=============================================================================
 
-func (sa *simpleAlgorithm) generateWinPerc() bool {
-	if sa.fc.EnableWinPerc {
-		sa.ctx.LogInfo("generateWinPerc: Optimizing winning percentage")
-
-		//for _, winPerLen := range *sa.fc.WinPercLen.Steps() {
-		//	for _, winPerPerc := range *sa.fc.WinPercPerc.Steps() {
-		//		f := sa.ctx.Baseline()
-		//		f.WinPerEnabled = true
-		//		f.WinPerLen = winPerLen
-		//		f.WinPerValue = winPerPerc
-		//
-		//		go func() {
-		//			sa.ctx.RunAnalysis(&f)
-		//		}()
-		//
-		//		//--- Check if we have to stop the process
-		//
-		//		if sa.ctx.IsStopping() {
-		//			sa.ctx.LogInfo("generateWinPerc: Got stop request")
-		//			return true
-		//		}
-		//	}
-		//}
-	}
-
-	return false
+func averageTradeFuncA(tf *model.TradingFilter, length int, value float64) {
+	tf.Activation.AverageTrade.Enabled = true
+	tf.Activation.AverageTrade.Length  = length
+	tf.Activation.AverageTrade.Value   = value
 }
 
 //=============================================================================
 
-func (sa *simpleAlgorithm) generateEquVsAvg() bool {
-	if sa.fc.EnableEquAvg {
-		sa.ctx.LogInfo("generateEquVsAvg: Optimizing equity vs its average")
-
-		//for _, equAvgLen := range *sa.fc.EquAvgLen.Steps() {
-		//	f := sa.ctx.Baseline()
-		//	f.EquAvgEnabled = true
-		//	f.EquAvgLen = equAvgLen
-		//
-		//	go func() {
-		//		sa.ctx.RunAnalysis(&f)
-		//	}()
-		//
-		//	//--- Check if we have to stop the process
-		//
-		//	if sa.ctx.IsStopping() {
-		//		sa.ctx.LogInfo("generateEquVsAvg: Got stop request")
-		//		return true
-		//	}
-		//}
-	}
-
-	return false
+func equityVsAverageFuncA(tf *model.TradingFilter, length int, value float64) {
+	tf.Activation.EquityVsAverage.Enabled = true
+	tf.Activation.EquityVsAverage.Length  = length
+	tf.Activation.EquityVsAverage.Value   = value
 }
 
 //=============================================================================
 
-func (sa *simpleAlgorithm) generateTrendline() bool {
-	if sa.fc.EnableTrendline {
-		sa.ctx.LogInfo("generateTrendline: Optimizing trendline")
-
-		//for _, trendLen := range *sa.fc.TrendlineLen.Steps() {
-		//	for _, trendValue := range *sa.fc.TrendlineValue.Steps() {
-		//		f := sa.ctx.Baseline()
-		//		f.TrendlineEnabled = true
-		//		f.TrendlineLen = trendLen
-		//		f.TrendlineValue = trendValue
-		//
-		//		go func() {
-		//			sa.ctx.RunAnalysis(&f)
-		//		}()
-		//
-		//		//--- Check if we have to stop the process
-		//
-		//		if sa.ctx.IsStopping() {
-		//			sa.ctx.LogInfo("generateTrendline: Got stop request")
-		//			return true
-		//		}
-		//	}
-		//}
-	}
-
-	return false
+func winningPercentageFuncA(tf *model.TradingFilter, length int, value float64) {
+	tf.Activation.WinningPercentage.Enabled = true
+	tf.Activation.WinningPercentage.Length  = length
+	tf.Activation.WinningPercentage.Value   = value
 }
 
 //=============================================================================
 
-func (sa *simpleAlgorithm) generateDrawdown() bool {
-	if sa.fc.EnableDrawdown {
-		sa.ctx.LogInfo("generateDrawdown: Optimizing drawdown")
+func maxDrawdownFuncA(tf *model.TradingFilter, length int, value float64) {
+	tf.Activation.MaxDrawdown.Enabled = true
+	tf.Activation.MaxDrawdown.Length  = length
+	tf.Activation.MaxDrawdown.Value   = value
+}
 
-		//for _, minVal := range *sa.fc.DrawdownMin.Steps() {
-		//	for _, maxVal := range *sa.fc.DrawdownMax.Steps() {
-		//		f := sa.ctx.Baseline()
-		//		f.DrawdownEnabled = true
-		//		f.DrawdownMin = minVal
-		//		f.DrawdownMax = maxVal
-		//
-		//		go func() {
-		//			sa.ctx.RunAnalysis(&f)
-		//		}()
-		//
-		//		//--- Check if we have to stop the process
-		//
-		//		if sa.ctx.IsStopping() {
-		//			sa.ctx.LogInfo("generateDrawdown: Got stop request")
-		//			return true
-		//		}
-		//	}
-		//}
-	}
+//=============================================================================
 
-	return false
+func trendLineFuncA(tf *model.TradingFilter, length int, value float64) {
+	tf.Activation.TrendLine.Enabled = true
+	tf.Activation.TrendLine.Length  = length
+	tf.Activation.TrendLine.Value   = value
+}
+
+//=============================================================================
+
+func profitFactorFuncA(tf *model.TradingFilter, length int, value float64) {
+	tf.Activation.ProfitFactor.Enabled = true
+	tf.Activation.ProfitFactor.Length  = length
+	tf.Activation.ProfitFactor.Value   = value
+}
+
+//=============================================================================
+
+func sharpeRatioFuncA(tf *model.TradingFilter, length int, value float64) {
+	tf.Activation.SharpeRatio.Enabled = true
+	tf.Activation.SharpeRatio.Length  = length
+	tf.Activation.SharpeRatio.Value   = value
+}
+
+//=============================================================================
+
+func sqn100FuncA(tf *model.TradingFilter, length int, value float64) {
+	tf.Activation.Sqn100.Enabled = true
+	tf.Activation.Sqn100.Length  = length
+	tf.Activation.Sqn100.Value   = value
+}
+
+//=============================================================================
+
+func returnMaxDDRatioFuncA(tf *model.TradingFilter, length int, value float64) {
+	tf.Activation.ReturnMaxDDRatio.Enabled = true
+	tf.Activation.ReturnMaxDDRatio.Length  = length
+	tf.Activation.ReturnMaxDDRatio.Value   = value
+}
+
+//=============================================================================
+//=== Deactivations
+//=============================================================================
+
+func netReturnFuncD(tf *model.TradingFilter, length int, value float64) {
+	tf.Deactivation.NetReturn.Enabled = true
+	tf.Deactivation.NetReturn.Length  = length
+	tf.Deactivation.NetReturn.Value   = value
+}
+
+//=============================================================================
+
+func averageTradeFuncD(tf *model.TradingFilter, length int, value float64) {
+	tf.Deactivation.AverageTrade.Enabled = true
+	tf.Deactivation.AverageTrade.Length  = length
+	tf.Deactivation.AverageTrade.Value   = value
+}
+
+//=============================================================================
+
+func equityVsAverageFuncD(tf *model.TradingFilter, length int, value float64) {
+	tf.Deactivation.EquityVsAverage.Enabled = true
+	tf.Deactivation.EquityVsAverage.Length  = length
+	tf.Deactivation.EquityVsAverage.Value   = value
+}
+
+//=============================================================================
+
+func winningPercentageFuncD(tf *model.TradingFilter, length int, value float64) {
+	tf.Deactivation.WinningPercentage.Enabled = true
+	tf.Deactivation.WinningPercentage.Length  = length
+	tf.Deactivation.WinningPercentage.Value   = value
+}
+
+//=============================================================================
+
+func maxDrawdownFuncD(tf *model.TradingFilter, length int, value float64) {
+	tf.Deactivation.MaxDrawdown.Enabled = true
+	tf.Deactivation.MaxDrawdown.Length  = length
+	tf.Deactivation.MaxDrawdown.Value   = value
+}
+
+//=============================================================================
+
+func trendLineFuncD(tf *model.TradingFilter, length int, value float64) {
+	tf.Deactivation.TrendLine.Enabled = true
+	tf.Deactivation.TrendLine.Length  = length
+	tf.Deactivation.TrendLine.Value   = value
+}
+
+//=============================================================================
+
+func profitFactorFuncD(tf *model.TradingFilter, length int, value float64) {
+	tf.Deactivation.ProfitFactor.Enabled = true
+	tf.Deactivation.ProfitFactor.Length  = length
+	tf.Deactivation.ProfitFactor.Value   = value
+}
+
+//=============================================================================
+
+func sharpeRatioFuncD(tf *model.TradingFilter, length int, value float64) {
+	tf.Deactivation.SharpeRatio.Enabled = true
+	tf.Deactivation.SharpeRatio.Length  = length
+	tf.Deactivation.SharpeRatio.Value   = value
+}
+
+//=============================================================================
+
+func sqn100FuncD(tf *model.TradingFilter, length int, value float64) {
+	tf.Deactivation.Sqn100.Enabled = true
+	tf.Deactivation.Sqn100.Length  = length
+	tf.Deactivation.Sqn100.Value   = value
+}
+
+//=============================================================================
+
+func returnMaxDDRatioFuncD(tf *model.TradingFilter, length int, value float64) {
+	tf.Deactivation.ReturnMaxDDRatio.Enabled = true
+	tf.Deactivation.ReturnMaxDDRatio.Length  = length
+	tf.Deactivation.ReturnMaxDDRatio.Value   = value
 }
 
 //=============================================================================

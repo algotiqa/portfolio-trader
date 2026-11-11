@@ -15,6 +15,7 @@ import (
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/portfolio-trader/pkg/business"
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/model"
 	"github.com/algotiqa/portfolio-trader/pkg/business/performance"
 	"github.com/algotiqa/portfolio-trader/pkg/business/position"
 	"github.com/algotiqa/portfolio-trader/pkg/business/quality"
@@ -95,7 +96,7 @@ func setTradingFilters(c *auth.Context) {
 	tsId, err := c.GetIdFromUrl()
 
 	if err == nil {
-		filters := filter.TradingFilter{}
+		filters := model.TradingFilter{}
 		err = c.BindParamsFromBody(&filters)
 
 		if err == nil {

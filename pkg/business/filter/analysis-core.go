@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter/criteria"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/model"
 	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
@@ -23,7 +24,7 @@ import (
 //===
 //=============================================================================
 
-func CalcActivation(ts *db.TradingSystem, filter *TradingFilter, list *[]db.Trade, p *db.Portfolio) bool {
+func CalcActivation(ts *db.TradingSystem, filter *model.TradingFilter, list *[]db.Trade, p *db.Portfolio) bool {
 	if len(*list) == 0 {
 		return true
 	}
@@ -51,7 +52,7 @@ func CalcActivation(ts *db.TradingSystem, filter *TradingFilter, list *[]db.Trad
 //===
 //=============================================================================
 
-func RunAnalysis(ts *db.TradingSystem, filter *TradingFilter, list *[]db.Trade, p *db.Portfolio, eval *Evaluator) *AnalysisResponse {
+func RunAnalysis(ts *db.TradingSystem, filter *model.TradingFilter, list *[]db.Trade, p *db.Portfolio, eval *Evaluator) *AnalysisResponse {
 	res := &AnalysisResponse{}
 	res.TradingSystem.Id   = ts.Id
 	res.TradingSystem.Name = ts.Name

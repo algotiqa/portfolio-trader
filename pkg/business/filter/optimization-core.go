@@ -47,7 +47,7 @@ func init() {
 //===
 //=============================================================================
 
-func StartOptimization(ts *db.TradingSystem, trades *[]db.Trade, or *OptimizationRequest) {
+func StartOptimization(ts *db.TradingSystem, trades *[]db.Trade, or *OptimizationRequest, fromTime *time.Time, p *db.Portfolio) {
 	jobs.Lock()
 	defer jobs.Unlock()
 
@@ -59,9 +59,11 @@ func StartOptimization(ts *db.TradingSystem, trades *[]db.Trade, or *Optimizatio
 	}
 
 	fop = &OptimizationProcess{
-		ts:     ts,
-		trades: trades,
-		optReq: or,
+		ts       : ts,
+		trades   : trades,
+		optReq   : or,
+		fromTime : fromTime,
+		portfolio: p,
 	}
 
 	fop.Start()

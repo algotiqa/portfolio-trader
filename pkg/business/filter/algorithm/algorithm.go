@@ -24,14 +24,14 @@ const Genetic = "genetic"
 
 func New(name string) optimization.Algorithm {
 	switch name {
-	case Simple:
-		return simple.New()
+		case Simple:
+			return simple.New()
 
-	case Genetic:
-		return genetic.New()
+		case Genetic:
+			return genetic.New()
 
-	default:
-		panic("Unknown optimization algorithm : " + name)
+		default:
+			panic("Unknown optimization algorithm : " + name)
 	}
 }
 

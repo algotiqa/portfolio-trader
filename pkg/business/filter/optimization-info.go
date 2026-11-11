@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/model"
 	"github.com/algotiqa/portfolio-trader/pkg/core"
-	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
 
 //=============================================================================
@@ -25,13 +25,12 @@ import (
 //=============================================================================
 
 type Run struct {
-	Filter *db.TradingFilter `json:"filter"`
-
-	FitnessValue float64 `json:"fitnessValue"`
-	NetProfit    float64 `json:"netProfit"`
-	AvgTrade     float64 `json:"avgTrade"`
-	MaxDrawdown  float64 `json:"maxDrawdown"`
-	random       int
+	Filter       *model.TradingFilter `json:"filter"`
+	FitnessValue  float64             `json:"fitnessValue"`
+	NetReturn     float64             `json:"netReturn"`
+	AvgTrade      float64             `json:"avgTrade"`
+	MaxDrawdown   float64             `json:"maxDrawdown"`
+	random        int
 }
 
 //=============================================================================
@@ -40,55 +39,90 @@ type Run struct {
 //===
 //=============================================================================
 
-const OptimStatusIdle = "idle"
-const OptimStatusRunning = "running"
+const OptimStatusIdle     = "idle"
+const OptimStatusRunning  = "running"
 const OptimStatusComplete = "complete"
+const OptimStatusError    = "error"
+
+//-----------------------------------------------------------------------------
 
 type OptimizationInfo struct {
 	sync.RWMutex
-	CurrStep  uint
-	MaxSteps  uint
+	CurrStep  int64
+	MaxSteps  int64
 	StartTime time.Time
 	EndTime   time.Time
 	Status    string
+	Error     error
 	results   *core.SortedResults[*Run]
 
 	StartDate       *time.Time
 	BaseValue       float64
 	BestValue       float64
 	FieldToOptimize string
-
-	Filter struct {
-		PosProfit bool
-		OldVsNew  bool
-		WinPerc   bool
-		EquVsAvg  bool
-		Trendline bool
-		Drawdown  bool
-	}
+	Filter          Flags
 }
 
 //=============================================================================
 
-func NewOptimizationInfo(maxResultSize int, field string, fc *optimization.FilterConfig,
-	steps uint, baseValue float64, startDate *time.Time) *OptimizationInfo {
-	oi := &OptimizationInfo{}
-	oi.CurrStep = 0
-	oi.StartTime = time.Now()
-	oi.Status = OptimStatusRunning
-	oi.results = core.NewSortedResults[*Run](maxResultSize, runComparator)
-	oi.BaseValue = baseValue
-	oi.BestValue = baseValue
-	oi.MaxSteps = steps
-	oi.FieldToOptimize = field
-	oi.StartDate = startDate
+type Flags struct {
+	Activation   EnableSet   `json:"activation"`
+	Deactivation EnableSet   `json:"deactivation"`
+}
 
-	oi.Filter.PosProfit = fc.EnablePosProfit
-	oi.Filter.OldVsNew = fc.EnableOldNew
-	oi.Filter.WinPerc = fc.EnableWinPerc
-	oi.Filter.EquVsAvg = fc.EnableEquAvg
-	oi.Filter.Trendline = fc.EnableTrendline
-	oi.Filter.Drawdown = fc.EnableDrawdown
+//=============================================================================
+
+func (f *Flags) fromConfig(fc *optimization.FilterConfig) {
+	f.Activation  .fromConfig(&fc.Activation)
+	f.Deactivation.fromConfig(&fc.Activation)
+}
+
+//=============================================================================
+
+type EnableSet struct {
+	NetReturn         bool  `json:"netReturn"`
+	AverageTrade      bool  `json:"averageTrade"`
+	EquityVsAverage   bool  `json:"equityVsAverage"`
+	WinningPercentage bool  `json:"winningPercentage"`
+	MaxDrawdown       bool  `json:"maxDrawdown"`
+	TrendLine         bool  `json:"trendLine"`
+	ProfitFactor      bool  `json:"profitFactor"`
+	SharpeRatio       bool  `json:"sharpeRatio"`
+	Sqn100            bool  `json:"sqn100"`
+	ReturnMaxDDRatio  bool  `json:"returnMaxDDRatio"`
+}
+
+//=============================================================================
+
+func (s *EnableSet) fromConfig(c *optimization.Config) {
+	s.NetReturn         = c.NetReturn        .Enabled
+	s.AverageTrade      = c.AverageTrade     .Enabled
+	s.EquityVsAverage   = c.EquityVsAverage  .Enabled
+	s.WinningPercentage = c.WinningPercentage.Enabled
+	s.MaxDrawdown       = c.MaxDrawdown      .Enabled
+	s.TrendLine         = c.TrendLine        .Enabled
+	s.ProfitFactor      = c.ProfitFactor     .Enabled
+	s.SharpeRatio       = c.SharpeRatio      .Enabled
+	s.Sqn100            = c.Sqn100           .Enabled
+	s.ReturnMaxDDRatio  = c.ReturnMaxDDRatio .Enabled
+}
+
+//=============================================================================
+
+func NewOptimizationInfo(maxResultSize int, field string, fc *optimization.FilterConfig, steps int64,
+						 baseValue float64, startDate *time.Time) *OptimizationInfo {
+	oi := &OptimizationInfo{}
+	oi.CurrStep        = 0
+	oi.MaxSteps        = steps
+	oi.StartTime       = time.Now()
+	oi.Status          = OptimStatusRunning
+	oi.results         = core.NewSortedResults[*Run](maxResultSize, runComparator)
+	oi.BaseValue       = baseValue
+	oi.BestValue       = baseValue
+	oi.FieldToOptimize = field
+	oi.StartDate       = startDate
+
+	oi.Filter.fromConfig(fc)
 
 	return oi
 }
@@ -128,22 +162,6 @@ func (oi *OptimizationInfo) addResult(r *Run) {
 	if oi.BestValue < fv {
 		oi.BestValue = fv
 	}
-}
-
-//=============================================================================
-
-func (oi *OptimizationInfo) isStatusComplete() bool {
-	oi.Lock()
-	defer oi.Unlock()
-
-	if oi.CurrStep != oi.MaxSteps {
-		return false
-	}
-
-	oi.EndTime = time.Now()
-	oi.Status = OptimStatusComplete
-
-	return true
 }
 
 //=============================================================================

@@ -59,30 +59,30 @@ type FitnessFunction func(r *Run) float64
 
 func GetFitnessFunction(field string) FitnessFunction {
 	switch field {
-	case FieldToOptimizeNetProfit:
-		return ffNetProfit
+		case FieldToOptimizeNetReturn:
+			return ffNetReturn
 
-	case FieldToOptimizeAvgTrade:
-		return ffAvgTrade
+		case FieldToOptimizeAvgTrade:
+			return ffAvgTrade
 
-	case FieldToOptimizeDrawDown:
-		return ffMaxDrawdown
+		case FieldToOptimizeDrawDown:
+			return ffMaxDrawdown
 
-	case FieldToOptimizeNetProfitAvgTrade:
-		return ffNetProfitAvgTrade
+		case FieldToOptimizeNetReturnAvgTrade:
+			return ffNetReturnAvgTrade
 
-	case FieldToOptimizeNetProfitAvgTradeMaxDD:
-		return ffNetProfitAvgTradeMaxDD
+		case FieldToOptimizeNetReturnAvgTradeMaxDD:
+			return ffNetReturnAvgTradeMaxDD
 
-	default:
-		panic("Unknown field to optimize: " + field)
+		default:
+			panic("Unknown field to optimize: " + field)
 	}
 }
 
 //=============================================================================
 
-func ffNetProfit(r *Run) float64 {
-	return r.NetProfit
+func ffNetReturn(r *Run) float64 {
+	return r.NetReturn
 }
 
 //=============================================================================
@@ -99,13 +99,13 @@ func ffMaxDrawdown(r *Run) float64 {
 
 //=============================================================================
 
-func ffNetProfitAvgTrade(r *Run) float64 {
-	fv := r.NetProfit * r.AvgTrade
+func ffNetReturnAvgTrade(r *Run) float64 {
+	fv := r.NetReturn * r.AvgTrade
 
-	//--- We have to push down results where both netProfit and avgTrade are negative
+	//--- We have to push down results where both netReturn and avgTrade are negative
 	//--- because their product is positive
 
-	if r.NetProfit < 0 && r.AvgTrade < 0 {
+	if r.NetReturn < 0 && r.AvgTrade < 0 {
 		fv *= -1
 	}
 
@@ -118,14 +118,14 @@ func ffNetProfitAvgTrade(r *Run) float64 {
 
 //=============================================================================
 
-func ffNetProfitAvgTradeMaxDD(r *Run) float64 {
-	fv := r.NetProfit * r.AvgTrade
+func ffNetReturnAvgTradeMaxDD(r *Run) float64 {
+	fv := r.NetReturn * r.AvgTrade
 	dd := math.Abs(r.MaxDrawdown)
 
-	//--- We have to push down results where both netProfit and avgTrade are negative
+	//--- We have to push down results where both netReturn and avgTrade are negative
 	//--- because their product is positive
 
-	if r.NetProfit < 0 && r.AvgTrade < 0 {
+	if r.NetReturn < 0 && r.AvgTrade < 0 {
 		fv *= -1
 	}
 

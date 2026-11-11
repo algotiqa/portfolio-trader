@@ -10,7 +10,6 @@
 package criteria
 
 import (
-	"github.com/algotiqa/core/req"
 	"golang.org/x/exp/stats"
 )
 
@@ -25,19 +24,13 @@ const SharpeRatio = "sharpeRatio"
 //=============================================================================
 
 type SharpeRatioConfig struct {
-	Enabled bool    `json:"enabled"`
-	Length  int     `json:"length"`
-	Value   float64 `json:"value"`
+	Config
 }
 
 //=============================================================================
 
 func (c *SharpeRatioConfig) validate() error {
-	if c.Length < 1 || c.Length > 1000 {
-		return req.NewBadRequestError("sharpeRatio.length must be between %v and %v", 1, 1000)
-	}
-
-	return nil
+	return c.Config.validate()
 }
 
 //=============================================================================
