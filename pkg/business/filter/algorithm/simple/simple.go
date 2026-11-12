@@ -41,22 +41,44 @@ func (sa *simpleAlgorithm) Init(ctx optimization.Context) {
 //=============================================================================
 
 func (sa *simpleAlgorithm) Steps() int64 {
-	return sa.fc.Activation.Steps() * sa.fc.Deactivation.Steps()
+	actSteps := sa.fc.Activation.Steps()
+	deaSteps := sa.fc.Deactivation.Steps()
+
+	//-- Edge cases (no optimizazion is selected)
+
+	if actSteps == 0 {
+		actSteps = 1
+	}
+
+	if deaSteps == 0 {
+		deaSteps = 1
+	}
+
+	return actSteps * deaSteps
 }
 
 //=============================================================================
 
 func (sa *simpleAlgorithm) Optimize() {
-	if sa.generateCriteriaA(&sa.fc.Activation.NetReturn.Optimization, netReturnFuncA) {
-		if sa.generateCriteriaA(&sa.fc.Activation.AverageTrade.Optimization, averageTradeFuncA) {
-			if sa.generateCriteriaA(&sa.fc.Activation.EquityVsAverage.Optimization, equityVsAverageFuncA) {
-				if sa.generateCriteriaA(&sa.fc.Activation.WinningPercentage.Optimization, winningPercentageFuncA) {
-					if sa.generateCriteriaA(&sa.fc.Activation.MaxDrawdown.Optimization, maxDrawdownFuncA) {
-						if sa.generateCriteriaA(&sa.fc.Activation.TrendLine.Optimization, trendLineFuncA) {
-							if sa.generateCriteriaA(&sa.fc.Activation.ProfitFactor.Optimization, profitFactorFuncA) {
-								if sa.generateCriteriaA(&sa.fc.Activation.SharpeRatio.Optimization, sharpeRatioFuncA) {
-									if sa.generateCriteriaA(&sa.fc.Activation.Sqn100.Optimization, sqn100FuncA) {
-										if sa.generateCriteriaA(&sa.fc.Activation.ReturnMaxDDRatio.Optimization, returnMaxDDRatioFuncA) {
+	if sa.fc.Activation.AllOff() {
+		tf := sa.ctx.Baseline()
+
+		if !sa.generateDeactivations(&tf) {
+			//--- Exit on error
+			return
+		}
+	} else {
+		if sa.generateCriteriaA(&sa.fc.Activation.NetReturn.Optimization, netReturnFuncA) {
+			if sa.generateCriteriaA(&sa.fc.Activation.AverageTrade.Optimization, averageTradeFuncA) {
+				if sa.generateCriteriaA(&sa.fc.Activation.EquityVsAverage.Optimization, equityVsAverageFuncA) {
+					if sa.generateCriteriaA(&sa.fc.Activation.WinningPercentage.Optimization, winningPercentageFuncA) {
+						if sa.generateCriteriaA(&sa.fc.Activation.MaxDrawdown.Optimization, maxDrawdownFuncA) {
+							if sa.generateCriteriaA(&sa.fc.Activation.TrendLine.Optimization, trendLineFuncA) {
+								if sa.generateCriteriaA(&sa.fc.Activation.ProfitFactor.Optimization, profitFactorFuncA) {
+									if sa.generateCriteriaA(&sa.fc.Activation.SharpeRatio.Optimization, sharpeRatioFuncA) {
+										if sa.generateCriteriaA(&sa.fc.Activation.Sqn100.Optimization, sqn100FuncA) {
+											if sa.generateCriteriaA(&sa.fc.Activation.ReturnMaxDDRatio.Optimization, returnMaxDDRatioFuncA) {
+											}
 										}
 									}
 								}
@@ -108,6 +130,16 @@ func (sa *simpleAlgorithm) generateCriteriaA(o *optimization.Optimization, f Set
 //=============================================================================
 
 func (sa *simpleAlgorithm) generateDeactivations(tf *model.TradingFilter) bool {
+	if sa.fc.Deactivation.AllOff() {
+		_,err := sa.ctx.RunAnalysis(tf)
+		if err != nil {
+			sa.ctx.ExitWithError(err)
+			return false
+		}
+
+		return true
+	}
+
 	if sa.generateCriteriaD(tf, &sa.fc.Deactivation.NetReturn.Optimization, netReturnFuncD) {
 		if sa.generateCriteriaD(tf, &sa.fc.Deactivation.AverageTrade.Optimization, averageTradeFuncD) {
 			if sa.generateCriteriaD(tf, &sa.fc.Deactivation.EquityVsAverage.Optimization, equityVsAverageFuncD) {

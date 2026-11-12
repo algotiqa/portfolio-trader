@@ -56,6 +56,12 @@ func NewOptimizationResponse(info *OptimizationInfo) *OptimizationResponse {
 		or.Error = info.Error.Error()
 	}
 
+	//--- Avoid to return too much data when the process is still going
+	//--- Runs are not used in this case
+
+	if or.Status == OptimStatusRunning {
+		or.Runs = nil
+	}
 	return or
 }
 

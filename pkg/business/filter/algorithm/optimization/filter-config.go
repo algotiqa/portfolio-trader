@@ -118,6 +118,21 @@ func (c *Config) Steps() int64 {
 }
 
 //=============================================================================
+
+func (c *Config) AllOff() bool {
+	return	!c.NetReturn.Enabled         &&
+			!c.AverageTrade.Enabled      &&
+			!c.EquityVsAverage.Enabled   &&
+			!c.WinningPercentage.Enabled &&
+			!c.MaxDrawdown.Enabled       &&
+			!c.TrendLine.Enabled         &&
+			!c.ProfitFactor.Enabled      &&
+			!c.SharpeRatio.Enabled       &&
+			!c.Sqn100.Enabled            &&
+			!c.ReturnMaxDDRatio.Enabled
+}
+
+//=============================================================================
 //===
 //=== Base optimization config
 //===
