@@ -15,7 +15,9 @@ import (
 	"time"
 
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm"
+	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter/model"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
 	"github.com/algotiqa/portfolio-trader/pkg/db"
 )
 
@@ -38,28 +40,27 @@ type OptimizationProcess struct {
 	fromTime        *time.Time
 	portfolio       *db.Portfolio
 	stopping        bool
+	workers         core.WorkerPool
 }
 
 //=============================================================================
 
 func (op *OptimizationProcess) Start() {
 	field := op.optReq.FieldToOptimize
-
 	op.fitnessFunction = GetFitnessFunction(field)
+	fc := op.optReq.FilterConfig
+	fc.Deactivation.WarmUp()
 
 	algo := algorithm.New(op.optReq.Algorithm.Type)
-	ctx  := NewContext(op)
-	algo.Init(ctx)
+	algo.Init(op)
 
-	fc := op.optReq.FilterConfig
 	base,err := op.calcBaseValue()
-	op.info = NewOptimizationInfo(MaxResultSize, field, fc, algo.Steps(), base, op.fromTime)
 
 	if err != nil {
-		op.ExitWithError(err)
+		op.exitWithError(err)
 	} else {
-		slog.Info("generate: Started", "tsId", op.ts.Id, "tsName", op.ts.Name, "algorithm", op.optReq.Algorithm)
-		go algo.Optimize()
+		op.info = NewOptimizationInfo(MaxResultSize, field, fc, algo.StepsCount(), base, op.fromTime)
+		go op.generate(algo)
 	}
 }
 
@@ -78,19 +79,96 @@ func (op *OptimizationProcess) GetInfo() *OptimizationInfo {
 
 //=============================================================================
 //===
-//=== Private methods
+//=== Context implementation
 //===
 //=============================================================================
 
-func (op *OptimizationProcess) runAnalysis(filter *model.TradingFilter) (float64,error) {
+func (op *OptimizationProcess) FilterConfig() *optimization.FilterConfig {
+	return op.optReq.FilterConfig
+}
+
+//=============================================================================
+
+func (op *OptimizationProcess) AlgorithmConfig() *optimization.AlgorithmConfig {
+	return &op.optReq.Algorithm.Config
+}
+
+//=============================================================================
+//--- To protect
+
+func (op *OptimizationProcess) IsStopping() bool {
+	return op.stopping
+}
+
+//=============================================================================
+
+func (op *OptimizationProcess) Baseline() model.TradingFilter {
+	return *op.optReq.Baseline
+}
+
+//=============================================================================
+
+func (op *OptimizationProcess) LogInfo(message string) {
+	slog.Info(message, "tsId", op.ts.Id, "tsName", op.ts.Name)
+}
+
+//=============================================================================
+//--- To protect
+
+func (op *OptimizationProcess) RunAnalysis(filter *model.TradingFilter) (float64,bool) {
 	eval,err := NewEvaluator(filter)
 	if err != nil {
-		return 0, err
+		op.exitWithError(err)
+		return 0, false
 	}
 
 	sum := RunAnalysis(op.ts, filter, op.trades, op.portfolio, eval).Summary
 	run := op.createRun(filter, &sum)
-	op.info.addResult(run)
+	op.info.addResult(run)						//	<-- protected
+
+	return run.FitnessValue, true
+}
+
+//=============================================================================
+
+func (op *OptimizationProcess) Submit(task func()) {
+	op.workers.Submit(task)
+}
+
+//=============================================================================
+//===
+//=== Private methods
+//===
+//=============================================================================
+
+//--- Running in a Go routine
+
+func (op *OptimizationProcess) generate(algo optimization.Algorithm) {
+	slog.Info("generate: Started", "tsId", op.ts.Id, "tsName", op.ts.Name, "algorithm", op.optReq.Algorithm)
+	op.workers.Init(8, 500)
+	algo.Optimize()
+	op.workers.Wait()
+
+	if op.info.Status == OptimStatusRunning {
+		op.info.EndTime = time.Now()
+		op.info.Status  = OptimStatusComplete
+	}
+
+	slog.Info("EndProcess: Completed.")
+}
+
+//=============================================================================
+
+func (op *OptimizationProcess) calcBaseValue() (float64,error) {
+	baseline := op.optReq.Baseline
+
+	eval,err := NewEvaluator(baseline)
+	if err != nil {
+		return 0, err
+	}
+
+	sum := RunAnalysis(op.ts, baseline, op.trades, op.portfolio, eval).Summary
+	run := op.createRun(baseline, &sum)
 
 	return run.FitnessValue, nil
 }
@@ -113,32 +191,7 @@ func (op *OptimizationProcess) createRun(filter *model.TradingFilter, sum *Summa
 
 //=============================================================================
 
-func (op *OptimizationProcess) calcBaseValue() (float64,error) {
-	baseline := op.optReq.Baseline
-
-	eval,err := NewEvaluator(baseline)
-	if err != nil {
-		return 0, err
-	}
-
-	sum := RunAnalysis(op.ts, baseline, op.trades, op.portfolio, eval).Summary
-	run := op.createRun(baseline, &sum)
-
-	return run.FitnessValue, nil
-}
-
-//=============================================================================
-
-func (op *OptimizationProcess) EndProcess() {
-	op.info.EndTime = time.Now()
-	op.info.Status  = OptimStatusComplete
-
-	slog.Info("EndProcess: Completed.")
-}
-
-//=============================================================================
-
-func (op *OptimizationProcess) ExitWithError(err error) {
+func (op *OptimizationProcess) exitWithError(err error) {
 	op.info.EndTime = time.Now()
 	op.info.Status  = OptimStatusError
 	op.info.Error   = err

@@ -104,17 +104,17 @@ func (c *Config) Validate() error {
 
 //=============================================================================
 
-func (c *Config) Steps() int64 {
-	return	c.NetReturn        .Steps() +
-			c.AverageTrade     .Steps()+
-			c.EquityVsAverage  .Steps() +
-			c.WinningPercentage.Steps() +
-			c.MaxDrawdown      .Steps() +
-			c.TrendLine        .Steps() +
-			c.ProfitFactor     .Steps() +
-			c.SharpeRatio      .Steps() +
-			c.Sqn100           .Steps() +
-			c.ReturnMaxDDRatio .Steps()
+func (c *Config) StepsCount() int64 {
+	return	c.NetReturn        .StepsCount() +
+			c.AverageTrade     .StepsCount()+
+			c.EquityVsAverage  .StepsCount() +
+			c.WinningPercentage.StepsCount() +
+			c.MaxDrawdown      .StepsCount() +
+			c.TrendLine        .StepsCount() +
+			c.ProfitFactor     .StepsCount() +
+			c.SharpeRatio      .StepsCount() +
+			c.Sqn100           .StepsCount() +
+			c.ReturnMaxDDRatio .StepsCount()
 }
 
 //=============================================================================
@@ -130,6 +130,21 @@ func (c *Config) AllOff() bool {
 			!c.SharpeRatio.Enabled       &&
 			!c.Sqn100.Enabled            &&
 			!c.ReturnMaxDDRatio.Enabled
+}
+
+//=============================================================================
+
+func (c *Config) WarmUp() {
+	c.NetReturn.WarmUp()
+	c.AverageTrade.WarmUp()
+	c.EquityVsAverage.WarmUp()
+	c.WinningPercentage.WarmUp()
+	c.MaxDrawdown.WarmUp()
+	c.TrendLine.WarmUp()
+	c.ProfitFactor.WarmUp()
+	c.SharpeRatio.WarmUp()
+	c.Sqn100.WarmUp()
+	c.ReturnMaxDDRatio.WarmUp()
 }
 
 //=============================================================================
@@ -158,12 +173,19 @@ func (c *Optimization) Validate() error {
 
 //=============================================================================
 
-func (c *Optimization) Steps() int64 {
+func (c *Optimization) StepsCount() int64 {
 	if c.Enabled {
 		return c.Length.StepsCount() * c.Value.StepsCount()
 	}
 
 	return 0
+}
+
+//=============================================================================
+
+func (c *Optimization) WarmUp() {
+	c.Length.Steps()
+	c.Value.Steps()
 }
 
 //=============================================================================

@@ -40,9 +40,9 @@ func (sa *simpleAlgorithm) Init(ctx optimization.Context) {
 
 //=============================================================================
 
-func (sa *simpleAlgorithm) Steps() int64 {
-	actSteps := sa.fc.Activation.Steps()
-	deaSteps := sa.fc.Deactivation.Steps()
+func (sa *simpleAlgorithm) StepsCount() int64 {
+	actSteps := sa.fc.Activation.StepsCount()
+	deaSteps := sa.fc.Deactivation.StepsCount()
 
 	//-- Edge cases (no optimizazion is selected)
 
@@ -62,11 +62,7 @@ func (sa *simpleAlgorithm) Steps() int64 {
 func (sa *simpleAlgorithm) Optimize() {
 	if sa.fc.Activation.AllOff() {
 		tf := sa.ctx.Baseline()
-
-		if !sa.generateDeactivations(&tf) {
-			//--- Exit on error
-			return
-		}
+		sa.submitDeactivations(&tf)
 	} else {
 		if sa.generateCriteriaA(&sa.fc.Activation.NetReturn.Optimization, netReturnFuncA) {
 			if sa.generateCriteriaA(&sa.fc.Activation.AverageTrade.Optimization, averageTradeFuncA) {
@@ -89,8 +85,6 @@ func (sa *simpleAlgorithm) Optimize() {
 			}
 		}
 	}
-
-	sa.ctx.EndProcess()
 }
 
 //=============================================================================
@@ -107,13 +101,11 @@ func (sa *simpleAlgorithm) generateCriteriaA(o *optimization.Optimization, f Set
 				tf := sa.ctx.Baseline()
 				f(&tf, leng, val)
 
-				if sa.generateDeactivations(&tf) {
-					//--- Check if we have to stop the process
+				sa.submitDeactivations(&tf)
 
-					if sa.ctx.IsStopping() {
-						return false
-					}
-				} else {
+				//--- Check if we have to stop the process
+
+				if sa.ctx.IsStopping() {
 					return false
 				}
 			}
@@ -129,15 +121,18 @@ func (sa *simpleAlgorithm) generateCriteriaA(o *optimization.Optimization, f Set
 //===
 //=============================================================================
 
-func (sa *simpleAlgorithm) generateDeactivations(tf *model.TradingFilter) bool {
-	if sa.fc.Deactivation.AllOff() {
-		_,err := sa.ctx.RunAnalysis(tf)
-		if err != nil {
-			sa.ctx.ExitWithError(err)
-			return false
-		}
+func (sa *simpleAlgorithm) submitDeactivations(tf *model.TradingFilter) {
+	sa.ctx.Submit(func() {
+		sa.generateDeactivations(tf)
+	})
+}
 
-		return true
+//=============================================================================
+
+func (sa *simpleAlgorithm) generateDeactivations(tf *model.TradingFilter) {
+	if sa.fc.Deactivation.AllOff() {
+		_,_ = sa.ctx.RunAnalysis(tf)
+		return
 	}
 
 	if sa.generateCriteriaD(tf, &sa.fc.Deactivation.NetReturn.Optimization, netReturnFuncD) {
@@ -150,7 +145,6 @@ func (sa *simpleAlgorithm) generateDeactivations(tf *model.TradingFilter) bool {
 								if sa.generateCriteriaD(tf, &sa.fc.Deactivation.SharpeRatio.Optimization, sharpeRatioFuncD) {
 									if sa.generateCriteriaD(tf, &sa.fc.Deactivation.Sqn100.Optimization, sqn100FuncD) {
 										if sa.generateCriteriaD(tf, &sa.fc.Deactivation.ReturnMaxDDRatio.Optimization, returnMaxDDRatioFuncD) {
-											return true
 										}
 									}
 								}
@@ -161,8 +155,6 @@ func (sa *simpleAlgorithm) generateDeactivations(tf *model.TradingFilter) bool {
 			}
 		}
 	}
-
-	return false
 }
 
 //=============================================================================
@@ -174,16 +166,14 @@ func (sa *simpleAlgorithm) generateCriteriaD(base *model.TradingFilter, o *optim
 				tf := *base
 				f(&tf, leng, val)
 
-				_,err := sa.ctx.RunAnalysis(&tf)
-				if err != nil {
-					sa.ctx.ExitWithError(err)
+				_,ok := sa.ctx.RunAnalysis(&tf)
+				if !ok {
 					return false
 				}
 
 				//--- Check if we have to stop the process
 
 				if sa.ctx.IsStopping() {
-					sa.ctx.LogInfo("generateTrendLineD: Got stop request")
 					return false
 				}
 			}

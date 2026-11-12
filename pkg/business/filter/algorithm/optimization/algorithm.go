@@ -21,10 +21,9 @@ type Context interface {
 	IsStopping() bool
 	Baseline() model.TradingFilter
 
-	RunAnalysis(filter *model.TradingFilter) (float64,error)
+	RunAnalysis(filter *model.TradingFilter) (float64,bool)
 	LogInfo(message string)
-	EndProcess()
-	ExitWithError(err error)
+	Submit(f func())
 }
 
 //=============================================================================
@@ -32,7 +31,7 @@ type Context interface {
 type Algorithm interface {
 	Init(ctx Context)
 	Optimize()
-	Steps() int64
+	StepsCount() int64
 }
 
 //=============================================================================

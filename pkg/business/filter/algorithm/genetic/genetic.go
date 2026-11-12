@@ -44,7 +44,7 @@ func (ga *geneticAlgorithm) Init(ctx optimization.Context) {
 
 //=============================================================================
 
-func (ga *geneticAlgorithm) Steps() int64 {
+func (ga *geneticAlgorithm) StepsCount() int64 {
 	return int64(ga.config.MinSteps)
 }
 

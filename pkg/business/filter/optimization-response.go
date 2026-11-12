@@ -31,7 +31,8 @@ type OptimizationResponse struct {
 	BaseValue       float64       `json:"baseValue"`
 	BestValue       float64       `json:"bestValue"`
 	FieldToOptimize string        `json:"fieldToOptimize"`
-	Duration        int64         `json:"duration"`
+	Duration        string        `json:"duration"`
+	Remaining       string        `json:"remaining"`
 	Filter         *Flags         `json:"filter"`
 }
 
@@ -49,7 +50,6 @@ func NewOptimizationResponse(info *OptimizationInfo) *OptimizationResponse {
 	or.BaseValue       = info.BaseValue
 	or.BestValue       = info.BestValue
 	or.FieldToOptimize = info.FieldToOptimize
-	or.Duration        = int64(time.Now().Sub(info.StartTime).Seconds())
 	or.Filter          = &info.Filter
 
 	if info.Error != nil {
@@ -62,6 +62,17 @@ func NewOptimizationResponse(info *OptimizationInfo) *OptimizationResponse {
 	if or.Status == OptimStatusRunning {
 		or.Runs = nil
 	}
+
+	//--- Calc remaining time
+
+	if or.CurrStep > 0 {
+		donSecs := int64(time.Now().Sub(info.StartTime).Seconds())
+		estSecs := (or.MaxSteps - or.CurrStep) * donSecs / or.CurrStep
+
+		or.Duration = (time.Duration(donSecs) * time.Second).String()
+		or.Remaining= (time.Duration(estSecs) * time.Second).String()
+	}
+
 	return or
 }
 

@@ -33,7 +33,7 @@ func (p *WorkerPool) Init(numWorkers, queueSize int) {
 	p.queueSize  = queueSize
 	p.taskQueue  = make(chan func(), queueSize)
 
-	for i := 0; i<numWorkers; i++ {
+	for range numWorkers {
 		go p.worker()
 	}
 
@@ -43,15 +43,9 @@ func (p *WorkerPool) Init(numWorkers, queueSize int) {
 //=============================================================================
 
 func (p *WorkerPool) ShutDown() bool {
-
 	if p.taskQueue != nil {
 		close(p.taskQueue)
-
-		//--- Wait for task completion
-		for ; len(p.taskQueue) > 0 ; {
-			time.Sleep(time.Millisecond * 500)
-		}
-
+		p.Wait()
 		p.taskQueue = nil
 	}
 
@@ -64,6 +58,17 @@ func (p *WorkerPool) ShutDown() bool {
 
 func (p *WorkerPool) Submit(task func()) {
 	p.taskQueue <- task
+}
+
+//=============================================================================
+
+func (p *WorkerPool) Wait() {
+	if p.taskQueue != nil {
+		//--- Wait for task completion
+		for ; len(p.taskQueue) > 0 ; {
+			time.Sleep(time.Millisecond * 500)
+		}
+	}
 }
 
 //=============================================================================
