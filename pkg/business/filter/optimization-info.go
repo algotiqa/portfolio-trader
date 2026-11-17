@@ -74,7 +74,7 @@ type Flags struct {
 
 func (f *Flags) fromConfig(fc *optimization.FilterConfig) {
 	f.Activation  .fromConfig(&fc.Activation)
-	f.Deactivation.fromConfig(&fc.Activation)
+	f.Deactivation.fromConfig(&fc.Deactivation)
 }
 
 //=============================================================================
