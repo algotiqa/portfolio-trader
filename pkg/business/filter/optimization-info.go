@@ -118,7 +118,7 @@ func NewOptimizationInfo(maxResultSize int, field string, fc *optimization.Filte
 	oi.Status          = OptimStatusRunning
 	oi.results         = core.NewSortedResults[*Run](maxResultSize, runComparator)
 	oi.BaseValue       = baseValue
-	oi.BestValue       = baseValue
+	oi.BestValue       = -999999999
 	oi.FieldToOptimize = field
 	oi.StartDate       = startDate
 
