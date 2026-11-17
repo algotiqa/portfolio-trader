@@ -12,6 +12,7 @@ package simple
 import (
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter/algorithm/optimization"
 	"github.com/algotiqa/portfolio-trader/pkg/business/filter/model"
+	"github.com/algotiqa/portfolio-trader/pkg/core"
 )
 
 //=============================================================================
@@ -99,7 +100,7 @@ func (sa *simpleAlgorithm) generateCriteriaA(o *optimization.Optimization, f Set
 			for _,val := range *o.Value.Steps() {
 				//--- Get a copy of the baseline (passed by value)
 				tf := sa.ctx.Baseline()
-				f(&tf, leng, val)
+				f(&tf, leng, core.Trunc2d(val))
 
 				sa.submitDeactivations(&tf)
 
@@ -164,7 +165,7 @@ func (sa *simpleAlgorithm) generateCriteriaD(base *model.TradingFilter, o *optim
 		for _, leng := range *o.Length.Steps() {
 			for _, val := range *o.Value.Steps() {
 				tf := *base
-				f(&tf, leng, val)
+				f(&tf, leng, core.Trunc2d(val))
 
 				_,ok := sa.ctx.RunAnalysis(&tf)
 				if !ok {
