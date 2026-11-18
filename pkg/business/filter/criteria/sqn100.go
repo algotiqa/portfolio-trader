@@ -72,7 +72,7 @@ func (c *Sqn100Criteria) Eval(s *Snapshot) {
 
 	length := c.config.Length
 
-	a := NewActivation(Sqn100,length)
+	a := NewActivation(Sqn100, &c.config.Config)
 
 	for i,t := range s.Time {
 		if i >= length-1 {

@@ -70,7 +70,7 @@ func (c *SharpeRatioCriteria) Eval(s *Snapshot) {
 
 	length := c.config.Length
 
-	a := NewActivation(SharpeRatio,length)
+	a := NewActivation(SharpeRatio,&c.config.Config)
 
 	for i,t := range s.Time {
 		if i >= length-1 {

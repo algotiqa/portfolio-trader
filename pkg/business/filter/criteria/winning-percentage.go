@@ -74,7 +74,7 @@ func (c *WinningPercentageCriteria) Eval(s *Snapshot) {
 	totCount := 0.0
 	length   := c.config.Length
 
-	a := NewActivation(WinningPercentage, length)
+	a := NewActivation(WinningPercentage, &c.config.Config)
 
 	for i,t := range s.Time {
 		if s.NetReturn[i] != 0 {

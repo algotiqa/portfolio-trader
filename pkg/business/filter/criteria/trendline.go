@@ -75,7 +75,7 @@ func (c *TrendLineCriteria) Eval(s *Snapshot) {
 
 	length := c.config.Length
 
-	a := NewActivation(TrendLine, length)
+	a := NewActivation(TrendLine, &c.config.Config)
 
 	for i,t := range s.Time {
 		if i >= length-1 {

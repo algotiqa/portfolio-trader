@@ -76,7 +76,7 @@ func (c *ProfitFactorCriteria) Eval(s *Snapshot) {
 	loss   := 0.0
 	length := c.config.Length
 
-	a := NewActivation(ProfitFactor, length)
+	a := NewActivation(ProfitFactor, &c.config.Config)
 
 	for i,t := range s.Time {
 		if s.NetReturn[i] > 0 {

@@ -51,19 +51,30 @@ type Snapshot struct {
 //=============================================================================
 
 type Activation struct {
-	Name    string      `json:"name"`
-	Times   []time.Time `json:"times"`
-	Flags   []int       `json:"flags"`
-	Metrics []float64   `json:"metrics"`
-	length  int
+	Name      string      `json:"name"`
+	Times     []time.Time `json:"times"`
+	Flags     []int       `json:"flags"`
+	Metrics   []float64   `json:"metrics"`
+	Length    int         `json:"length"`
+	Threshold float64     `json:"threshold"`
+	Overlay   []float64   `json:"overlay"`
 }
 
 //=============================================================================
 
-func NewActivation(name string, length int) *Activation {
+func NewActivation(name string, config *Config) *Activation {
+    length := 0
+	value  := 0.0
+
+	if config != nil {
+		length= config.Length
+		value = config.Value
+	}
+
 	return &Activation{
-		Name  : name,
-		length: length,
+		Name     : name,
+		Length   : length,
+		Threshold: value,
 	}
 }
 
@@ -91,7 +102,7 @@ func (a *Activation) LastActive() int {
 //=============================================================================
 
 func (a *Activation) Active(i int) int {
-	length := a.length
+	length := a.Length
 
 	if i >= length-1 {
 		return a.Flags[i-length+1]

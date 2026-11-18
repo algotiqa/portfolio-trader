@@ -75,7 +75,7 @@ func (c *MaxDrawdownCriteria) Eval(s *Snapshot) {
 
 	length := c.config.Length
 
-	a := NewActivation(MaxDrawdown, length)
+	a := NewActivation(MaxDrawdown, &c.config.Config)
 
 	for i,t := range s.Time {
 		if i >= length-1 {

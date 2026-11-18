@@ -68,7 +68,7 @@ func (c *AverageTradeCriteria) Eval(s *Snapshot) {
 	count  := 0.0
 	length := c.config.Length
 
-	a := NewActivation(AverageTrade, length)
+	a := NewActivation(AverageTrade, &c.config.Config)
 
 	for i,t := range s.Time {
 		if i >= length-1 {

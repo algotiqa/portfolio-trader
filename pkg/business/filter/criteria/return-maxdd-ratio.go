@@ -76,7 +76,7 @@ func (c *ReturnMaxDDRatioCriteria) Eval(s *Snapshot) {
 	//retSum := 0.0
 	length := c.config.Length
 
-	a := NewActivation(ReturnMaxDDRatio, length)
+	a := NewActivation(ReturnMaxDDRatio, &c.config.Config)
 
 	for i, t := range s.Time {
 		if i >= length-1 {

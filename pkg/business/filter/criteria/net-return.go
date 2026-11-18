@@ -67,7 +67,7 @@ func (c *NetReturnCriteria) Eval(s *Snapshot) {
 	retSum := 0.0
 	length := c.config.Length
 
-	a := NewActivation(NetReturn, length)
+	a := NewActivation(NetReturn, &c.config.Config)
 
 	for i,t := range s.Time {
 		if i >= length-1 {

@@ -62,7 +62,7 @@ func (s *WeeklyPeriodSampler) Sample(time []time.Time, activations []int) ([]int
 	res  := make([]int, len(activations))
 	prev := activations[0]
 
-	a := criteria.NewActivation("finalActivation", 0)
+	a := criteria.NewActivation("finalActivation", nil)
 	a.AddFlag(time[0], activations[0])
 
 	for i, t := range time {
@@ -109,7 +109,7 @@ func (s *MonthlyPeriodSampler) Sample(time []time.Time, activations []int) ([]in
 	res := make([]int, len(activations))
 	prev := activations[0]
 
-	a := criteria.NewActivation("finalActivation", 0)
+	a := criteria.NewActivation("finalActivation", nil)
 	a.AddFlag(time[0], activations[0])
 
 	for i, t := range time {

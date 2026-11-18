@@ -70,7 +70,7 @@ func (c *EquityVsAverageCriteria) Eval(s *Snapshot) {
 	length := c.config.Length
 	maSum  := 0.0
 
-	a := NewActivation(EquityVsAverage, length)
+	a := NewActivation(EquityVsAverage, &c.config.Config)
 
 	for i,t := range s.Time {
 		maSum += s.Equity[i]
@@ -104,15 +104,27 @@ func (c *EquityVsAverageCriteria) evaluate() {
 	for i, m := range c.activation.Metrics {
 		switch c.runMode {
 			case RunModeActivation:
-				if c.equity[i+length-1] >= m + value {
+				overlay := m + value
+				c.activation.Overlay = append(c.activation.Overlay, overlay)
+
+				if c.equity[i+length-1] >= overlay {
 					c.activation.Flags[i] = 1
 				}
 
 			case RunModeDeactivation:
-				if c.equity[i+length-1] < m - value {
+				overlay := m - value
+				c.activation.Overlay = append(c.activation.Overlay, overlay)
+
+				if c.equity[i+length-1] < overlay {
 					c.activation.Flags[i] = 1
 				}
 		}
+
+		c.activation.Metrics[i] = c.equity[i+length-1] - m
+	}
+
+	if c.runMode == RunModeDeactivation {
+		c.activation.Threshold *= -1
 	}
 }
 
